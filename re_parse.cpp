@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <stdlib.h>
+#include "re_parse.h"
 using namespace std;
 //*********************************
 // regular expression like that
@@ -9,29 +11,13 @@ using namespace std;
 
 // #define DEGUG
 #define EOF -1
-enum TYPE {
-  TYPE_CAT,
-  TYPE_STAR,
-  TYPE_OR,
-  TYPE_CHAR
-};
+
+struct TreeNode;
 
 static string input_string; // the global input_string
 static int cur_pos;         // current position of input_string  
-static char cur_char;       // input_string[cur_pos]
+static char cur_char, lookahead;       // input_string[cur_pos]
 
-struct TreeNode { // the Node of the re parse tree
-  int type;
-  char ch;
-  TreeNode* left; // the TYPE_STAR use the left node only
-  TreeNode* right;
-  TreeNode(int t, char c, TreeNode* l, TreeNode* r) {
-    type = t;
-    ch = c;
-    left = l;
-    right = r;
-  }
-};
 TreeNode* parse_char();
 TreeNode* parse_or();
 TreeNode* parse_cat();
@@ -41,14 +27,14 @@ TreeNode* parse(string s);
 void init();
 void move();
 void match(char t);
-void visit(TreeNode* root);
+void visit_print(TreeNode* root);
 void debug(string s);
 
 
-int main(int argc, char**argv) {
-  TreeNode* root = parse("((ab|cd|e)*(hg)*)*");
-  visit(root);
-}
+// int main(int argc, char**argv) {
+//   TreeNode* root = parse("((ab|cd|e)*(hg)*)*)");
+//   visit_print(root);
+// }
 
 // the api for the other files
 TreeNode* parse(string s) {
@@ -79,7 +65,7 @@ TreeNode* parse_or() {
   TreeNode* root = parse_cat();
   while (cur_char == '|') {
     move();
-    root = new TreeNode(TYPE_OR, NULL, root, parse_cat());
+    root = new TreeNode(ENUM::TYPE_OR, NULL, root, parse_cat());
   }
   return root;
 }
@@ -90,7 +76,7 @@ TreeNode* parse_cat() {
          cur_char != '*' &&
          cur_char != ')' &&
          cur_char != '|') {
-    root = new TreeNode(TYPE_CAT, NULL, root, parse_star());
+    root = new TreeNode(ENUM::TYPE_CAT, NULL, root, parse_star());
   }
   return root;
 }
@@ -98,9 +84,13 @@ TreeNode* parse_cat() {
 TreeNode* parse_star() {
   debug("parse_star");
   TreeNode* root = parse_char();
-  if (cur_char == '*') {
+  if (cur_char == '*' && lookahead == '*') {
+  	cout << "repetition-operator *" <<endl;
+    exit(-1);
+  }
+  if (cur_char == '*' && lookahead != '*') {
     move();
-    root = new TreeNode(TYPE_STAR, NULL, root, NULL);
+    root = new TreeNode(ENUM::TYPE_STAR, NULL, root, NULL);
   }
   return root;
 }
@@ -115,7 +105,7 @@ TreeNode* parse_char() {
       match(')');
       break;
     default:
-      root = new TreeNode(TYPE_CHAR, cur_char, NULL, NULL);
+      root = new TreeNode(ENUM::TYPE_CHAR, cur_char, NULL, NULL);
       move();
   }
   return root;
@@ -128,6 +118,9 @@ void move() {
   cur_pos++;
   if (cur_pos < input_string.length()) cur_char = input_string[cur_pos];
   else cur_char = EOF;
+
+  if (cur_pos+1 < input_string.length()) lookahead = input_string[cur_pos+1];
+  else lookahead = EOF;
 }
 // assert to match the character
 void match(char t) {
@@ -138,21 +131,21 @@ void match(char t) {
   move();
 }
 
-void visit(TreeNode* root) {
+void visit_print(TreeNode* root) {
   if (root) {
-    visit(root->left);
-    visit(root->right);
+    visit_print(root->left);
+    visit_print(root->right);
     switch (root->type) {
-      case TYPE_CAT:
+      case ENUM::TYPE_CAT:
         cout << " -";
         break;
-      case TYPE_OR:
+      case ENUM::TYPE_OR:
         cout << " |";
         break;
-      case TYPE_STAR:
+      case ENUM::TYPE_STAR:
         cout << " *";
         break;
-      case TYPE_CHAR:
+      case ENUM::TYPE_CHAR:
         cout << " "  << root->ch;
         break;
       default:
@@ -164,12 +157,6 @@ void visit(TreeNode* root) {
 void init() {
   // here we avoid the repetition of the * and spacelike character
   for (int i = 0; i < input_string.length(); i++) {
-    if (input_string[i] == '*' && 
-        i+1 < input_string.length() && 
-        input_string[i+1] == '*') {
-      cout << "repetition-operator *" <<endl;
-      exit(-1);
-    }
     if (input_string[i] == ' ' || 
         input_string[i] == '\t'||
         input_string[i] == '\n') {
@@ -187,3 +174,4 @@ void debug(string s) {
   cout << s << endl;
 #endif
 }
+
