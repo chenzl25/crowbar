@@ -104,6 +104,26 @@ TreeNode* parse_char() {
       root = parse_re();
       match(')');
       break;
+    case '\\' : // escape case
+      move();
+      if (cur_char == '\\' ||
+          cur_char == '('  ||
+          cur_char == ')'  ||
+          cur_char == '{'  ||
+          cur_char == '}'  ||
+          cur_char == '*'  ||
+          cur_char == '|'  ||
+          cur_char == '^'  ||
+          cur_char == '$'  ||
+          cur_char == '-'  ||
+          cur_char == '+'   ) {
+        root = new TreeNode(ENUM::TYPE_CHAR, cur_char, NULL, NULL);
+        move();
+      } else {
+        cout << "escape error, only these: \\ ( ) { } * | ^ $ - + can be escaped" << endl;
+        exit(-1);
+      }
+      break;
     default:
       root = new TreeNode(ENUM::TYPE_CHAR, cur_char, NULL, NULL);
       move();
@@ -155,15 +175,6 @@ void visit_print(TreeNode* root) {
 }
 
 void init() {
-  // here we avoid the repetition of the * and spacelike character
-  for (int i = 0; i < input_string.length(); i++) {
-    if (input_string[i] == ' ' || 
-        input_string[i] == '\t'||
-        input_string[i] == '\n') {
-      cout << "the regular expression should not contain the spacelike character" << endl;
-      exit(-1);
-    }
-  }
   // prepare to parse. Before to parse we let the cur_pos point to the start position
   cur_pos = -1;
   move();
