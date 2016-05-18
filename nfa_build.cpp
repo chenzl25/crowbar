@@ -6,6 +6,7 @@
 #include "re_parse.h"
 using namespace std;
 #define EPS 0
+#define ANY -1
 
 struct TreeNode;
 class NFA;
@@ -42,7 +43,7 @@ private:
 		set<DNode*> jump(char s) {
 			set<DNode*> result;
 			for (int i = 0; i < out.size(); i++) {
-				if (out[i]->symbol == s | out[i]->symbol == '.') {
+				if (out[i]->symbol == s | out[i]->symbol == ANY) {
 					result.insert(out[i]->to);
 				}
 			}
@@ -131,6 +132,11 @@ private:
 	        start = new Digraph::DNode();
 	        end = new Digraph::DNode();
 	        Digraph::addEdge(start, tnode->ch, end);
+	        break;
+	      case ENUM::TYPE_ANY:
+	      	start = new Digraph::DNode();
+	        end = new Digraph::DNode();
+	        Digraph::addEdge(start, ANY, end);
 	        break;
 	      default:
 	        break;

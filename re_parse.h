@@ -21,7 +21,8 @@ namespace ENUM {
 	  TYPE_CAT = 1,
 	  TYPE_STAR,
 	  TYPE_OR,
-	  TYPE_CHAR
+	  TYPE_CHAR,
+    TYPE_ANY
 	};
 }
 
