@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include "util.h"
 #include "re_parse.h"
 using namespace std;
 //*********************************
@@ -28,12 +29,7 @@ void init();
 void move();
 void match(char t);
 void visit_print(TreeNode* root);
-void debug(string s);
-void assert(bool should, string msg);
-void error(string msg); 
-bool isdigit(char c);
-bool is_uppercase_letter(char c);
-bool is_lowercase_letter(char c);
+
 // int main(int argc, char**argv) {
 //   TreeNode* root = parse("((ab|cd|e)*(hg)*)*)");
 //   visit_print(root);
@@ -332,36 +328,3 @@ void init() {
   move();
 }
 
-void debug(string s) {
-#ifdef DEGUG
-  cout << s << endl;
-#endif
-}
-void assert(bool should, string msg) {
-  if (!should) {
-    cout << msg << endl;
-    exit(-1);
-  }
-}
-void error(string msg) {
-  cout << msg << endl;
-}
-bool isdigit(char c) {
-  if (c >= '0' && c <= '9') {
-    return true;
-  } else {
-    return false;
-  }
-}
-bool is_uppercase_letter(char c) {
-  if (c >= 'A' && c <= 'Z') {
-    return true;
-  }
-  return false;
-}
-bool is_lowercase_letter(char c) {
-  if (c >= 'a' && c <= 'z') {
-    return true;
-  }
-  return false;
-}
