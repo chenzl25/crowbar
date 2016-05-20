@@ -33,6 +33,7 @@ bool DFA::simulate(string txt) {
   else return false;
 }
 void DFA::minimize() {
+  cout << "before minimize size: " << _Dstates.size() << endl;
 
 }
 void DFA::_nfa_to_dfa() {
@@ -50,17 +51,14 @@ void DFA::_nfa_to_dfa() {
   set<Digraph::DNode*> unmarked_state;
   unmarked_state = _find_unmarked_state();
   while (unmarked_state.size() != 0) {
-
     _Dstates[unmarked_state]->mark = true;
     set<char> input_symbol_set;
 
     // get all the input symbol
     for (auto it = unmarked_state.begin(); it != unmarked_state.end(); it++) {
       for (int i = 0; i < (*it)->out.size(); i++) {
-        if ((*it)->out[i]->symbol != ANY && (*it)->out[i]->symbol != EPS) {
+        if ((*it)->out[i]->symbol != EPS) {
           input_symbol_set.insert((*it)->out[i]->symbol);
-        } else {
-          input_symbol_set.insert(ANY);
         }
       }
     }
