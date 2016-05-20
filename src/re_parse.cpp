@@ -322,7 +322,7 @@ void init() {
     i++;
   }
   input_string = tem;
-  cout << input_string << endl;
+  debug(input_string);
   // prepare to parse. Before to parse we let the cur_pos point to the start position
   cur_pos = -1;
   move();

@@ -11,7 +11,7 @@ CXX?=g++
 CPPFLAGS=-w
 
 all: $(OBJS)
-	$(CXX) -o dfa $(OBJS)
+	$(CXX) -o mygrep $(OBJS)
 
 nfa.o:      src/nfa.h
 
@@ -26,4 +26,4 @@ re_parse.o: src/re_parse.h
 main.o: 
 
 clean:
-	-rm $(OBJS) dfa 
+	-rm $(OBJS) mygrep 

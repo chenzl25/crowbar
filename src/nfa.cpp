@@ -9,6 +9,7 @@ NFA::NFA(TreeNode* root) {
 	_root = root;
 	_re_tree_to_nfa();
 }
+// match the longer one before the short one
 int NFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
     for (int j = txt.length(); j >=i+1 ; j--) {

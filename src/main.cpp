@@ -12,7 +12,7 @@ int main(int argc, char**argv) {
     cout << "we need a regular expression as argument" << endl;
   }
   TreeNode* root = parse(pre + argv[1]+ pre);
-  visit_print(root); cout << endl;
+  // visit_print(root); cout << endl;
   NFA nfa(root);
   DFA dfa(&nfa);
   int line = 0;

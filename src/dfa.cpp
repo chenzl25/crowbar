@@ -12,6 +12,7 @@ DFA::DFA(TreeNode* root) {
   _root = root;
   _re_tree_to_dfa();
 }
+// match the longer one before the short one
 int DFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
     for (int j = txt.length(); j >=i+1 ; j--) {
@@ -42,10 +43,10 @@ bool DFA::simulate(string txt) {
   else return false;
 }
 void DFA::minimize() {
-  cout << "before minimize size: " << _Dstates.size() << endl;
+  debug("before minimize size: " + _Dstates.size());
   _partition();
   _connect();
-  cout << "after  minimize size: " << _group.size() << endl;
+  debug("after  minimize size: " + _group.size());
 }
 void DFA::_partition() {
   // init _group
@@ -61,8 +62,6 @@ void DFA::_partition() {
   }
   _group.insert(accept_group);
   _group.insert(nonaccept_group);
-  // cout << "accept size " <<  accept_group->dfa_node_set.size() << endl;
-  // cout << "nonaccept size " << nonaccept_group->dfa_node_set.size() << endl;
   // init _group_map
   _group_map.clear();
   for (auto it_group : _group) {
@@ -82,7 +81,7 @@ void DFA::_partition() {
         _group = next_group;
       }
     }
-    cout << "_group.size = " << _group.size() << endl;
+    debug("_group.size = " + _group.size());
     first = false;
     next_group.clear();
     for (auto it_group : _group) { // for each group
@@ -103,7 +102,6 @@ void DFA::_partition() {
     for (auto it_group : next_group) {
       for (auto it_dfa_node : it_group->dfa_node_set) {
         _group_map[it_dfa_node] = it_group;
-        // cout << it_dfa_node << " => " << it_group << endl;
       }
     }
   }
