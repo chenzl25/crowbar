@@ -2,9 +2,10 @@
 #define DIGRAPH_H
 #include <set>
 #include <vector>
-
-#define EPS 0
-#define ANY -1
+#include <iostream>
+#define EPS ((char)0)
+#define ANY ((char)254)
+#define OTHER ((char)255)
 
 using namespace std;
 struct TreeNode;

@@ -11,7 +11,7 @@ using namespace std;
 //*********************************
 
 // #define DEGUG
-#define EOF -1
+#define EOF -2
 
 struct TreeNode;
 
@@ -29,11 +29,6 @@ void init();
 void move();
 void match(char t);
 void visit_print(TreeNode* root);
-
-// int main(int argc, char**argv) {
-//   TreeNode* root = parse("((ab|cd|e)*(hg)*)*)");
-//   visit_print(root);
-// }
 
 // the api for the other files
 TreeNode* parse(string s) {
@@ -175,6 +170,9 @@ void visit_print(TreeNode* root) {
         break;
       case ENUM::TYPE_CHAR:
         cout << " "  << root->ch;
+        break;
+      case ENUM::TYPE_ANY:
+        cout << " [any]";
         break;
       default:
         break;

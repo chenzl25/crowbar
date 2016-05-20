@@ -1,8 +1,6 @@
 #include "nfa.h"
 #include "re_parse.h"
 using namespace std;
-#define EPS 0
-#define ANY -1
 
 struct TreeNode;
 class NFA;
@@ -83,18 +81,3 @@ void NFA::_visit_construct_subnfa(TreeNode* tnode, Digraph::DNode* &start, Digra
     }
   }
 }
-
-// int main(int argc, char**argv) {
-//   string pre = ".*";
-// 	string text;
-//   TreeNode* root = parse(pre + argv[1]+ pre);
-//   visit_print(root); cout << endl;
-//   NFA nfa(root);
-// 	int line = 0;
-// 	while (getline(cin, text)) {
-// 		line++;
-// 		if (nfa.simulate(text)) {
-// 			cout << line << " : " << text << endl;
-// 		}
-// 	}
-// }

@@ -1,0 +1,19 @@
+zdd
+zadd
+zaadd
+zaaadd
+zaaaadd
+zaaddd
+595084778@qq.com
+chenzl25@mail2.sysu.edu.cn
+775949801@dd.xyz
+
+set<Digraph::DNode*> DFA::_find_unmarked_state() {
+  for (map< set<Digraph::DNode*>,MNode* >::iterator it = _Dstates.begin(); it != _Dstates.end(); it++) {
+    if (it->second->mark == false) {
+      return it->first;
+    }
+  }
+  set<Digraph::DNode*> s;
+  return s;
+}

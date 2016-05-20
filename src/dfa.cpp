@@ -1,24 +1,8 @@
 #include "dfa.h"
 #include "util.h"
 using namespace std;
-// class DFA {
-// public:
-//   DFA(NFA* nfa);
-//   DFA(TreeNode* root);
-//   bool simulate(string txt);
-//   void minimize();
-// private:
-//   TreeNode* _root;
-//   Digraph   _graph;
-//   NFA*      _nfa;
-//   // in dfa we don't need the end state.
-//   // because we can check whether DNode is accept state;
-//   Digraph::DNode* _start; 
-//   void _nfa_to_dfa();
-//   void _re_tree_to_dfa();
-// };
-class Digraph;
 
+class Digraph;
 
 DFA::DFA(NFA* nfa) {
   _nfa = nfa;
@@ -45,7 +29,8 @@ bool DFA::simulate(string txt) {
       }
     }
   }
-  return false;
+  if (cur_dnode->accept) return true;
+  else return false;
 }
 void DFA::minimize() {
 
@@ -56,19 +41,30 @@ void DFA::_nfa_to_dfa() {
   set<Digraph::DNode*> e_closure_s0 = Digraph::e_closure(nfa_start_set);
   _start = new Digraph::DNode();
   _Dstates[e_closure_s0] = new MNode(false, _start);
+  for (auto it = e_closure_s0.begin(); it != e_closure_s0.end(); it++) {
+    if ((*it)->accept) {
+      _Dstates[e_closure_s0]->dnode->accept = true;
+      break;
+    }
+  }
   set<Digraph::DNode*> unmarked_state;
   unmarked_state = _find_unmarked_state();
   while (unmarked_state.size() != 0) {
+
     _Dstates[unmarked_state]->mark = true;
     set<char> input_symbol_set;
+
     // get all the input symbol
     for (auto it = unmarked_state.begin(); it != unmarked_state.end(); it++) {
       for (int i = 0; i < (*it)->out.size(); i++) {
-        if ((*it)->out[i]->symbol != ANY) {
+        if ((*it)->out[i]->symbol != ANY && (*it)->out[i]->symbol != EPS) {
           input_symbol_set.insert((*it)->out[i]->symbol);
+        } else {
+          input_symbol_set.insert(ANY);
         }
       }
     }
+
     // jump and e-closure
     for (auto it1 = input_symbol_set.begin(); it1 != input_symbol_set.end(); it1++) {
       set<Digraph::DNode*> total_jump_set;
@@ -90,7 +86,10 @@ void DFA::_nfa_to_dfa() {
         _Dstates[new_group] = new MNode(false, new Digraph::DNode());
         _Dstates[new_group]->dnode->accept = accept;
       }
-      Digraph::addEdge(_Dstates[unmarked_state]->dnode, *it1, _Dstates[new_group]->dnode);
+      // because the *it1 are distinct, so only one OTHER edge for a new dfa node
+      Digraph::addEdge(_Dstates[unmarked_state]->dnode, 
+                       (*it1==ANY)?OTHER:*it1,
+                       _Dstates[new_group]->dnode);
     } // end jump and e-closure
     unmarked_state = _find_unmarked_state();
   } // end while
@@ -106,19 +105,4 @@ set<Digraph::DNode*> DFA::_find_unmarked_state() {
   }
   set<Digraph::DNode*> s;
   return s;
-}
-int main(int argc, char**argv) {
-  string pre = ".*";
-  string text;
-  TreeNode* root = parse(pre + argv[1]+ pre);
-  visit_print(root); cout << endl;
-  NFA nfa(root);
-  DFA dfa(&nfa);
-  int line = 0;
-  while (getline(cin, text)) {
-    line++;
-    if (dfa.simulate(text)) {
-      cout << line << " : " << text << endl;
-    }
-  }
 }

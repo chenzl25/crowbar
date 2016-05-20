@@ -1,4 +1,4 @@
 all:
-	g++ nfa.cpp re_parse.cpp digraph.cpp dfa.cpp util.cpp -w -o dfa
+	g++ src/nfa.cpp src/re_parse.cpp src/digraph.cpp src/dfa.cpp src/util.cpp src/main.cpp -w -o dfa
 clean:
 	rm dfa
