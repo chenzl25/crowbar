@@ -14,7 +14,7 @@ DFA::DFA(TreeNode* root) {
 }
 int DFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
-    for (int j = i+1; j < txt.length(); j++) {
+    for (int j = txt.length(); j >=i+1 ; j--) {
       if (simulate(txt.substr(i,j-i))) {
         result = txt.substr(i,j-i);
         return i;
@@ -24,28 +24,184 @@ int DFA::match(string txt, string& result) {
   return -1;
 }
 bool DFA::simulate(string txt) {
+  // only match the txt exactly
   Digraph::DNode *cur_dnode = _start;
   for (int i = 0; i < txt.length(); i++) {
-    if (cur_dnode->accept) {
-      return true;
-    } else {
-      set<Digraph::DNode*> next_set = cur_dnode->jump(txt[i]);
-      if (next_set.size() == 0) {
-        return false;
-      }
-      assert(next_set.size() == 1, "the size of next_set must be 1");
-      for (auto it = next_set.begin(); it != next_set.end(); it++) {
-        cur_dnode = *it;
-        // we omit the break, for only one item in the next_set
-      }
+    set<Digraph::DNode*> next_set = cur_dnode->jump(txt[i]);
+    if (next_set.size() == 0) {
+      return false;
+    }
+    assert(next_set.size() == 1, "the size of next_set must be 1");
+    for (auto it = next_set.begin(); it != next_set.end(); it++) {
+      cur_dnode = *it;
+      // we omit the break, for only one item in the next_set
     }
   }
+  // find the final state at last, in order to know whether exactly match
   if (cur_dnode->accept) return true;
   else return false;
 }
 void DFA::minimize() {
   cout << "before minimize size: " << _Dstates.size() << endl;
+  _partition();
+  _connect();
+  cout << "after  minimize size: " << _group.size() << endl;
+}
+void DFA::_partition() {
+  // init _group
+  _group = set<Group*>();
+  Group* accept_group = new Group();
+  Group* nonaccept_group = new Group();
+  for (auto it : _Dstates) {
+    if (it.second->dnode->accept) {
+      accept_group->dfa_node_set.insert(it.second->dnode);
+    } else {
+      nonaccept_group->dfa_node_set.insert(it.second->dnode);
+    }
+  }
+  _group.insert(accept_group);
+  _group.insert(nonaccept_group);
+  // cout << "accept size " <<  accept_group->dfa_node_set.size() << endl;
+  // cout << "nonaccept size " << nonaccept_group->dfa_node_set.size() << endl;
+  // init _group_map
+  _group_map.clear();
+  for (auto it_group : _group) {
+    for (auto it_dfa_node : it_group->dfa_node_set) {
+      _group_map[it_dfa_node] = it_group;
+    }
+  }
 
+  set<Group*> next_group = set<Group*>();
+  bool first = true;
+  while(true) {
+    if (!first) {
+      if (Group::group_set_deep_equal(_group, next_group)) {
+        _group = next_group;
+        break;
+      } else {
+        _group = next_group;
+      }
+    }
+    cout << "_group.size = " << _group.size() << endl;
+    first = false;
+    next_group.clear();
+    for (auto it_group : _group) { // for each group
+      set<char> input_set;
+      for (auto it_dfa_node: it_group->dfa_node_set) { // get input
+        for (auto it_edge : it_dfa_node->out) {
+          input_set.insert(it_edge->symbol);
+        }
+      }
+
+      set<Group*> splited_group = it_group->split(input_set, _group_map);
+      for (auto it: splited_group) {
+        next_group.insert(it);
+      }
+    }
+    // update _group_map
+    _group_map.clear();
+    for (auto it_group : next_group) {
+      for (auto it_dfa_node : it_group->dfa_node_set) {
+        _group_map[it_dfa_node] = it_group;
+        // cout << it_dfa_node << " => " << it_group << endl;
+      }
+    }
+  }
+}
+void DFA::_connect() {
+  // setup representative for each group
+  map< Digraph::DNode*,Digraph::DNode* > representative_map; // old => new
+  for (auto it_group : _group) {
+    for (auto it_dfa_node : it_group->dfa_node_set) {
+      it_group->representative = it_dfa_node;
+      representative_map[it_dfa_node] = new Digraph::DNode();
+      break;
+    }
+  }
+  auto mini_start = representative_map[_group_map[_start]->representative];
+  // // set accept state
+  for (auto it_group : _group) {
+    for (auto it_dfa_node : it_group->dfa_node_set) {
+      if (it_dfa_node->accept) {
+        representative_map[_group_map[it_dfa_node]->representative]->accept = true;
+      }
+    }
+  }
+  // // set transition
+  for (auto it_group : _group) {
+    auto old_s = it_group->representative;
+    auto new_s = representative_map[old_s];
+    for (auto it_edge : old_s->out) {
+      auto old_t = it_edge->to;
+      auto new_t = representative_map[_group_map[old_t]->representative];
+      Digraph::addEdge(new_s, it_edge->symbol, new_t);
+    }
+  }
+  _start = mini_start;
+}
+bool DFA::Group::group_set_deep_equal(set< Group* > & gs1, set< Group* > &gs2) {
+  if (gs1.size() != gs2.size()) {
+    return false;
+  }
+  for (auto g1 : gs1) {
+    bool has_equal = false;
+    for (auto g2 : gs2) {
+      if (g1->dfa_node_set == g2->dfa_node_set) {
+        has_equal = true;
+        break;
+      }
+    }
+    if (!has_equal) return false;
+  }
+  return true;
+}
+
+set<DFA::Group*> DFA::Group::split(set<char> input_set, map< Digraph::DNode*,Group* > &group_map) {
+  // for each s:(it1),t:(it2) dfa state pair
+  set<DFA::Group*> result;
+  map< Digraph::DNode*,bool > has_group;
+  for (auto it: this->dfa_node_set) {
+    has_group[it] = false;
+  }
+  for (auto it1 = this->dfa_node_set.begin(); it1 != this->dfa_node_set.end(); it1++) {
+    if (has_group[*it1]) {
+      continue;
+    }
+    Group* outer_group = new Group();
+    outer_group->dfa_node_set.insert(*it1);
+    has_group[*it1] = true;
+    auto it2 = it1;
+    it2++;
+    for (; it2 != this->dfa_node_set.end(); it2++) {
+      if (has_group[*it2]) {
+        continue;
+      }
+      bool can_group = true;
+      for (auto input: input_set) {
+        auto jump_set1 = (*it1)->jump(input);
+        auto jump_set2 = (*it2)->jump(input);
+        assert(jump_set1.size() <= 1 && jump_set2.size() <= 1, "jump_set1 and jump_set2 should be less than 1");
+        if (jump_set1.size() == 1 && jump_set2.size() == 1) {
+          Group* group_flag1, *group_flag2;
+          for (auto next_state1: jump_set1) group_flag1 = group_map[next_state1];
+          for (auto next_state2: jump_set2) group_flag2 = group_map[next_state2];
+          if (group_flag1 != group_flag2) {
+            can_group = false;
+            break;
+          }
+        } else {
+          can_group = false;
+          break;
+        }
+      }
+      if (can_group) {
+        has_group[*it2] = true;
+        outer_group->dfa_node_set.insert(*it2);
+      }
+    }
+    result.insert(outer_group);
+  }
+  return result;
 }
 void DFA::_nfa_to_dfa() {
   set<Digraph::DNode*> nfa_start_set;

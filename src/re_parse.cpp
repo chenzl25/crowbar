@@ -179,7 +179,7 @@ void visit_print(TreeNode* root) {
     }
   }
 }
-
+// all this function want to do is to conver [] {} to | () *
 void init() {
   string tem;
   // support [] {} + ? 
@@ -291,6 +291,7 @@ void init() {
       }
       // for exmaple the (aa){3,5} => (aa)(aa)((aa)|(aa)(aa)|(aa)(aa)(aa))
       if ((r != 0) && r != l) {
+        int old_l = l;
         if (l == 0) {
           tem =  "(" + tem + ')' + "|((" + tem + ')';
         }
@@ -312,7 +313,7 @@ void init() {
           if (j != r-l) tem += '|';
           else tem += ')';
         }
-        if (l == 0) tem += ')';
+        if (old_l == 0) tem += ')';
       }
       i = rb_pos + 1;
       continue;
@@ -321,6 +322,7 @@ void init() {
     i++;
   }
   input_string = tem;
+  cout << input_string << endl;
   // prepare to parse. Before to parse we let the cur_pos point to the start position
   cur_pos = -1;
   move();

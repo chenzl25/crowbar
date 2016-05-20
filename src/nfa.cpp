@@ -11,7 +11,7 @@ NFA::NFA(TreeNode* root) {
 }
 int NFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
-    for (int j = i+1; j < txt.length(); j++) {
+    for (int j = txt.length(); j >=i+1 ; j--) {
       if (simulate(txt.substr(i,j-i))) {
         result = txt.substr(i,j-i);
         return i;
@@ -21,6 +21,7 @@ int NFA::match(string txt, string& result) {
   return -1;
 }
 bool NFA::simulate(string txt) {
+  // only match the txt exactly
 	set<Digraph::DNode*> now;
 	now.insert(_start);
 	now = Digraph::e_closure(now);
@@ -33,11 +34,11 @@ bool NFA::simulate(string txt) {
 			}
 		}
 		now = Digraph::e_closure(match_set);
-		// find the final state
-		for (set<Digraph::DNode*>::iterator it = now.begin(); it != now.end(); it++) {
-			if (*it == _end) {
-				return true;
-			}
+  }
+	// find the final state at last, in order to know whether exactly match
+	for (set<Digraph::DNode*>::iterator it = now.begin(); it != now.end(); it++) {
+		if (*it == _end) {
+			return true;
 		}
 	}
 	return false;

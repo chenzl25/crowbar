@@ -16,6 +16,7 @@ int main(int argc, char**argv) {
   NFA nfa(root);
   DFA dfa(&nfa);
   int line = 0;
+  dfa.minimize();
   while (getline(cin, text)) {
     line++;
     // if (dfa.simulate(text)) {

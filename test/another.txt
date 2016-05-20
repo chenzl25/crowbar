@@ -1,1 +1,2 @@
-zdd
+\(a\|b\)\*a\(a\|b\)\{12\}
+(a|b)*a(a|b){n}  // can make dfa have at least 2^n state
