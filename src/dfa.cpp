@@ -75,6 +75,20 @@ void DFA::_nfa_to_dfa() {
     }
 
     // jump and e-closure
+    // some tricks here: for example we have input_set { a, b, k, ANY }
+    // then for each input we can get a new DFA node  U = e-closure(jump(T,input));
+    // if U not in _Dstates then add U to _Dstates
+    // and then let transition table [T input] = U
+    // the problem is how to deal with the ANY input
+    // we know that we should let the DFA be deterministic
+    // so ANY should be split as { a, b, k, OTHER} => input_set = { a, b, k, { a, b, k, OTHER} }
+    // for the jump(T,input) , more specific, take input as a
+    // jump(T, a) we should make use of the ANY out nodes. 
+    // (maybe serval ANY out nodes, but the input_set will keep only one ANY, same as the { a, b, k })
+    // then, the most tricky point come. 
+    // when we get the new DFA node, the out edge should be => { a, b, k, OTHER}
+    // remember "deterministic" we can only use OTHER insteal of ANY.
+    // O(∩_∩)O~~ we solve the problem. (all the other input are replaced with OTHER)
     for (auto it1 = input_symbol_set.begin(); it1 != input_symbol_set.end(); it1++) {
       set<Digraph::DNode*> total_jump_set;
       for (auto it2 = unmarked_state.begin(); it2 != unmarked_state.end(); it2++) {
