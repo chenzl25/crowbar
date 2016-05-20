@@ -12,6 +12,17 @@ DFA::DFA(TreeNode* root) {
   _root = root;
   _re_tree_to_dfa();
 }
+int DFA::match(string txt, string& result) {
+  for (int i = 0; i < txt.length(); i++) {
+    for (int j = i+1; j < txt.length(); j++) {
+      if (simulate(txt.substr(i,j-i))) {
+        result = txt.substr(i,j-i);
+        return i;
+      }
+    }
+  }
+  return -1;
+}
 bool DFA::simulate(string txt) {
   Digraph::DNode *cur_dnode = _start;
   for (int i = 0; i < txt.length(); i++) {

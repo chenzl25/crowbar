@@ -15,6 +15,7 @@ class DFA {
 public:
   DFA(NFA* nfa);
   DFA(TreeNode* root);
+  int match(string txt, string& result);
   bool simulate(string txt);
   void minimize();
 private:

@@ -17,6 +17,7 @@ public:
   friend DFA;
   NFA(TreeNode* root);
   bool simulate(string txt);
+  int match(string txt, string& result);
 private:
   TreeNode* _root;
   Digraph _graph;

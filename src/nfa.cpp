@@ -9,6 +9,17 @@ NFA::NFA(TreeNode* root) {
 	_root = root;
 	_re_tree_to_nfa();
 }
+int NFA::match(string txt, string& result) {
+  for (int i = 0; i < txt.length(); i++) {
+    for (int j = i+1; j < txt.length(); j++) {
+      if (simulate(txt.substr(i,j-i))) {
+        result = txt.substr(i,j-i);
+        return i;
+      }
+    }
+  }
+  return -1;
+}
 bool NFA::simulate(string txt) {
 	set<Digraph::DNode*> now;
 	now.insert(_start);
