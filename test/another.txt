@@ -1,2 +1,13 @@
 \(a\|b\)\*a\(a\|b\)\{12\}
 (a|b)*a(a|b){n}  // can make dfa have at least 2^n state
+
+ababb
+bbabb
+abb
+a
+b
+bb
+a
+aaaaaaabaaaaabb
+
+cat test/another.txt | ./mygrep \(a\|b\)\*abb

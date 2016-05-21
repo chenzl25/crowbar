@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <iostream>
+// edge type
 #define EPS ((char)0)
 #define ANY ((char)254)
 #define OTHER ((char)255)

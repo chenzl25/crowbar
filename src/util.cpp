@@ -2,9 +2,9 @@
 #include <iostream>
 #include "util.h"
 using namespace std;
-
+// #define DEBUG
 void debug(string s) {
-#ifdef DEGUG
+#ifdef DEBUG
   cout << s << endl;
 #endif
 }

@@ -37,16 +37,37 @@ private:
     set<Group*> split(set<char> input_set, map< Digraph::DNode*,Group* > &group_map);
     static bool group_set_deep_equal(set< Group* > & gs1, set< Group* > &gs2);
   };
+  enum MODE {
+    from_re_parse_tree,
+    from_nfa
+  };
+  MODE mode;
   map< set<Digraph::DNode*>,MNode* > _Dstates;
+  map< set<TreeNode*>,MNode* > _Tstates;
   set< Group* > _group;
   map< Digraph::DNode*,Group* > _group_map;
+  map< TreeNode*,bool > _nullable_map;
+  map< TreeNode*,bool > _has_cal_nullable_map;
+  map< TreeNode*,set<TreeNode*> > _firstpos_map;
+  map< TreeNode*,bool > _has_cal_firstpos_map;
+  map< TreeNode*,set<TreeNode*> > _lastpos_map;
+  map< TreeNode*,bool > _has_cal_lastpos_map;
+  map< TreeNode*,set<TreeNode*> > _followpos_map;
+  bool _has_calculate_followpos;
   // in dfa we don't need the end state.
   // because we can check whether DNode is accept state;
   Digraph::DNode* _start; 
-  set<Digraph::DNode*> _find_unmarked_state();
+  set<Digraph::DNode*> _find_Dstates_unmarked_state();
+  set<TreeNode*> _find_Tstates_unmarked_state();
+  
   void _nfa_to_dfa();
-  void _re_tree_to_dfa();
   void _partition(); // for minimize
   void _connect();   // for minimize
+  void _re_tree_to_dfa();
+  bool _nullable(TreeNode* sub_root);
+  set<TreeNode*> _firstpos(TreeNode* sub_root);
+  set<TreeNode*> _lastpost(TreeNode* sub_root);
+  set<TreeNode*> _followpos(TreeNode* sub_root);
+  void _visit_calculate_followpos(TreeNode* sub_root);
 };
 #endif

@@ -22,7 +22,8 @@ namespace ENUM {
 	  TYPE_STAR,
 	  TYPE_OR,
 	  TYPE_CHAR,
-    TYPE_ANY
+    TYPE_ANY,
+    TYPE_AUGEND
 	};
 }
 

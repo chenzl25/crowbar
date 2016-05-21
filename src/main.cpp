@@ -4,6 +4,7 @@
 #include "re_parse.h"
 using namespace std;
 
+
 int main(int argc, char**argv) {
   string pre = ""; // we can use ".*"
   string text, result;
@@ -14,15 +15,17 @@ int main(int argc, char**argv) {
   TreeNode* root = parse(pre + argv[1]+ pre);
   // visit_print(root); cout << endl;
   NFA nfa(root);
-  DFA dfa(&nfa);
+  // DFA dfa(&nfa);
   int line = 0;
-  dfa.minimize();
+  // dfa.minimize();
+  // DFA dfa2(root);
+  // dfa2.minimize();
   while (getline(cin, text)) {
     line++;
     // if (dfa.simulate(text)) {
     //   cout << line << " : " << text << endl;
     // }
-    if ((index = dfa.match(text, result)) != -1) {
+    if ((index = nfa.match(text, result)) != -1) {
       cout << line << " : " << text << endl;
       int tem = line;
       do {

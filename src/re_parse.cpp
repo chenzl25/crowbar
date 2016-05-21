@@ -10,8 +10,7 @@ using namespace std;
 // '.' stand for arbitrary symbol
 //*********************************
 
-// #define DEGUG
-#define EOF -2
+#define EOF -2  //detect the end of the input string
 
 struct TreeNode;
 
@@ -94,6 +93,10 @@ TreeNode* parse_char() {
   TreeNode* root = NULL;
   switch (cur_char) {
     case '(' :
+      if (lookahead == ')') {
+        match(')');
+        return NULL;
+      }
       move();
       root = parse_re();
       match(')');
@@ -174,6 +177,9 @@ void visit_print(TreeNode* root) {
       case ENUM::TYPE_ANY:
         cout << " [any]";
         break;
+      case ENUM::TYPE_AUGEND:
+        cout << " [#]";
+        break;
       default:
         break;
     }
@@ -181,6 +187,7 @@ void visit_print(TreeNode* root) {
 }
 // all this function want to do is to conver [] {} to | () *
 void init() {
+  cout << "raw: " << input_string << endl;
   string tem;
   // support [] {} + ? 
   if (input_string.length() > 0) {
@@ -191,7 +198,33 @@ void init() {
            "* { + ?  can't not be the first char");
   }
   for (int i = 0; i < input_string.length();) {
+    if (input_string[i] == '+') {
+      // for escape
+      if (input_string[i-1] == '\\') {
+        tem += input_string[i];
+        i++;
+        continue;
+      }
+      //TODO
+    }
+    if (input_string[i] == '?') {
+      // for escape
+      if (input_string[i-1] == '\\') {
+        tem += input_string[i];
+        i++;
+        continue;
+      }
+      input_string.erase(i, 1);
+      input_string.insert(i, "{0,1}");
+      continue;
+    }
     if (input_string[i] == '[') {
+      // for escape
+      if (i-1>=0 && input_string[i-1] == '\\') {
+        tem += input_string[i];
+        i++;
+        continue;
+      }
       tem += '(';
       i++;
       while(input_string[i] != ']') { // ok:[a-zA-Z0-9],[abcd]  not:[^asd]
@@ -243,8 +276,15 @@ void init() {
       assert(tem[tem.length()-1] == '|', "the last pos in the tem must be '|' ");
       tem[tem.length()-1] = ')';
       i++; // skip the ]
+      continue;
     } // end if [
     if (input_string[i] == '{') {
+      // for escape
+      if (i-1>=0 && input_string[i-1] == '\\') {
+        tem += input_string[i];
+        i++;
+        continue;
+      }
       int l = 0,r = 0;
       int lb_pos = i, rb_pos; // pos of '{' and '}'
       string repeat_one;
@@ -293,7 +333,7 @@ void init() {
       if ((r != 0) && r != l) {
         int old_l = l;
         if (l == 0) {
-          tem =  "(" + tem + ')' + "|((" + tem + ')';
+          tem =  "((" + tem + ')' + "|((" + tem + ')';
         }
         if (l > 0) {
           l--;
@@ -313,7 +353,7 @@ void init() {
           if (j != r-l) tem += '|';
           else tem += ')';
         }
-        if (old_l == 0) tem += ')';
+        if (old_l == 0) tem += "))";
       }
       i = rb_pos + 1;
       continue;
@@ -323,6 +363,7 @@ void init() {
   }
   input_string = tem;
   debug(input_string);
+  cout << input_string << endl;
   // prepare to parse. Before to parse we let the cur_pos point to the start position
   cur_pos = -1;
   move();
