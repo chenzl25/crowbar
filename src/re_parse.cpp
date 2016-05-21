@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "util.h"
 #include "re_parse.h"
+#include "digraph.h"
 using namespace std;
 //*********************************
 // regular expression like that
@@ -93,11 +94,11 @@ TreeNode* parse_char() {
   TreeNode* root = NULL;
   switch (cur_char) {
     case '(' :
-      if (lookahead == ')') {
-        match(')');
-        return NULL;
-      }
       move();
+      if (cur_char == ')') {
+        match(')');
+        return new TreeNode(ENUM::TYPE_CHAR, EPS, NULL, NULL);
+      }
       root = parse_re();
       match(')');
       break;
@@ -172,7 +173,8 @@ void visit_print(TreeNode* root) {
         cout << " *";
         break;
       case ENUM::TYPE_CHAR:
-        cout << " "  << root->ch;
+        if (root->ch == EPS) cout << " " << "[e]";
+        else cout << " "  << root->ch;
         break;
       case ENUM::TYPE_ANY:
         cout << " [any]";
@@ -205,7 +207,29 @@ void init() {
         i++;
         continue;
       }
-      //TODO
+      string plus_one;
+      if (tem.length()-2 >= 0 && tem[tem.length()] == '\\') {
+        plus_one = tem[tem.length()-2] + tem[tem.length()-1];
+      } else {
+        if (tem[tem.length()-1] == ')') {
+          int num_rp = 1;
+          for (int j = tem.length()-2; j >= 0; j--) {
+            if (tem[j] == ')' && j-1>=0 && tem[j-1] != '\\') num_rp++;
+            if (((tem[j] == '(' && j==0)) || (tem[j] == '(' && j-1>=0 && tem[j-1] != '\\')) num_rp--;
+            if (num_rp == 0) {
+              plus_one = tem.substr(j, tem.length() - j);
+              break;
+            }
+          }
+          assert(num_rp == 0, "the () should be balanced");
+        } else {
+          // the simple case like: asd{5,10}  repeat the d 5 to 10 times
+          plus_one = tem[tem.length()-1];
+        }
+      }
+      tem += plus_one + '*';
+      i++;
+      continue;
     }
     if (input_string[i] == '?') {
       // for escape
@@ -309,8 +333,8 @@ void init() {
         if (tem[tem.length()-1] == ')') {
           int num_rp = 1;
           for (int j = tem.length()-2; j >= 0; j--) {
-            if (tem[j] == ')') num_rp++;
-            if (tem[j] == '(') num_rp--;
+            if (tem[j] == ')' && j-1>=0 && tem[j-1] != '\\') num_rp++;
+            if (((tem[j] == '(' && j==0)) || (tem[j] == '(' && j-1>=0 && tem[j-1] != '\\')) num_rp--;
             if (num_rp == 0) {
               repeat_one = tem.substr(j, tem.length() - j);
               break;

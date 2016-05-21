@@ -13,19 +13,23 @@ int main(int argc, char**argv) {
     cout << "we need a regular expression as argument" << endl;
   }
   TreeNode* root = parse(pre + argv[1]+ pre);
-  // visit_print(root); cout << endl;
-  NFA nfa(root);
+  visit_print(root); cout << endl;
+  // NFA nfa(root);
   // DFA dfa(&nfa);
   int line = 0;
   // dfa.minimize();
-  // DFA dfa2(root);
-  // dfa2.minimize();
+  DFA dfa2(root);
+  dfa2.minimize();
   while (getline(cin, text)) {
     line++;
     // if (dfa.simulate(text)) {
     //   cout << line << " : " << text << endl;
     // }
-    if ((index = nfa.match(text, result)) != -1) {
+    if ((index = dfa2.match(text, result)) != -1) {
+      if (result.empty()) {
+        cout << "match [empty string]!!!" << endl;
+        continue;
+      }
       cout << line << " : " << text << endl;
       int tem = line;
       do {

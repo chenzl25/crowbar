@@ -17,7 +17,7 @@ DFA::DFA(TreeNode* root) {
 // match the longer one before the short one
 int DFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
-    for (int j = txt.length(); j >=i+1 ; j--) {
+    for (int j = txt.length(); j >=i ; j--) {
       if (simulate(txt.substr(i,j-i))) {
         result = txt.substr(i,j-i);
         return i;
@@ -374,7 +374,8 @@ bool DFA::_nullable(TreeNode* sub_root) {
       result = _nullable(sub_root->left) || _nullable(sub_root->right);
       break;
     case ENUM::TYPE_CHAR:
-      result = false;
+      if (sub_root->ch == EPS) result = true;
+      else result = false;
       break;
     case ENUM::TYPE_ANY :
       result = false;
@@ -413,7 +414,7 @@ set<TreeNode*> DFA::_firstpos(TreeNode* sub_root) {
       for (auto it : right_set) result.insert(it);
       break;
     case ENUM::TYPE_CHAR:
-      result.insert(sub_root);
+      if (sub_root->ch != EPS) result.insert(sub_root);
       break;
     case ENUM::TYPE_ANY :
       result.insert(sub_root);
@@ -452,7 +453,7 @@ set<TreeNode*> DFA::_lastpost(TreeNode* sub_root) {
       for (auto it : right_set) result.insert(it);
       break;
     case ENUM::TYPE_CHAR:
-      result.insert(sub_root);
+      if (sub_root->ch != EPS) result.insert(sub_root);
       break;
     case ENUM::TYPE_ANY :
       result.insert(sub_root);

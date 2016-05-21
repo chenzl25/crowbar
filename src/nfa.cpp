@@ -12,7 +12,7 @@ NFA::NFA(TreeNode* root) {
 // match the longer one before the short one
 int NFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {
-    for (int j = txt.length(); j >=i+1 ; j--) {
+    for (int j = txt.length(); j >=i ; j--) {
       if (simulate(txt.substr(i,j-i))) {
         result = txt.substr(i,j-i);
         return i;
