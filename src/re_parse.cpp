@@ -317,7 +317,12 @@ void init() {
        l = l*10 + (int)(input_string[i]-'0');
        i++;
       }
-      if (input_string[i] == ',') {
+      bool r_infinite = false;
+      if (input_string[i] == ',' && i+1 < input_string.length() && input_string[i+1] == '}') {
+        r_infinite = true;
+        i++;// skip the ','
+      }
+      if (input_string[i] == ',' && i+1 < input_string.length() && input_string[i+1] != '}') {
         i++; // skip the ','
         while (isdigit(input_string[i])){
          r = r*10 + (int)(input_string[i]-'0');
@@ -346,38 +351,47 @@ void init() {
           repeat_one = tem[tem.length()-1];
         }
       }
-      tem = tem.substr(0, tem.length() - repeat_one.length()); // go back to the repeat_one += before enter '{'
-      if ((r == 0 && l > 0) || r == l) {
+      if (!r_infinite) {
+        tem = tem.substr(0, tem.length() - repeat_one.length()); // go back to the repeat_one += before enter '{'
+        if ((r == 0 && l > 0) || r == l) {
+          int count = l;
+          while(count--) {
+            tem += repeat_one;
+          }
+        }
+        // for exmaple the (aa){3,5} => (aa)(aa)((aa)|(aa)(aa)|(aa)(aa)(aa))
+        if ((r != 0) && r != l) {
+          int old_l = l;
+          if (l == 0) {
+            tem =  "((" + tem + ')' + "|((" + tem + ')';
+          }
+          if (l > 0) {
+            l--;
+            int count = l;
+            if (count > 0) {
+              while(count--) {
+                tem += repeat_one;
+              }
+            }
+          }
+          tem += '(';
+          for (int j = 1; j <= r - l; j++) {
+            int count = j;
+            while (count--) {
+              tem += repeat_one;
+            }
+            if (j != r-l) tem += '|';
+            else tem += ')';
+          }
+          if (old_l == 0) tem += "))";
+        }
+      } // end if (!r_infinite)
+      if (r_infinite) {
         int count = l;
         while(count--) {
           tem += repeat_one;
         }
-      }
-      // for exmaple the (aa){3,5} => (aa)(aa)((aa)|(aa)(aa)|(aa)(aa)(aa))
-      if ((r != 0) && r != l) {
-        int old_l = l;
-        if (l == 0) {
-          tem =  "((" + tem + ')' + "|((" + tem + ')';
-        }
-        if (l > 0) {
-          l--;
-          int count = l;
-          if (count > 0) {
-            while(count--) {
-              tem += repeat_one;
-            }
-          }
-        }
-        tem += '(';
-        for (int j = 1; j <= r - l; j++) {
-          int count = j;
-          while (count--) {
-            tem += repeat_one;
-          }
-          if (j != r-l) tem += '|';
-          else tem += ')';
-        }
-        if (old_l == 0) tem += "))";
+        tem += '*';
       }
       i = rb_pos + 1;
       continue;

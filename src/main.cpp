@@ -14,8 +14,8 @@ int main(int argc, char**argv) {
   }
   TreeNode* root = parse(pre + argv[1]+ pre);
   // visit_print(root); cout << endl;
-  // NFA nfa(root);
-  // DFA dfa(&nfa);
+  NFA nfa(root);
+  DFA dfa(&nfa);
   int line = 0;
   // dfa.minimize();
   DFA dfa2(root);
@@ -38,9 +38,17 @@ int main(int argc, char**argv) {
       cout << "   ";
       for (int i = 0; i < text.length(); i++) {
         if (i >= index && i < result.size() + index) {
-          cout << "^";
+          if (text[i] == '\t') {
+            cout << "^^^";
+          } else {
+            cout << "^";
+          }
         } else {
-          cout << ' ';
+          if (text[i] == '\t') {
+            // cout << '\t';
+          } else {
+            cout << ' ';
+          }
         }
       }
       cout << endl;

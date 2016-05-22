@@ -329,7 +329,7 @@ void DFA::_re_tree_to_dfa() {
     for (auto it_input : input_symbol_set) {
       set<TreeNode*> new_group;
       for (auto it_treenode : unmarked_state) {
-        if (it_input == it_treenode->ch) {
+        if (it_input == it_treenode->ch || it_treenode->type == ENUM::TYPE_ANY) {
           auto followpos_set = _followpos(it_treenode);
           for (auto it_followpos_node : followpos_set) {
             new_group.insert(it_followpos_node);
@@ -347,6 +347,7 @@ void DFA::_re_tree_to_dfa() {
         _Tstates[new_group] = new MNode(false, new Digraph::DNode());
         _Tstates[new_group]->dnode->accept = accept;
       }
+
       Digraph::addEdge(_Tstates[unmarked_state]->dnode, 
                        (it_input==ANY)?OTHER:it_input,
                        _Tstates[new_group]->dnode);
