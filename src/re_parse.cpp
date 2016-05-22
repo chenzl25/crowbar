@@ -51,11 +51,11 @@ TreeNode* parse(string s) {
 
 
 TreeNode* parse_re() {
-  debug("parse_re");
+  // debug("parse_re");
   return parse_or();
 }
 TreeNode* parse_or() {
-  debug("parse_or");
+  // debug("parse_or");
   TreeNode* root = parse_cat();
   while (cur_char == '|') {
     move();
@@ -64,7 +64,7 @@ TreeNode* parse_or() {
   return root;
 }
 TreeNode* parse_cat() {
-  debug("parse_cat");
+  // debug("parse_cat");
   TreeNode* root = parse_star();
   while (cur_char != EOF &&
          cur_char != '*' &&
@@ -76,7 +76,7 @@ TreeNode* parse_cat() {
 }
 
 TreeNode* parse_star() {
-  debug("parse_star");
+  // debug("parse_star");
   TreeNode* root = parse_char();
   if (cur_char == '*' && lookahead == '*') {
     error("repetition-operator *");
@@ -90,7 +90,7 @@ TreeNode* parse_star() {
 }
 
 TreeNode* parse_char() {
-  debug("parse_char");
+  // debug("parse_char");
   TreeNode* root = NULL;
   switch (cur_char) {
     case '(' :
@@ -189,7 +189,7 @@ void visit_print(TreeNode* root) {
 }
 // all this function want to do is to conver [] {} to | () *
 void init() {
-  cout << "raw: " << input_string << endl;
+  debug("raw; " + input_string);
   string tem;
   // support [] {} + ? 
   if (input_string.length() > 0) {
@@ -386,8 +386,7 @@ void init() {
     i++;
   }
   input_string = tem;
-  debug(input_string);
-  cout << input_string << endl;
+  debug("after preprocess: "+ input_string);
   // prepare to parse. Before to parse we let the cur_pos point to the start position
   cur_pos = -1;
   move();

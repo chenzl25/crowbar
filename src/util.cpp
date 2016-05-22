@@ -2,10 +2,17 @@
 #include <iostream>
 #include "util.h"
 using namespace std;
+
 // #define DEBUG
+
 void debug(string s) {
 #ifdef DEBUG
   cout << s << endl;
+#endif
+}
+void debug(string s, int a) {
+#ifdef DEBUG
+  cout << s << a << endl;
 #endif
 }
 void assert(bool should, string msg) {

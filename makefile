@@ -8,8 +8,8 @@ SRCS += src/re_parse.cpp
 OBJS=$(SRCS:.cpp=.o)
 
 CXX?=g++
-CPPFLAGS=-w
-
+CPPFLAGS =-w 
+# CPPFLAGS +=-D DEBUG
 all: $(OBJS)
 	$(CXX) -o mygrep $(OBJS)
 

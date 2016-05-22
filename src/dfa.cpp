@@ -45,14 +45,11 @@ bool DFA::simulate(string txt) {
   else return false;
 }
 void DFA::minimize() {
-  if (mode == from_re_parse_tree) debug("before minimize size: " + _Tstates.size());
-  else if (mode == from_nfa) debug("before minimize size: " + _Dstates.size());
-  // if (mode == from_re_parse_tree) cout << "before minimize size: " << _Tstates.size() << endl;
-  // else if (mode == from_nfa) cout << "before minimize size: " << _Dstates.size() << endl;
+  if (mode == from_re_parse_tree) debug("before minimize size: ", _Tstates.size());
+  else if (mode == from_nfa) debug("before minimize size: ", _Dstates.size());
   _partition();
   _connect();
-  debug("after  minimize size: " + _group.size());
-  // cout << "after  minimize size: " << _group.size() << endl;
+  debug("after  minimize size: ", _group.size());
 }
 void DFA::_partition() {
   // init _group
@@ -97,8 +94,9 @@ void DFA::_partition() {
         _group = next_group;
       }
     }
-    debug("_group.size = " + _group.size());
-    // cout << "_group.size = " << _group.size() << endl;
+
+    debug("group size :", _group.size());
+
     first = false;
     next_group.clear();
     for (auto it_group : _group) { // for each group
@@ -108,9 +106,8 @@ void DFA::_partition() {
           input_set.insert(it_edge->symbol);
         }
       }
-      // cout << "input_set size  = " << input_set.size() << endl; 
       set<Group*> splited_group = it_group->split(input_set, _group_map);
-      // cout << "splited_group size = " << splited_group.size() << endl;
+      // here we don't care about the pointer address. because it always split itself.
       for (auto it: splited_group) {
         next_group.insert(it);
       }
@@ -205,6 +202,8 @@ set<DFA::Group*> DFA::Group::split(set<char> input_set, map< Digraph::DNode*,Gro
             can_group = false;
             break;
           }
+        } else if (jump_set1.size() == 0 && jump_set2.size() == 0) {
+          /*do nothing*/
         } else {
           can_group = false;
           break;
@@ -269,9 +268,7 @@ void DFA::_nfa_to_dfa() {
           total_jump_set.insert(*it3);
         }
       }
-      // cout << "total_jump_set" << total_jump_set.size() << endl;
       set<Digraph::DNode*> new_group = Digraph::e_closure(total_jump_set);
-      // cout << "new_group" << new_group.size() << endl;
       if (_Dstates.count(new_group) == 0) {
         bool accept = false;
         for (auto it = new_group.begin(); it != new_group.end(); it++) {

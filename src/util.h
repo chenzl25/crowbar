@@ -3,6 +3,7 @@
 #include <string>
 using namespace std;
 void debug(string s);
+void debug(string s, int a);
 void assert(bool should, string msg);
 void error(string msg); 
 bool isdigit(char c);
