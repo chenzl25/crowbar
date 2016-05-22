@@ -25,7 +25,7 @@ TreeNode* parse_cat();
 TreeNode* parse_star();
 TreeNode* parse_re();
 TreeNode* parse(string s);
-void init();
+void preprocess();
 void move();
 void match(char t);
 void visit_print(TreeNode* root);
@@ -33,7 +33,7 @@ void visit_print(TreeNode* root);
 // the api for the other files
 TreeNode* parse(string s) {
   input_string = s;
-  init();
+  preprocess();
   return parse_re();
 }
 
@@ -188,7 +188,7 @@ void visit_print(TreeNode* root) {
   }
 }
 // all this function want to do is to conver [] {} to | () *
-void init() {
+void preprocess() {
   debug("raw; " + input_string);
   string tem;
   // support [] {} + ? 
@@ -200,6 +200,29 @@ void init() {
            "* { + ?  can't not be the first char");
   }
   for (int i = 0; i < input_string.length();) {
+    if (input_string[i] == '\\') { // support \d \w \s
+      if (i+1 < input_string.length()) {
+        switch(input_string[i+1]) {
+          case 'd':
+            input_string.erase(i, 2);
+            input_string.insert(i,"[0-9]");
+            break;
+          case 'w':
+            input_string.erase(i, 2);
+            input_string.insert(i,"[a-zA-Z0-9]");
+            break;
+          case 's':
+            input_string.erase(i, 2);
+            input_string.insert(i,"[ \t]");
+            break;
+          default:
+            break; 
+        continue;
+        }
+      } else {
+        // do nothing
+      }
+    }
     if (input_string[i] == '+') {
       // for escape
       if (input_string[i-1] == '\\') {
@@ -251,7 +274,7 @@ void init() {
       }
       tem += '(';
       i++;
-      while(input_string[i] != ']') { // ok:[a-zA-Z0-9],[abcd]  not:[^asd]
+      while(input_string[i] != ']') { // support:[a-zA-Z0-9],[abcd]  don't support:[^asd]
         assert(i+1 < input_string.length(), "the escape can not be the end");
         if (isdigit(input_string[i]) || is_uppercase_letter(input_string[i]) || is_lowercase_letter(input_string[i])) {
           if (input_string[i+1] == '-') {
@@ -271,32 +294,41 @@ void init() {
           }
         }
         if (input_string[i] == '\\') {
-          if (input_string[i+1] == '\\' ||
-              input_string[i+1] == '('  ||
-              input_string[i+1] == ')'  ||
-              input_string[i+1] == '{'  ||
-              input_string[i+1] == '}'  ||
-              input_string[i+1] == '*'  ||
-              input_string[i+1] == '|'  ||
-              input_string[i+1] == '^'  ||
-              input_string[i+1] == '$'  ||
-              input_string[i+1] == '-'  ||
-              input_string[i+1] == '+'  ||
-              input_string[i+1] == '.'  ||
-              input_string[i+1] == ','  ||
-              input_string[i+1] == '?'  ||
-              input_string[i+1] == '\'' ||
-              input_string[i+1] == '\"' ) {
+          if (input_string[i+1] == 'd') {
+            input_string.erase(i, 2);
+            input_string.insert(i, "0123456789");
+          } else if (input_string[i+1] == 'w') {
+            input_string.erase(i, 2);
+            input_string.insert(i, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+          } else if (input_string[i+1] == 's') {
+            input_string.erase(i, 2);
+            input_string.insert(i, " \t");
+          } else if  (input_string[i+1] == '\\' ||
+                      input_string[i+1] == '('  ||
+                      input_string[i+1] == ')'  ||
+                      input_string[i+1] == '{'  ||
+                      input_string[i+1] == '}'  ||
+                      input_string[i+1] == '*'  ||
+                      input_string[i+1] == '|'  ||
+                      input_string[i+1] == '^'  ||
+                      input_string[i+1] == '$'  ||
+                      input_string[i+1] == '-'  ||
+                      input_string[i+1] == '+'  ||
+                      input_string[i+1] == '.'  ||
+                      input_string[i+1] == ','  ||
+                      input_string[i+1] == '?'  ||
+                      input_string[i+1] == '\'' ||
+                      input_string[i+1] == '\"' ) {
             /*only i++ here we deal with later*/
-            i++;
+            i++; // skip '\\'
           } else {
-            error("escape error, only these: \\ ( ) { } * | ^ $ - + . , ? \' \" can be escaped");
+            error("escape error, only these: d, w, s, \\ ( ) { } * | ^ $ - + . , ?, \' \" can be escaped in [ ]");
           }
         } // end the while not ]
         tem += input_string[i];
         tem += '|';
         i++;
-      }
+      } // end while (input_string[i] != ']')
       assert(tem[tem.length()-1] == '|', "the last pos in the tem must be '|' ");
       tem[tem.length()-1] = ')';
       i++; // skip the ]

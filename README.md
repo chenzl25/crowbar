@@ -7,9 +7,12 @@
 
 ##how to use
 
- 1. go to the root directory. run `make` to produce executable file `mygrep`.
- 2. we can use like `grep` in linux.  for example: `cat src/dfa.cpp | ./mygrep \[a-zA-Z_\]\*\\\(\\\)`
-
+ - go to the root directory. run `make` to produce executable file `mygrep`.
+ - we can use like `grep` in linux.  
+for example:
+ $: `cat src/dfa.cpp | ./mygrep \[a-zA-Z_\]\*\\\(\\\)`
+ $: `cat test/mail.txt | ./mygrep \\w+@\[\\w\\d\\\.\]\+\[\\w\]\+`
+ 
 PS: 
 
  1. you can look at the `src/main.cpp` to configure the finding policy. 

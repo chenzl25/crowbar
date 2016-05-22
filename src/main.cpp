@@ -14,8 +14,8 @@ int main(int argc, char**argv) {
   }
   TreeNode* root = parse(pre + argv[1]+ pre);
   // visit_print(root); cout << endl;
-  NFA nfa(root);
-  DFA dfa(&nfa);
+  // NFA nfa(root);
+  // DFA dfa(&nfa);
   int line = 0;
   // dfa.minimize();
   DFA dfa2(root);
