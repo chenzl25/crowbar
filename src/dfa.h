@@ -12,12 +12,14 @@ struct TreeNode;
 
 
 class DFA {
-friend Digraph;
+friend class Digraph;
 public:
+  DFA(string re);
   DFA(NFA* nfa);
   DFA(TreeNode* root);
+  bool match_from_head(string txt, string &result); //match from head, if ok return true, otherwise false;
   int match(string txt, string& result);
-  bool simulate(string txt);
+  bool simulate(string txt); // match exactly
   void minimize();
 private:
   TreeNode* _root;

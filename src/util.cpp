@@ -21,8 +21,13 @@ void assert(bool should, string msg) {
     exit(-1);
   }
 }
+void error (int line, string msg) {
+  cout << line << " : " << msg << endl;
+  exit(-1);
+}
 void error(string msg) {
   cout << msg << endl;
+  exit(-1);
 }
 bool isdigit(char c) {
   if (c >= '0' && c <= '9') {
@@ -42,4 +47,9 @@ bool is_lowercase_letter(char c) {
     return true;
   }
   return false;
+}
+string trim(string& str) {
+  size_t first = str.find_first_not_of(' ');
+  size_t last  = str.find_last_not_of(' ');
+  return str.substr(first, last - first+1);
 }

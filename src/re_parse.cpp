@@ -109,6 +109,8 @@ TreeNode* parse_char() {
           cur_char == ')'  ||
           cur_char == '{'  ||
           cur_char == '}'  ||
+          cur_char == '['  ||
+          cur_char == ']'  ||
           cur_char == '*'  ||
           cur_char == '|'  ||
           cur_char == '^'  ||
@@ -123,7 +125,7 @@ TreeNode* parse_char() {
         root = new TreeNode(ENUM::TYPE_CHAR, cur_char, NULL, NULL);
         move();
       } else {
-        error("escape error, only these: \\ ( ) { } * | ^ $ - + . , ? \' \" can be escaped");
+        error("escape error, only these: \\ ( ) { } [ ] * | ^ $ - + . , ? \' \" can be escaped");
         exit(-1);
       }
       break;

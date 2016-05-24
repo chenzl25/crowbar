@@ -1,31 +1,18 @@
-#include <iostream>
-#include "dfa.h"
-#include "nfa.h"
-#include "re_parse.h"
-using namespace std;
+#include "grep.h"
 
-
-int main(int argc, char**argv) {
-  string pre = ""; // we can use ".*"
-  string text, result;
-  int index;
-  if (argc == 0) {
-    cout << "we need a regular expression as argument" << endl;
-  }
-  TreeNode* root = parse(pre + argv[1]+ pre);
+Grep::Grep(string re) {
+  TreeNode* root = parse(re);
   // visit_print(root); cout << endl;
-  // NFA nfa(root);
-  // DFA dfa(&nfa);
+  _dfa = new DFA(root);
+  _dfa->minimize();
+}
+void Grep::match() {
+  string result, text;
+  int index;
   int line = 0;
-  // dfa.minimize();
-  DFA dfa2(root);
-  dfa2.minimize();
   while (getline(cin, text)) {
     line++;
-    // if (dfa.simulate(text)) {
-    //   cout << line << " : " << text << endl;
-    // }
-    if ((index = dfa2.match(text, result)) != -1) {
+    if ((index = _dfa->match(text, result)) != -1) {
       if (result.empty()) {
         cout << "match [empty string]!!!" << endl;
         continue;

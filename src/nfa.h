@@ -14,7 +14,7 @@ class DFA;
 
 class NFA {
 public:
-  friend DFA;
+  friend class DFA;
   NFA(TreeNode* root);
   bool simulate(string txt);
   int match(string txt, string& result);

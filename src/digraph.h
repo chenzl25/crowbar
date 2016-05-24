@@ -14,8 +14,8 @@ class NFA;
 class DFA;
 
 class Digraph {
-friend NFA;
-friend DFA;
+friend class NFA;
+friend class DFA;
 private:
   struct DNode;
   struct DEdge;

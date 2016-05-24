@@ -1,17 +1,20 @@
 SRCS  = src/nfa.cpp
-SRCS += src/main.cpp
 SRCS += src/util.cpp
 SRCS += src/dfa.cpp
 SRCS += src/digraph.cpp
 SRCS += src/re_parse.cpp
+SRCS += src/grep.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
 CXX?=g++
-CPPFLAGS =-w 
+CPPFLAGS =-w -std=c++11
 # CPPFLAGS +=-D DEBUG
-all: $(OBJS)
-	$(CXX) -o mygrep $(OBJS)
+lex: $(OBJS)
+	$(CXX) -o mylex $(OBJS)  src/main_lex.cpp
+
+grep: $(OBJS)
+	$(CXX) -o mygrep $(OBJS) src/main_grep.cpp
 
 nfa.o:      src/nfa.h
 
@@ -23,7 +26,8 @@ digraph.o:  src/digraph.h
 
 re_parse.o: src/re_parse.h
 
-main.o: 
+grep.o:     src/grep.h
+
 
 clean:
-	-rm $(OBJS) mygrep 
+	-rm -f $(OBJS) mygrep mylex 

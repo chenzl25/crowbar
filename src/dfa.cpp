@@ -4,6 +4,11 @@ using namespace std;
 
 class Digraph;
 struct TreeNode;
+DFA::DFA(string re) {
+  _root = parse(re);
+  _re_tree_to_dfa();
+  mode = from_re_parse_tree;
+}
 DFA::DFA(NFA* nfa) {
   _nfa = nfa;
   _nfa_to_dfa();
@@ -13,6 +18,34 @@ DFA::DFA(TreeNode* root) {
   _root = root;
   _re_tree_to_dfa();
   mode = from_re_parse_tree;
+}
+
+//match from head, if ok return true, otherwise false;
+bool DFA::match_from_head(string txt, string &result) {
+  // Digraph::DNode *cur_dnode = _start;
+  // for (int i = 0; i < txt.length(); i++) {
+  //   set<Digraph::DNode*> next_set = cur_dnode->jump(txt[i]);
+  //   if (next_set.size() == 0) {
+  //     return false;
+  //   }
+  //   assert(next_set.size() == 1, "the size of next_set must be 1");
+  //   for (auto it = next_set.begin(); it != next_set.end(); it++) {
+  //     cur_dnode = *it;
+  //     // we omit the break, for only one item in the next_set
+  //   }
+  //   if (cur_dnode->accept) {
+  //     result = txt.substr(0, i+1);
+  //     return true;
+  //   }
+  // }
+  // return false;
+  for (int i = txt.length(); i >= 0 ; i--) {
+    if (simulate(txt.substr(0,i))) {
+      result = txt.substr(0,i);
+      return true;
+    }
+  }
+  return false;
 }
 // match the longer one before the short one
 int DFA::match(string txt, string& result) {
