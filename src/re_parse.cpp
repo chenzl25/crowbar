@@ -159,7 +159,13 @@ void match(char t) {
   }
   move();
 }
-
+void visit_delete(TreeNode* root) {
+  if (root) {
+    visit_delete(root->left);
+    visit_delete(root->right);
+    delete root;
+  }
+}
 void visit_print(TreeNode* root) {
   if (root) {
     visit_print(root->left);

@@ -5,7 +5,8 @@
 #include <vector>
 #include "dfa.h"
 #include "util.h"
-const int max_token_size = 50;
+// modify this to limit the max token size, we use this improve the performance of dfa match
+const int max_token_size = 50; 
 using namespace std;
 struct LexRule {
   string lexeme;

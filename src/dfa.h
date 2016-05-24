@@ -17,13 +17,13 @@ public:
   DFA(string re);
   DFA(NFA* nfa);
   DFA(TreeNode* root);
+  ~DFA();
   bool match_from_head(string txt, string &result); //match from head, if ok return true, otherwise false;
   int match(string txt, string& result);
   bool simulate(string txt); // match exactly
   void minimize();
 private:
   TreeNode* _root;
-  Digraph   _graph;
   NFA*      _nfa;
   struct MNode {
     bool mark;
@@ -40,11 +40,12 @@ private:
     static bool group_set_deep_equal(set< Group* > & gs1, set< Group* > &gs2);
   };
   enum MODE {
+    from_re,
     from_re_parse_tree,
     from_nfa
   };
-  MODE mode;
-  map< set<Digraph::DNode*>,MNode* > _Dstates;
+  MODE _mode;
+  map< set<Digraph::DNode*>,MNode* > _Dstates;  // use for 
   map< set<TreeNode*>,MNode* > _Tstates;
   set< Group* > _group;
   map< Digraph::DNode*,Group* > _group_map;

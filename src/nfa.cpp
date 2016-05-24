@@ -9,6 +9,21 @@ NFA::NFA(TreeNode* root) {
 	_root = root;
 	_re_tree_to_nfa();
 }
+NFA::~NFA() {
+  Digraph::delete_from(_start);
+  _root = NULL;
+  _start = _end = NULL;
+}
+//match from head, if ok return true, otherwise false;
+bool NFA::match_from_head(string txt, string &result) {
+  for (int i = txt.length(); i >= 0 ; i--) {
+    if (simulate(txt.substr(0,i))) {
+      result = txt.substr(0,i);
+      return true;
+    }
+  }
+  return false;
+}
 // match the longer one before the short one
 int NFA::match(string txt, string& result) {
   for (int i = 0; i < txt.length(); i++) {

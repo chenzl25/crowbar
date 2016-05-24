@@ -1,10 +1,12 @@
 #include "grep.h"
 
 Grep::Grep(string re) {
-  TreeNode* root = parse(re);
-  // visit_print(root); cout << endl;
-  _dfa = new DFA(root);
+  _dfa = new DFA(re);
   _dfa->minimize();
+}
+Grep::~Grep() {
+  delete _dfa;
+  _dfa = NULL;
 }
 void Grep::match() {
   string result, text;

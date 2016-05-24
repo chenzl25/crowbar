@@ -29,6 +29,7 @@ namespace ENUM {
 
 TreeNode* parse(string s);
 void visit_print(TreeNode* root);
+void visit_delete(TreeNode* root);
 
 #endif
 // end RE_PARSE_H

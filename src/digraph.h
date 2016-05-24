@@ -21,7 +21,9 @@ private:
   struct DEdge;
 public:
   static void addEdge(DNode* from, char symbol, DNode* to);
+  static void delete_from (DNode* from_node);
   static void dfs(DNode* from_node, set<DNode*>& result_set);
+  static void e_dfs(DNode* from_node, set<DNode*>& result_set);
   static set<DNode*> e_closure(set<DNode*>& from_set);
 private:
   struct DNode {

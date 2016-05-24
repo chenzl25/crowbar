@@ -9,6 +9,7 @@ using namespace std;
 class Grep {
 public:
   Grep(string re);
+  ~Grep();
   void match();
 private:
   DFA* _dfa;

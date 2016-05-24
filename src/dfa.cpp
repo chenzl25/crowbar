@@ -7,38 +7,37 @@ struct TreeNode;
 DFA::DFA(string re) {
   _root = parse(re);
   _re_tree_to_dfa();
-  mode = from_re_parse_tree;
+  _mode = from_re;
 }
 DFA::DFA(NFA* nfa) {
   _nfa = nfa;
   _nfa_to_dfa();
-  mode = from_nfa;
+  _mode = from_nfa;
 }
 DFA::DFA(TreeNode* root) {
   _root = root;
   _re_tree_to_dfa();
-  mode = from_re_parse_tree;
+  _mode = from_re_parse_tree;
 }
-
+DFA::~DFA() {
+  if (_mode == from_re) {
+    visit_delete(_root);
+  }
+  Digraph::delete_from(_start);
+  for (auto it: _Dstates) {
+    delete it.second;
+  }
+  for (auto it: _Tstates) {
+    delete it.second;
+  }
+  for (auto it: _group) {
+    delete it;
+  }
+  _start = NULL;
+  _root = NULL;
+}
 //match from head, if ok return true, otherwise false;
 bool DFA::match_from_head(string txt, string &result) {
-  // Digraph::DNode *cur_dnode = _start;
-  // for (int i = 0; i < txt.length(); i++) {
-  //   set<Digraph::DNode*> next_set = cur_dnode->jump(txt[i]);
-  //   if (next_set.size() == 0) {
-  //     return false;
-  //   }
-  //   assert(next_set.size() == 1, "the size of next_set must be 1");
-  //   for (auto it = next_set.begin(); it != next_set.end(); it++) {
-  //     cur_dnode = *it;
-  //     // we omit the break, for only one item in the next_set
-  //   }
-  //   if (cur_dnode->accept) {
-  //     result = txt.substr(0, i+1);
-  //     return true;
-  //   }
-  // }
-  // return false;
   for (int i = txt.length(); i >= 0 ; i--) {
     if (simulate(txt.substr(0,i))) {
       result = txt.substr(0,i);
@@ -78,8 +77,8 @@ bool DFA::simulate(string txt) {
   else return false;
 }
 void DFA::minimize() {
-  if (mode == from_re_parse_tree) debug("before minimize size: ", _Tstates.size());
-  else if (mode == from_nfa) debug("before minimize size: ", _Dstates.size());
+  if (_mode == from_re_parse_tree || _mode == from_re) debug("before minimize size: ", _Tstates.size());
+  else if (_mode == from_nfa) debug("before minimize size: ", _Dstates.size());
   _partition();
   _connect();
   debug("after  minimize size: ", _group.size());
@@ -89,7 +88,7 @@ void DFA::_partition() {
   _group = set<Group*>();
   Group* accept_group = new Group();
   Group* nonaccept_group = new Group();
-  if (mode == from_re_parse_tree) {
+  if (_mode == from_re_parse_tree || _mode == from_re) {
     for (auto it : _Tstates) {
       if (it.second->dnode->accept) {
         accept_group->dfa_node_set.insert(it.second->dnode);
@@ -97,7 +96,7 @@ void DFA::_partition() {
         nonaccept_group->dfa_node_set.insert(it.second->dnode);
       }
     }
-  } else if (mode == from_nfa) {
+  } else if (_mode == from_nfa) {
     for (auto it : _Dstates) {
       if (it.second->dnode->accept) {
         accept_group->dfa_node_set.insert(it.second->dnode);
@@ -121,9 +120,15 @@ void DFA::_partition() {
   while(true) {
     if (!first) {
       if (Group::group_set_deep_equal(_group, next_group)) {
+        for (auto it : _group) {
+          delete it;
+        }
         _group = next_group;
         break;
       } else {
+        for (auto it : _group) {
+          delete it;
+        }
         _group = next_group;
       }
     }
@@ -183,6 +188,7 @@ void DFA::_connect() {
       Digraph::addEdge(new_s, it_edge->symbol, new_t);
     }
   }
+  Digraph::delete_from(_start);
   _start = mini_start;
 }
 bool DFA::Group::group_set_deep_equal(set< Group* > & gs1, set< Group* > &gs2) {

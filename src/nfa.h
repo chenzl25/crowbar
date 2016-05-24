@@ -16,11 +16,12 @@ class NFA {
 public:
   friend class DFA;
   NFA(TreeNode* root);
+  ~NFA();
   bool simulate(string txt);
   int match(string txt, string& result);
+  bool match_from_head(string txt, string &result);
 private:
   TreeNode* _root;
-  Digraph _graph;
   Digraph::DNode* _start, *_end;
   void _re_tree_to_nfa();
   // notice the start and the end will be construct after call this function

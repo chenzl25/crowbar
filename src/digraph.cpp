@@ -15,17 +15,32 @@ void Digraph::addEdge(Digraph::DNode* from, char symbol, Digraph::DNode* to) {
 }
 void Digraph::dfs(Digraph::DNode* from_node, set<Digraph::DNode*>& result_set) {
   result_set.insert(from_node);
+  for (auto it_edge : from_node->out) {
+    if (!result_set.count(it_edge->to)) {
+      Digraph::dfs(it_edge->to, result_set);
+    }
+  }
+}
+void Digraph::delete_from (DNode* from_node) {
+  set<Digraph::DNode*> delete_set;
+  Digraph::dfs(from_node, delete_set);
+  for (auto it_node : delete_set) {
+    delete it_node;
+  }
+}
+void Digraph::e_dfs(Digraph::DNode* from_node, set<Digraph::DNode*>& result_set) {
+  result_set.insert(from_node);
   set<Digraph::DNode*> e_set = from_node->jump(EPS);
   for (set<Digraph::DNode*>::iterator it = e_set.begin(); it != e_set.end(); it++) {
     if (!result_set.count(*it)) {
-      Digraph::dfs(*it, result_set);
+      Digraph::e_dfs(*it, result_set);
     }
   }
 }
 set<Digraph::DNode*> Digraph::e_closure(set<Digraph::DNode*>& from_set) {
   set<Digraph::DNode*> result_set;
   for (set<Digraph::DNode*>::iterator it = from_set.begin(); it != from_set.end(); it++) {
-    Digraph::dfs(*it, result_set);
+    Digraph::e_dfs(*it, result_set);
   }
   return result_set;
 }
