@@ -14,7 +14,7 @@ for example:
  $: `cat src/dfa.cpp | ./mygrep \[a-zA-Z_\]\*\\\(\\\)`
  $: `cat test/mail.txt | ./mygrep \\w+@\[\\w\\d\\\.\]\+\[\\w\]\+`
 
- ###mylex
+###mylex
  
  - go to the root directory. run `make lex` to produce executable file `mylex`.
  - write the configuration file  in `conf/conf.txt`.
