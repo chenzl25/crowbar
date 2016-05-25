@@ -4,6 +4,7 @@ SRCS += src/dfa.cpp
 SRCS += src/digraph.cpp
 SRCS += src/re_parse.cpp
 SRCS += src/grep.cpp
+SRCS += src/lex.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
@@ -28,6 +29,7 @@ re_parse.o: src/re_parse.h
 
 grep.o:     src/grep.h
 
+lex.o:      src/lex.h
 
 clean:
 	-rm -f $(OBJS) mygrep mylex 
