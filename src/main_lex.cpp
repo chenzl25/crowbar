@@ -13,7 +13,6 @@ struct LexRule {
   string pattern;
   DFA    *dfa;
 };
-
 string check_escape(string input) {
   string result;
   for (int i = 0; i < input.size(); i++) {
@@ -89,12 +88,13 @@ string read_code(string code_path) {
   code_in.close();
   return text;
 }
+
 int main(int argc, char **argv) {
   string code_path;
   if (argc == 2) {
     code_path = argv[1];
   } else {
-    code_path = "data/code.data";
+    code_path = "data/code.data"; // default code path
   }
   vector<LexRule> vec;
   string text;
