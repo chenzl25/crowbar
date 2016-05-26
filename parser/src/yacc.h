@@ -3,31 +3,24 @@
 #include <string>
 #include <vector>
 #include <set>
+#include "bnf_rule.h"
+#include "slr.h"
 using namespace std;
+class SLR;
 
 class Yacc {
+friend class SLR;
 public:
   Yacc();
   ~Yacc();
-  bool build_bnf_rule(string bnf_rule_path);
+  bool read_bnf_rule(string bnf_rule_path);
   void print();
 private:
-  struct BnfRule {
-    struct Symbol {
-      bool is_terminal;
-      string s;
-      Symbol(bool is_t, string tem) {
-        is_terminal = is_t;
-        s = tem;
-      }
-    };
-    string head;
-    vector< vector<BnfRule::Symbol> > body;
-  };
+  bool _check_terminal(string & input);
   vector<BnfRule> _bnf_rules;
   set<string> _lex_declaration_set;
-
-  bool _check_terminal(string & input);
+  void _build_SLR();
+  SLR _slr;
 };
 
 #endif

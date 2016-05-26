@@ -20,7 +20,7 @@ public:
   };
   Lex();
   ~Lex();
-  bool build_lex_rule(string lex_rule_path);
+  bool read_lex_rule(string lex_rule_path);
   bool read_code(string code_path);
   void set_max_token_size(int n);
   Token get_token();

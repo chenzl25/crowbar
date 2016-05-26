@@ -43,7 +43,7 @@ string Lex::_check_escape(string input) {
   return result;
 }
 
-bool Lex::build_lex_rule (string lex_rule_path) {
+bool Lex::read_lex_rule (string lex_rule_path) {
   ifstream lex_rule_in(lex_rule_path);
   if (!lex_rule_in.is_open()) {
     return false;

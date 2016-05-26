@@ -4,6 +4,7 @@
 #include <vector>
 #include "../../lexer/src/lex.h"
 #include "yacc.h"
+#include "slr.h"
 using namespace std;
 int main() {
   ifstream bnf_in("data/bnf.data");
@@ -11,7 +12,7 @@ int main() {
   string code_path     = "data/code.data";
   string bnf_rule_path = "data/bnf.data";
   Lex mylex;
-  if (!mylex.build_lex_rule(lex_rule_path)) {
+  if (!mylex.read_lex_rule(lex_rule_path)) {
     error("read lex rule error");
   }
   if (!mylex.read_code(code_path)) {
@@ -27,10 +28,10 @@ int main() {
   //   }
   // }
   Yacc myyacc;
-  if (!myyacc.build_bnf_rule(bnf_rule_path)) {
+  if (!myyacc.read_bnf_rule(bnf_rule_path)) {
     error("read bnf rule error");
   }
   // mylex.print();
-  myyacc.print();
-  
+  // myyacc.print();
+
 }
