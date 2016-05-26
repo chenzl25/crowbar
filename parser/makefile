@@ -1,33 +1,34 @@
-# SRCS  = src/nfa.cpp
-# SRCS += src/util.cpp
-# SRCS += src/dfa.cpp
-# SRCS += src/digraph.cpp
-# SRCS += src/re_parse.cpp
-# SRCS += src/grep.cpp
+SRCS  = src/main.cpp
+SRCS += src/yacc.cpp
+SRCS += ../lexer/src/nfa.cpp
+SRCS += ../lexer/src/util.cpp
+SRCS += ../lexer/src/dfa.cpp
+SRCS += ../lexer/src/digraph.cpp
+SRCS += ../lexer/src/re_parse.cpp
+SRCS += ../lexer/src/lex.cpp
 
-# OBJS=$(SRCS:.cpp=.o)
+OBJS=$(SRCS:.cpp=.o)
 
-# CXX?=g++
-# CPPFLAGS =-w -std=c++11
-# # CPPFLAGS +=-D DEBUG
-# grep: $(OBJS)
-# 	$(CXX) -o mygrep $(OBJS) src/main_grep.cpp
+CXX?=g++
+CPPFLAGS =-w -std=c++11
+# CPPFLAGS +=-D DEBUG
+all: $(OBJS)
+	$(CXX) -o myyacc $(OBJS)
 
-# lex: $(OBJS)
-# 	$(CXX) -o mylex $(OBJS)  src/main_lex.cpp
+yacc.o:     src/yacc.h
 
-# nfa.o:      src/nfa.h
+nfa.o:      ../lexer/src/nfa.h
 
-# util.o: 		src/util.h
+util.o: 		../lexer/src/util.h
 
-# dfa.o: 			src/dfa.h
+dfa.o: 			../lexer/src/dfa.h
 
-# digraph.o:  src/digraph.h
+digraph.o:  ../lexer/src/digraph.h
 
-# re_parse.o: src/re_parse.h
-
-# grep.o:     src/grep.h
+re_parse.o: ../lexer/src/re_parse.h
 
 
-# clean:
-# 	-rm -f $(OBJS) mygrep mylex 
+main.o:
+
+clean:
+	-rm -f $(OBJS) myyacc 

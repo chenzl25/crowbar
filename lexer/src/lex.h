@@ -24,6 +24,7 @@ public:
   bool read_code(string code_path);
   void set_max_token_size(int n);
   Token get_token();
+  void print();
 private:
   struct LexRule {
     string type;
@@ -31,7 +32,7 @@ private:
     DFA    *dfa;
   };
   string _check_escape(string input);
-  vector<LexRule> _vec;
+  vector<LexRule> _lex_rules;
   string _code;
   int _max_token_size; 
   int _line;

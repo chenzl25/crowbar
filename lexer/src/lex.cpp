@@ -5,7 +5,7 @@ Lex::Lex() {
   _pos = 0;
 }
 Lex::~Lex() {
-  for (auto it : _vec) {
+  for (auto it : _lex_rules) {
     delete it.dfa;
   }
 }
@@ -51,6 +51,7 @@ bool Lex::build_lex_rule (string lex_rule_path) {
   string s;
   // build the lex rule
   while (getline(lex_rule_in, s)) {
+    if (s.length() == 0) continue;
     stringstream ss(s);
     char flag;
     ss >> flag;
@@ -73,11 +74,13 @@ bool Lex::build_lex_rule (string lex_rule_path) {
       re_string = trim(re_string);
       lex_rule.pattern += re_string;
       lex_rule.dfa = new DFA(lex_rule.pattern);
+    } else if (flag == '#') {
+      continue;
     }
-    _vec.push_back(lex_rule);
+    _lex_rules.push_back(lex_rule);
   }
   lex_rule_in.close();;
-  // _vec 0 position has the heighest priority
+  // _lex_rules 0 position has the heighest priority
   return true; 
 }
 
@@ -113,10 +116,10 @@ Lex::Token Lex::get_token() {
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );
-  for (int i = 0; i < _vec.size(); i++) {
-    if (_vec[i].dfa->match_from_head(sub_string, result)) {
+  for (int i = 0; i < _lex_rules.size(); i++) {
+    if (_lex_rules[i].dfa->match_from_head(sub_string, result)) {
       _pos += result.length();
-      Lex::Token token(_vec[i].type, result);
+      Lex::Token token(_lex_rules[i].type, result);
       return token;
     }
   }
@@ -137,4 +140,11 @@ Lex::Token::Token(string t, string l) {
   } else if (type == "reserve_words") {
 
   }
+}
+void Lex::print() {
+  cout << "--------------------------------------------------------------" << endl;
+  for (auto lex_rule: _lex_rules) {
+    cout << lex_rule.type << " : " << lex_rule.pattern << endl;
+  }
+  cout << "--------------------------------------------------------------" << endl;
 }
