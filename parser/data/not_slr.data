@@ -1,0 +1,4 @@
+% number
+$ S -> L '=' R | R
+$ L -> '*' R | number
+$ R -> L

@@ -1,0 +1,28 @@
+l := 3/2;
+read r;
+repeat
+  write l;
+  l := l+1
+until (l < r);
+
+
+eps := 1;
+
+read x;
+if(x < 0)
+then
+  l;
+else
+  l := 0;
+  r := x;
+  repeat
+    mid := (l+r)/2;
+    if(mid*mid > x)
+    then
+      r := mid
+    else
+      l := mid
+    end
+  until (r-l > eps);
+  write l
+end

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <string>
 #include <vector>
 #include "../../lexer/src/lex.h"
@@ -7,10 +8,23 @@
 #include "slr.h"
 using namespace std;
 int main(int argc, char** argv) {
-  ifstream bnf_in("data/bnf.data");
   string lex_rule_path = "data/lex_rule.data";
   string code_path     = "data/code.data";
   string bnf_rule_path = "data/bnf.data";
+  for (int i = 1; i < argc;) {
+    if (strcmp(argv[i],"-lex") == 0) {
+      lex_rule_path = argv[i+1];
+      i+=2;
+    } else if (strcmp(argv[i], "-bnf") == 0) {
+      bnf_rule_path = argv[i+1];
+      i+=2;
+    } else if (strcmp(argv[i], "-code") == 0) {
+      code_path = argv[i+1];
+      i+=2;
+    } else {
+      i++;
+    }
+  } 
   Lex mylex;
   if (!mylex.read_lex_rule(lex_rule_path)) {
     error("read lex rule error");
@@ -19,14 +33,12 @@ int main(int argc, char** argv) {
     error("read code_file error");
   }
   mylex.set_max_token_size(50);
-  string test_follow_path = "data/test_follow.data";
-  string no_recursion_path ="data/no_recursion.data";
+  // mylex.print();
   Yacc myyacc;
   if (!myyacc.read_bnf_rule(bnf_rule_path)) {
     error("read bnf rule error");
   }
   myyacc.parse(mylex);
-  // mylex.print();
   // myyacc.print();
 
 }

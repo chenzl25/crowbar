@@ -15,12 +15,13 @@ void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _construct_terminal_and_nonterminal_set();
   _construct_states(); // _goto_table  construct here implictly
   _construct_action_table();
+  _print_terminal_and_nonterminal_set();
   // _print_first_follow();
-  // cout << "final state " <<  _states.size() << endl;
-  // for (auto ii : _states) _print_state(ii);
+  cout << "final state " <<  _states.size() << endl;
+  for (auto ii : _states) _print_state(ii);
   // _print_state_transition();
-  // _print_action_table();
-  // _print_goto_table();
+  _print_action_table();
+  _print_goto_table();
   // _print_bnf_rule();
 }
 
@@ -387,6 +388,17 @@ void SLR::_print_first_follow() {
   }
   cout << "=================================" << endl;
 }
+void SLR::_print_terminal_and_nonterminal_set() {
+  cout << "terminal set : " << endl;
+  for (auto terminal : _terminal_set) {
+    cout << terminal << " ";
+  }
+  cout << endl << "nonterminal set : " << endl;
+  for (auto nonterminal : _nonterminal_set) {
+    cout << nonterminal.value << " ";
+  }
+  cout << endl;
+}
 void SLR::_construct_terminal_and_nonterminal_set() {
   _terminal_set.insert(EOF_STRING);
   for (auto bnf_rule : _bnf_rules) {
@@ -417,12 +429,42 @@ void SLR::_construct_action_table() {
       } else if (item.dot_pos == _bnf_rules[item.rule_pos].body.size()) {
         auto follow_set = _follow(_bnf_rules[item.rule_pos].head);
         for (auto it_follow : follow_set) {
+          if (_action_table[state.no][it_follow].type == ENUM::ACTION_REDUCE &&
+              _action_table[state.no][it_follow].rule_pos != item.rule_pos) {
+            cout << "state.no " << state.no << " on input " << it_follow << " ";
+            cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
+            cout << "r" << item.rule_pos << endl;
+            error("reduce reduce conflit");
+          } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_SHIFT) {
+            cout << "shift reduce conflit : "; 
+            cout << "state.no " << state.no << " on input " << it_follow << " ";
+            cout << "s" << _action_table[state.no][it_follow].state_no << " , ";
+            cout << "r" << item.rule_pos << endl;
+            cout << "we prefer shift" << endl;
+            continue;
+            // error("shift reduce conflit");
+          } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_ACCEPT) {
+            error("accept error");
+          }
           _action_table[state.no][it_follow] = SLR::Action(ENUM::ACTION_REDUCE, NULL, item.rule_pos);
         }
       } else if (item.dot_pos < _bnf_rules[item.rule_pos].body.size()) {
         BnfRule::Symbol dot_right = _bnf_rules[item.rule_pos].body[item.dot_pos];
         if (dot_right.is_terminal) {
           int shift_state_no =  _goto_table[state.no][dot_right];
+          if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_REDUCE) {
+            cout << "shift reduce conflit : ";
+            cout << "state.no " << state.no << " on input " << dot_right.value << " ";
+            cout << "s" << _action_table[state.no][dot_right.value].state_no << " , ";
+            cout << "r" << item.rule_pos << endl;
+            cout << "we prefer shift" << endl;
+            // error("shift reduce conflit");
+          } else if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_SHIFT &&
+                     _action_table[state.no][dot_right.value].state_no != shift_state_no) {
+            error("shift shift conflit");
+          } else if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_ACCEPT) {
+            error("accept error");
+          }
           _action_table[state.no][dot_right.value] = SLR::Action(ENUM::ACTION_SHIFT, shift_state_no, NULL);
         }
       } else {
@@ -494,7 +536,9 @@ void SLR::parse(Lex &lexer) {
     // cout << token.type << " -> " << token.lexeme << endl;
     if (token.type == "number") {
       action_string = "number";
-    } else {
+    } else if (token.type == "identifier") {
+      action_string = "identifier";
+    }else {
       action_string = token.lexeme;
     }
     auto action = _action_table[state_stack.top()][action_string];
@@ -502,7 +546,7 @@ void SLR::parse(Lex &lexer) {
       case ENUM::ACTION_SHIFT:
         state_stack.push(action.state_no);
         token = lexer.get_token();
-        cout << "shift " << action.state_no << endl;
+        // cout << "shift " << action.state_no << " <= " << action_string << endl;
         break;
       case ENUM::ACTION_REDUCE:
         body_length = _bnf_rules[action.rule_pos].body.size();
@@ -516,6 +560,8 @@ void SLR::parse(Lex &lexer) {
         return;
         break;
       case ENUM::ACTION_ERROR:
+        cout << action_string << endl;
+        cout << state_stack.top() << endl;
         error("fail: parse error");
         break;
       default:
