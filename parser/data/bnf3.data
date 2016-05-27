@@ -1,4 +1,4 @@
-% if else while do break number identifier true false
+% if else while do break number identifier true false string
 
 
 $ program -> block
@@ -16,5 +16,5 @@ $ rel -> expr '<' expr | expr '<=' expr  | expr '>=' expr | expr '>' expr | expr
 $ expr -> expr '+' term | expr '-' term  | term
 $ term -> term * unary | term '/' unary | unary
 $ unary -> '!' unary | '-' unary | factor
-$ factor -> '(' bool ')' | loc | number | true | false 
+$ factor -> '(' bool ')' | loc | number | true | false
 

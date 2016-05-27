@@ -538,6 +538,8 @@ void SLR::parse(Lex &lexer) {
       action_string = "number";
     } else if (token.type == "identifier") {
       action_string = "identifier";
+    } else if (token.type == "string") {
+      action_string = "string";
     }else {
       action_string = token.lexeme;
     }
