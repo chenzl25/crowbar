@@ -34,6 +34,6 @@ int main(int argc, char** argv) {
     error("read bnf rule error");
   }
   // mylex.print();
-  myyacc.print();
+  // myyacc.print();
 
 }

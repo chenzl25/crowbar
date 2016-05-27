@@ -1,6 +1,7 @@
 #include <iostream>
 #include "slr.h"
 #include "../../lexer/src/util.h"
+#include <iomanip>
 using namespace std;
 SLR::SLR() {
   _state_count = 0;
@@ -11,8 +12,16 @@ SLR::~SLR() {
 }
 void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _bnf_rules = bnf_rules;
-  _construct_states();
-  _print_first_follow();
+  _construct_terminal_and_nonterminal_set();
+  _construct_states(); // _goto_table  construct here implictly
+  _construct_action_table();
+  // _print_first_follow();
+  // cout << "final state " <<  _states.size() << endl;
+  // for (auto ii : _states) _print_state(ii);
+  // _print_state_transition();
+  _print_action_table();
+  _print_goto_table();
+  _print_bnf_rule();
 }
 
 void SLR::_construct_states() {
@@ -45,9 +54,6 @@ void SLR::_construct_states() {
     }
   }
   for (int i = 0; i < _states.size(); i++) assert(_states[i].no == i, "state doesn't match");
-  // cout << "final state " <<  _states.size() << endl;
-  // for (auto ii : _states) _print_state(ii);
-  // _print_state_transition();
 }
 set<SLR::Item> SLR::_goto(set<SLR::Item> I, BnfRule::Symbol X) {
   auto IandX = make_pair(I, X);
@@ -62,11 +68,6 @@ set<SLR::Item> SLR::_goto(set<SLR::Item> I, BnfRule::Symbol X) {
       next_kernel_item_set.insert(SLR::Item(item.rule_pos, item.dot_pos+1));
     }
   }
-  // cout << "I : " << endl;
-  // for (auto ii : I) _print_item(ii);
-  // cout << "edge : "  << X.value << endl;
-  // cout << "J : " << endl;
-  // for (auto ii : next_kernel_item_set) _print_item(ii);
   
   // here we get the new state
   set<SLR::Item> next_closure_item_set = _closure(next_kernel_item_set);
@@ -74,15 +75,23 @@ set<SLR::Item> SLR::_goto(set<SLR::Item> I, BnfRule::Symbol X) {
     SLR::State new_state(_state_count, next_kernel_item_set, next_closure_item_set);
     _all_item_state_no_map[next_closure_item_set] = _state_count;
     _states.push_back(new_state);
-    _states_trasition[_all_item_state_no_map[I]][X] = _state_count;
     _state_count++;
   }
+  _goto_table[_all_item_state_no_map[I]][X] = _all_item_state_no_map[next_closure_item_set];
 
   _goto_map[IandX] = next_closure_item_set;
+  
+  { // ----------------------------------------------------
+    // cout << "I : " << _all_item_state_no_map[I] << endl;
+    // for (auto ii : I) _print_item(ii);
+    // cout << "edge : "  << X.value << endl;
+    // cout << "J : " << _all_item_state_no_map[next_closure_item_set] << endl;
+    // for (auto ii : next_kernel_item_set) _print_item(ii);
 
-  // cout << "clousre :" << endl;
-  // for (auto ii : _goto_map[IandX]) _print_item(ii);
-  // cout << endl;
+    // cout << "clousre :" << endl;
+    // for (auto ii : _goto_map[IandX]) _print_item(ii);
+    // cout << endl;
+  } // ----------------------------------------------------
 
   return _goto_map[IandX];
 }
@@ -153,9 +162,23 @@ void SLR::_print_state(State state) {
   for (auto ii : state.item) _print_item(ii);
   cout << "--------------------------------------------------" << endl;
 }
-
+void SLR::_print_bnf_rule() {
+  cout << "--------------------------------------------------------------" << endl;
+  cout << "_bnf_rules :" << endl;
+  for (auto bnf_rule : _bnf_rules) {
+    cout << bnf_rule.head.value << " -> ";
+    if (bnf_rule.body.size() == 0) {
+      cout << "ε";
+    }
+    for (auto symbol : bnf_rule.body) {
+      cout << symbol.value << " ";
+    }
+    cout << endl;
+  } 
+  cout << "--------------------------------------------------------------" << endl;
+}
 void SLR::_print_state_transition() {
-  for (auto ii : _states_trasition) {
+  for (auto ii : _goto_table) {
     for (auto jj: ii.second) {
       cout << ii.first << " => " << jj.first.value << " => " << jj.second << endl;
     }
@@ -352,4 +375,99 @@ void SLR::_print_first_follow() {
     }
   }
   cout << "=================================" << endl;
+}
+void SLR::_construct_terminal_and_nonterminal_set() {
+  _terminal_set.insert(EOF_STRING);
+  for (auto bnf_rule : _bnf_rules) {
+    _nonterminal_set.insert(bnf_rule.head);
+    for (auto body_symbol : bnf_rule.body) {
+      if (body_symbol.is_terminal) {
+        _terminal_set.insert(body_symbol.value);
+      }
+    }
+  }
+}
+SLR::Action::Action() {
+  type = ENUM::ACTION_ERROR; // default type
+}
+SLR::Action::Action(ENUM::ActionType _type) {
+  type = _type;
+}
+SLR::Action::Action(ENUM::ActionType _type, int _state_no, int _rule_pos) {
+  type = _type;
+  state_no = _state_no;
+  rule_pos = _rule_pos;
+}
+void SLR::_construct_action_table() {
+  for (auto state : _states) {
+    for (auto item: state.item) {
+      if (item.rule_pos == 0 && item.dot_pos == _bnf_rules[item.rule_pos].body.size()) {
+        _action_table[state.no][EOF_STRING] = SLR::Action(ENUM::ACTION_ACCEPT);
+      } else if (item.dot_pos == _bnf_rules[item.rule_pos].body.size()) {
+        auto follow_set = _follow(_bnf_rules[item.rule_pos].head);
+        for (auto it_follow : follow_set) {
+          _action_table[state.no][it_follow] = SLR::Action(ENUM::ACTION_REDUCE, NULL, item.rule_pos);
+        }
+      } else if (item.dot_pos < _bnf_rules[item.rule_pos].body.size()) {
+        BnfRule::Symbol dot_right = _bnf_rules[item.rule_pos].body[item.dot_pos];
+        if (dot_right.is_terminal) {
+          int shift_state_no =  _goto_table[state.no][dot_right];
+          _action_table[state.no][dot_right.value] = SLR::Action(ENUM::ACTION_SHIFT, shift_state_no, NULL);
+        }
+      } else {
+        // nothing can go here
+      }
+    }
+  }
+}
+template<typename T> void wprint(T t, const int& width = 8) {
+  cout << std::left << setw(width) << setfill(' ') << t;
+}
+void SLR::_print_action_table() {
+  cout << "--------------------------------------------------------------" << endl;
+  wprint("state");
+  for (auto terminal : _terminal_set) {
+    wprint(terminal);
+  } cout << endl;
+  for (int i = 0; i < _states.size(); i++) {
+    wprint(i);
+    for (auto terminal : _terminal_set) {
+      auto action = _action_table[i][terminal];
+      switch(action.type) {
+        case ENUM::ACTION_SHIFT:
+          wprint("s" + std::to_string(action.state_no));
+          break;
+        case ENUM::ACTION_REDUCE:
+          wprint("r" + std::to_string(action.rule_pos));
+          break;
+        case ENUM::ACTION_ACCEPT:
+          wprint("acc");
+          break;
+        case ENUM::ACTION_ERROR:
+          wprint(" ");
+          break;
+        default:
+          break;
+      }
+    }
+    cout << endl;
+  }
+  cout << "--------------------------------------------------------------" << endl;
+}
+void SLR::_print_goto_table() {
+  cout << "--------------------------------------------------------------" << endl;
+  wprint("state");
+  for (auto nonterminal : _nonterminal_set) {
+    wprint(nonterminal.value);
+  } cout << endl;
+  for (int i = 0; i < _states.size(); i++) {
+    wprint(i);
+    for (auto nonterminal : _nonterminal_set) {
+      int to_state_no = _goto_table[i][nonterminal];
+      if (to_state_no != 0) wprint(to_state_no);
+      else wprint(" ");
+    }
+    cout << endl;
+  }
+  cout << "--------------------------------------------------------------" << endl;
 }
