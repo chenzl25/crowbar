@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     code_path = "data/code.data"; // default code path
   }
   Lex mylex;
-  if (!mylex.build_lex_rule("conf/conf.txt")) {
+  if (!mylex.read_lex_rule("conf/conf.txt")) {
     error("read lex rule error");
   }
   if (!mylex.read_code(code_path)) {
@@ -31,4 +31,5 @@ int main(int argc, char **argv) {
       break;
     }
   }
+  return 0;
 }

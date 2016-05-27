@@ -11,11 +11,12 @@ OBJS=$(SRCS:.cpp=.o)
 CXX?=g++
 CPPFLAGS =-w -std=c++11
 # CPPFLAGS +=-D DEBUG
-grep: $(OBJS)
-	$(CXX) -o mygrep $(OBJS) src/main_grep.cpp
 
 lex: $(OBJS)
 	$(CXX) -o mylex $(OBJS)  src/main_lex.cpp
+	
+grep: $(OBJS)
+	$(CXX) -o mygrep $(OBJS) src/main_grep.cpp
 
 nfa.o:      src/nfa.h
 

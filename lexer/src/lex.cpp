@@ -3,6 +3,8 @@ Lex::Lex() {
   _max_token_size = 50;
   _line = 1;
   _pos = 0;
+  _string_type = "string";
+  _string_distincter = '\"';
 }
 Lex::~Lex() {
   for (auto it : _lex_rules) {
@@ -74,6 +76,9 @@ bool Lex::read_lex_rule (string lex_rule_path) {
       re_string = trim(re_string);
       lex_rule.pattern += re_string;
       lex_rule.dfa = new DFA(lex_rule.pattern);
+    } else if (flag == '^') {
+      ss >> _string_type >> _string_distincter;
+      continue;
     } else if (flag == '#') {
       continue;
     }
@@ -113,6 +118,16 @@ Lex::Token Lex::get_token() {
   _pos = not_empty_pos;
   if (_pos >= _code.length()) {
     Lex::Token token("EOF", "$");
+    return token;
+  }
+  if(_code[_pos] == _string_distincter) { // enter string mode
+    int old_pos = _pos;
+    _pos++; // skip the first _string_distincter
+    while (!(_code[_pos] == _string_distincter && _code[_pos-1] != '\\')) {
+      _pos++;
+    }
+    _pos++; // skip the last _string_distincter
+    Lex::Token token(_string_type, _code.substr(old_pos, _pos - old_pos));
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );

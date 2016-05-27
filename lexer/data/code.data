@@ -8,3 +8,5 @@ int main() {
 int add (int a, int b) {
   return a + b;
 }
+
+string a = 'dasdhasduaskdnsakdnsakdnkasdbkasbdkabdkaksjdn kjn dwkqbdqwkb dkwqb dkwabdkb\{asdasdaiwijdaos asdmaon'; 

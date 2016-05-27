@@ -37,6 +37,8 @@ private:
   int _max_token_size; 
   int _line;
   int _pos;
+  string _string_type;
+  char   _string_distincter;
 };
 
 #endif
