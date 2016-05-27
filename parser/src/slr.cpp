@@ -4,6 +4,7 @@
 using namespace std;
 SLR::SLR() {
   _state_count = 0;
+  _has_calculate_follow = false;
 }
 SLR::~SLR() {
 
@@ -11,14 +12,15 @@ SLR::~SLR() {
 void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _bnf_rules = bnf_rules;
   _construct_states();
+  _print_first_follow();
 }
 
 void SLR::_construct_states() {
   assert(_bnf_rules.size() > 0, "_bnf_rules.size should > 0");
   // assume _bnf_rules[0] is the start bnf_rule
   BnfRule extend_bnf_rule;
-  extend_bnf_rule.head = "S\'";
-  extend_bnf_rule.body.push_back(BnfRule::Symbol(false, _bnf_rules[0].head));
+  extend_bnf_rule.head.value = "S\'";
+  extend_bnf_rule.body.push_back(BnfRule::Symbol(false, _bnf_rules[0].head.value));
   _bnf_rules.insert(_bnf_rules.begin(), extend_bnf_rule);
   set<Item> init_kernel_item_set;
   init_kernel_item_set.insert(SLR::Item(0, 0));
@@ -43,13 +45,9 @@ void SLR::_construct_states() {
     }
   }
   for (int i = 0; i < _states.size(); i++) assert(_states[i].no == i, "state doesn't match");
-  cout << "final state " <<  _states.size() << endl;
+  // cout << "final state " <<  _states.size() << endl;
   // for (auto ii : _states) _print_state(ii);
-  for (auto ii : _states_trasition) {
-    for (auto jj: ii.second) {
-      cout << ii.first << " => " << jj.first.value << " => " << jj.second << endl;
-    }
-  }
+  // _print_state_transition();
 }
 set<SLR::Item> SLR::_goto(set<SLR::Item> I, BnfRule::Symbol X) {
   auto IandX = make_pair(I, X);
@@ -99,7 +97,7 @@ set<SLR::Item> SLR::_closure(set<SLR::Item> I) {
       string B = _bnf_rules[item.rule_pos].body[item.dot_pos].value;
       int rule_count = 0;
       for (auto bnf_rule : _bnf_rules) { // B -> .γ
-        if (bnf_rule.head == B) {
+        if (bnf_rule.head.value == B) {
           SLR::Item item(rule_count, 0);
           next_J.insert(item);
         }
@@ -129,8 +127,11 @@ bool operator== (const SLR::Item& one, const SLR::Item& another) {
   return (one.rule_pos == another.rule_pos) && (one.dot_pos == another.dot_pos);
 }
 void SLR::_print_item(Item item) {
-  cout << _bnf_rules[item.rule_pos].head << " => ";
+  cout << _bnf_rules[item.rule_pos].head.value << " => ";
   int cnt = 0;
+  if (_bnf_rules[item.rule_pos].body.size() == 0) {
+    cout << "ε";
+  }
   for (auto s : _bnf_rules[item.rule_pos].body) {
     if (cnt == item.dot_pos) {
       cout << ".";
@@ -153,7 +154,13 @@ void SLR::_print_state(State state) {
   cout << "--------------------------------------------------" << endl;
 }
 
-
+void SLR::_print_state_transition() {
+  for (auto ii : _states_trasition) {
+    for (auto jj: ii.second) {
+      cout << ii.first << " => " << jj.first.value << " => " << jj.second << endl;
+    }
+  }
+}
 SLR::State::State() {
 
 }
@@ -161,4 +168,188 @@ SLR::State::State(int _no, set<Item> _kernel, set<Item> _item) {
   no = _no;
   kernel = _kernel;
   item = _item;
+}
+bool SLR::_nullable(BnfRule::Symbol symbol) {
+  if (_nullable_map.count(symbol)) {
+    return _nullable_map[symbol];
+  }
+  if (symbol.is_terminal) {
+    return false;
+  }
+  for (auto bnf_rule : _bnf_rules) {
+    if (bnf_rule.head == symbol) {
+      if (bnf_rule.body.size() == 0) {
+        _nullable_map[symbol] = true;
+      }
+    }
+  }
+  _nullable_map[symbol] = false;
+  return _nullable_map[symbol];
+}
+set<string> SLR::_first(BnfRule::Symbol symbol) {
+  if (_first_map.count(symbol)) {
+    return _first_map[symbol];
+  }
+  set<string> first_set;
+  if (symbol.is_terminal) {
+    first_set.insert(symbol.value);
+    return first_set;
+  }
+
+  for (auto bnf_rule : _bnf_rules) {
+    if (bnf_rule.head == symbol) {
+      if (bnf_rule.body.size() == 0) {
+        first_set.insert(EPS_STRING);
+        continue;
+      }
+      for (int i =0; i < bnf_rule.body.size(); i++) {
+        auto body_symbol = bnf_rule.body[i];
+        // only work at the first order recursion
+        // E -> Eβ1 | Eβ2 | ... | Eβm | α1 | α2 | ... | αn
+        // calculate the First(E) will occur left recursion
+        // if we assume the grammer is just first order recursion,
+        // we can just use break to skip
+        // we know First(E) should be {α1, α2, ... , αn}
+        // PS : first order recursion means no this production occur
+        //      E -> A
+        //      A -> E
+        if (body_symbol == symbol) break;
+        /////////////////////////////////////////
+        auto tmp_first_set = _first(body_symbol);
+        for (auto it_first : tmp_first_set) {
+          if (it_first != EPS_STRING) {
+            first_set.insert(it_first);
+          }
+        }
+        if (!_nullable(body_symbol)) {
+          break;
+        }
+        if (i == bnf_rule.body.size() -1) {
+          first_set.insert(EPS_STRING);
+        }
+      }
+    }
+  }
+  _first_map[symbol] = first_set;
+  return first_set;
+}
+set<string> SLR::_first_vec(vector<BnfRule::Symbol> symbol_vec) {
+  if (_first_vec_map.count(symbol_vec)) {
+    return _first_vec_map[symbol_vec];
+  }
+  set<string> first_set;
+  if (symbol_vec.size() == 0) {
+    return first_set;
+  }
+  for (int i =0; i < symbol_vec.size(); i++) {
+    auto body_symbol = symbol_vec[i];
+    for (auto it_first : _first(body_symbol)) {
+      first_set.insert(it_first);
+    }
+    if (!_nullable(body_symbol)) {
+      break;
+    }
+  }
+  _first_vec_map[symbol_vec] = first_set;
+  return first_set;
+}
+
+set<string> SLR::_follow(BnfRule::Symbol symbol) {
+  if (!_has_calculate_follow) {
+    _calculate_follow();
+    _has_calculate_follow = true;
+  }
+  if (_follow_map.count(symbol)) {
+    return _follow_map[symbol];
+  }
+  if (symbol.is_terminal) {
+    error("calculate the follow for the terminal");
+  }
+  set<string> empty_set;
+  return empty_set;
+}
+void SLR::_calculate_follow() {
+  while (true) {
+    bool follow_set_has_change = false;
+    for (auto outter_bnf_rule : _bnf_rules) {
+      BnfRule::Symbol symbol = outter_bnf_rule.head; // B
+      set<string> follow_set, modified_set;
+      modified_set = _follow_map[symbol];
+      if (symbol == _bnf_rules[0].head) { // $ is in Follow(S)
+        follow_set.insert(EOF_STRING);
+      } 
+      for (auto bnf_rule : _bnf_rules) {
+        if (bnf_rule.body.size() == 0) continue;
+        for (int i = 0; i < bnf_rule.body.size(); i++) {
+          auto body_symbol = bnf_rule.body[i];
+          if (body_symbol == symbol) { //A -> αBβ
+            if (i == bnf_rule.body.size() -1) { //A -> αB then Follow(A) is in Follow(B)
+              auto tmp_follow_set = _follow_map[bnf_rule.head];
+              for (auto it_follow : tmp_follow_set) {
+                follow_set.insert(it_follow);
+              }
+            } else {
+              vector<BnfRule::Symbol> right_symbols;  // β
+              for (int j = i + 1; j < bnf_rule.body.size(); j++) {
+                right_symbols.push_back(bnf_rule.body[j]);
+              }
+              auto tmp_first_vec_set = _first_vec(right_symbols); //First(β)
+              if (tmp_first_vec_set.count(EPS_STRING)) { // if First(β) contain ε then... 
+                for (auto it_follow : tmp_first_vec_set) { // First(β) except ε is in Follow(B)
+                  if (it_follow != EPS_STRING) {        
+                    follow_set.insert(it_follow);
+                  }
+                }
+                auto A = _follow_map[bnf_rule.head];
+                for (auto it_follow : A) { // Follow(A) is in Follow(B)
+                  follow_set.insert(it_follow);
+                }
+              } else {   // if First(β) doesn't contain ε , First(β) is in Follow(A)
+                for (auto it_follow : tmp_first_vec_set) {
+                  follow_set.insert(it_follow);
+                }
+              }
+            }
+          }
+        }
+      }
+      int before_modified_size = modified_set.size();
+      for (auto it_follow : follow_set) modified_set.insert(it_follow);
+      int after_modified_size = modified_set.size();
+      // we need to iterate all the follow sets don't change again
+      if (before_modified_size != after_modified_size) { 
+        follow_set_has_change = true;
+      }
+      _follow_map[symbol] = modified_set;
+    } // end for
+    if (!follow_set_has_change) {
+      break;
+    }
+  } // end while
+}
+void SLR::_print_first_follow() {
+  set<BnfRule::Symbol> symbol_set;
+  cout << "=================================" << endl;
+  for (auto bnf_rule : _bnf_rules) {
+    if (!symbol_set.count(bnf_rule.head)) {
+      symbol_set.insert(bnf_rule.head);
+      cout << "First " << bnf_rule.head.value << " => ";
+      for (auto s : _first(bnf_rule.head)) {
+        cout << " " << s;
+      } 
+      cout << endl;
+    }
+  }
+  symbol_set.clear();
+  for (auto bnf_rule : _bnf_rules) {
+    if (!symbol_set.count(bnf_rule.head)) {
+      symbol_set.insert(bnf_rule.head);
+      cout << "Follow " << bnf_rule.head.value << " => ";
+      for (auto s : _follow(bnf_rule.head)) {
+        cout << " " << s;
+      } 
+      cout << endl;
+    }
+  }
+  cout << "=================================" << endl;
 }

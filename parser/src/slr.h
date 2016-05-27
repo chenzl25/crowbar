@@ -40,6 +40,18 @@ private:
   void _construct_states();
   void _print_item(Item item);
   void _print_state(State state);
+  void _print_state_transition();
+  void _print_first_follow();
+  map<BnfRule::Symbol, bool> _nullable_map;
+  map<BnfRule::Symbol, set<string>> _first_map;
+  map< vector<BnfRule::Symbol>, set<string>> _first_vec_map;
+  map<BnfRule::Symbol, set<string>> _follow_map;
+  bool _nullable(BnfRule::Symbol symbol);
+  set<string> _first_vec(vector<BnfRule::Symbol> symbol_vec);
+  set<string> _first(BnfRule::Symbol symbol);
+  set<string> _follow(BnfRule::Symbol symbol);
+  void _calculate_follow();
+  bool _has_calculate_follow;
 friend bool operator < (const Item& one, const Item& another);
 friend bool operator== (const Item& one, const Item& another);
 };

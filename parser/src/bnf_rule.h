@@ -3,18 +3,26 @@
 #include <string>
 #include <vector>
 #include <set>
+
+#define EPS_STRING ("ε")
+#define EOF_STRING ("$")
+
 using namespace std;
-struct BnfRule {
-  struct Symbol {
+class BnfRule {
+public:
+  class Symbol {
+  public:
     bool is_terminal;
     string value;
+    Symbol();
+    Symbol(const Symbol &another);
     Symbol(bool is_t, string v);
-    bool operator =(Symbol &another);
+    Symbol& operator = (const Symbol &another);
     friend bool operator < (const BnfRule::Symbol& one, const BnfRule::Symbol& another);
     friend bool operator == (const BnfRule::Symbol& one, const BnfRule::Symbol& another);
   };
-  
-  string head;
+
+  BnfRule::Symbol head;
   vector<BnfRule::Symbol> body;
 };
 
