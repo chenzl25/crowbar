@@ -13,6 +13,7 @@ friend class SLR;
 public:
   Yacc();
   ~Yacc();
+  void parse(Lex &lexer);
   bool read_bnf_rule(string bnf_rule_path);
   void print();
 private:

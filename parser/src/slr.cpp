@@ -19,9 +19,9 @@ void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   // cout << "final state " <<  _states.size() << endl;
   // for (auto ii : _states) _print_state(ii);
   // _print_state_transition();
-  _print_action_table();
-  _print_goto_table();
-  _print_bnf_rule();
+  // _print_action_table();
+  // _print_goto_table();
+  // _print_bnf_rule();
 }
 
 void SLR::_construct_states() {
@@ -176,6 +176,17 @@ void SLR::_print_bnf_rule() {
     cout << endl;
   } 
   cout << "--------------------------------------------------------------" << endl;
+}
+void SLR::_print_specific_bnf_rule(int rule_pos) {
+  auto bnf_rule = _bnf_rules[rule_pos];
+  cout << bnf_rule.head.value << " -> ";
+  if (bnf_rule.body.size() == 0) {
+    cout << "ε";
+  }
+  for (auto symbol : bnf_rule.body) {
+    cout << symbol.value << " ";
+  }
+  cout << endl;
 }
 void SLR::_print_state_transition() {
   for (auto ii : _goto_table) {
@@ -470,4 +481,47 @@ void SLR::_print_goto_table() {
     cout << endl;
   }
   cout << "--------------------------------------------------------------" << endl;
+}
+
+void SLR::parse(Lex &lexer) {
+  string action_string;
+  stack<int> state_stack;
+  state_stack.push(0);
+  int body_length;
+  // EOF Token  <"EOF", "$">
+  Lex::Token token = lexer.get_token();
+  while(true) {
+    // cout << token.type << " -> " << token.lexeme << endl;
+    if (token.type == "number") {
+      action_string = "number";
+    } else {
+      action_string = token.lexeme;
+    }
+    auto action = _action_table[state_stack.top()][action_string];
+    switch(action.type) {
+      case ENUM::ACTION_SHIFT:
+        state_stack.push(action.state_no);
+        token = lexer.get_token();
+        cout << "shift " << action.state_no << endl;
+        break;
+      case ENUM::ACTION_REDUCE:
+        body_length = _bnf_rules[action.rule_pos].body.size();
+        while (body_length--) state_stack.pop();
+        state_stack.push(_goto_table[state_stack.top()][_bnf_rules[action.rule_pos].head]);
+        cout << "reduce ";
+        _print_specific_bnf_rule(action.rule_pos); // action...
+        break;
+      case ENUM::ACTION_ACCEPT:
+        cout << "accept : parse done!" << endl;
+        return;
+        break;
+      case ENUM::ACTION_ERROR:
+        error("fail: parse error");
+        break;
+      default:
+        error("wrong action type");
+        break;
+    }
+
+  }
 }

@@ -100,3 +100,6 @@ bool Yacc::_check_terminal(string & input) {
   }
   return false;
 }
+void Yacc::parse(Lex &lexer) {
+  _slr.parse(lexer);
+}

@@ -19,20 +19,13 @@ int main(int argc, char** argv) {
     error("read code_file error");
   }
   mylex.set_max_token_size(50);
-  // while(true) {
-  //   Lex::Token token = mylex.get_token();
-  //   if (token.type != "EOF") {
-  //     cout << token.type << " -> " << token.lexeme << endl;
-  //   } else {
-  //     break;
-  //   }
-  // }
   string test_follow_path = "data/test_follow.data";
   string no_recursion_path ="data/no_recursion.data";
   Yacc myyacc;
   if (!myyacc.read_bnf_rule(bnf_rule_path)) {
     error("read bnf rule error");
   }
+  myyacc.parse(mylex);
   // mylex.print();
   // myyacc.print();
 

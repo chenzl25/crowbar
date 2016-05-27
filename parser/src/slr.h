@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stack>
 #include <utility>
 #include "bnf_rule.h"
+#include "../../lexer/src/lex.h"
 #include "../../lexer/src/util.h"
 using namespace std;
 
@@ -22,8 +24,9 @@ class SLR {
 
 public:
   SLR();
-  void build_from_bnf_rules(vector<BnfRule> bnf_rules);
   ~SLR();
+  void build_from_bnf_rules(vector<BnfRule> bnf_rules);
+  void parse(Lex &lexer);
 private:
   struct Item {
     int rule_pos;
@@ -61,6 +64,7 @@ private:
   void _construct_states();
   void _construct_action_table();
   void _print_bnf_rule();
+  void _print_specific_bnf_rule(int rule_pos);
   void _print_item(Item item);
   void _print_state(State state);
   void _print_state_transition();

@@ -112,7 +112,7 @@ Lex::Token Lex::get_token() {
   }
   _pos = not_empty_pos;
   if (_pos >= _code.length()) {
-    Lex::Token token("EOF", "");
+    Lex::Token token("EOF", "$");
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );
