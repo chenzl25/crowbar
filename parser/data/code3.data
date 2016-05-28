@@ -6,4 +6,8 @@
     if (i >= j) break;
     x = a[i]; a[i] = a[j]; a[j] = x;
   }
+  a = a && b || !c == -d <= gg;
+  d = 3.14159;
+
+  print(a[i]);
 }

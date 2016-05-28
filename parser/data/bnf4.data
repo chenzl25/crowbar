@@ -1,0 +1,20 @@
+% if else while do break number identifier true false string
+
+
+$ program -> block
+$ block -> '{' decls stmts '}'
+$ decls -> decls decl | 
+$ decl  -> type identifier ';'
+$ type -> type '[' number ']' | 'int' | 'double' | 'float'
+$ stmts -> stmts stmt | 
+$ stmt -> loc '=' bool ';' | while '(' bool ')' stmt | do stmt while '(' bool ')' ';' | break ';' | block | if '(' bool ')' stmt else stmt | if '(' bool ')' stmt | 'print' '(' loc ')' ';'
+$ loc -> loc '[' bool ']' | identifier
+$ bool -> bool '||' join | join
+$ join -> join '&&' equality | equality
+$ equality -> equality '==' rel | equality '!=' rel | rel
+$ rel -> expr '<' expr | expr '<=' expr  | expr '>=' expr | expr '>' expr | expr
+$ expr -> expr '+' term | expr '-' term  | term
+$ term -> term * unary | term '/' unary | unary
+$ unary -> '!' unary | '-' unary | factor
+$ factor -> '(' bool ')' | loc | number | true | false
+

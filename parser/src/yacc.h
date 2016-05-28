@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <map>
 #include "bnf_rule.h"
 #include "slr.h"
 using namespace std;
@@ -18,8 +19,12 @@ public:
   void print();
 private:
   bool _check_terminal(string & input);
+  bool _check_type(string& input);
+  string _find_type(string input);
   vector<BnfRule> _bnf_rules;
   set<string> _lex_declaration_set;
+  string _union_type_string;
+  map<string, string> _type_map;
   void _build_SLR();
   SLR _slr;
 };

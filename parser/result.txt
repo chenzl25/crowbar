@@ -1,0 +1,53 @@
+--------------------------------------------------------------
+_lex_declaration_set : break do else false identifier if number string true while 
+_bnf_rules :
+program -> block 
+block -> { decls stmts } 
+decls -> decls decl 
+decls -> ε
+decl -> type identifier ; 
+type -> type [ number ] 
+type -> int 
+type -> double 
+type -> float 
+stmts -> stmts stmt 
+stmts -> ε
+stmt -> loc = bool ; 
+stmt -> while ( bool ) stmt 
+stmt -> do stmt while ( bool ) ; 
+stmt -> break ; 
+stmt -> ε
+stmt -> block 
+stmt -> if ( bool ) stmt else stmt 
+stmt -> if ( bool ) stmt 
+stmt -> ε
+stmt -> print ( loc ) ; 
+loc -> loc [ bool ] 
+loc -> identifier 
+bool -> bool || join 
+bool -> join 
+join -> join && equality 
+join -> equality 
+equality -> equality == rel 
+equality -> equality != rel 
+equality -> rel 
+rel -> expr < expr 
+rel -> expr <= expr 
+rel -> expr >= expr 
+rel -> expr > expr 
+rel -> expr 
+expr -> expr + term 
+expr -> expr - term 
+expr -> term 
+term -> term * unary 
+term -> term / unary 
+term -> unary 
+unary -> ! unary 
+unary -> - unary 
+unary -> factor 
+factor -> ( bool ) 
+factor -> loc 
+factor -> number 
+factor -> true 
+factor -> false 
+--------------------------------------------------------------

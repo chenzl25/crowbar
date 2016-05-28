@@ -15,13 +15,13 @@ void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _construct_terminal_and_nonterminal_set();
   _construct_states(); // _goto_table  construct here implictly
   _construct_action_table();
-  _print_terminal_and_nonterminal_set();
+  // _print_terminal_and_nonterminal_set();
   // _print_first_follow();
-  cout << "final state " <<  _states.size() << endl;
-  for (auto ii : _states) _print_state(ii);
+  // cout << "final state " <<  _states.size() << endl;
+  // for (auto ii : _states) _print_state(ii);
   // _print_state_transition();
-  _print_action_table();
-  _print_goto_table();
+  // _print_action_table();
+  // _print_goto_table();
   // _print_bnf_rule();
 }
 
@@ -30,7 +30,7 @@ void SLR::_construct_states() {
   // assume _bnf_rules[0] is the start bnf_rule
   BnfRule extend_bnf_rule;
   extend_bnf_rule.head.value = "S\'";
-  extend_bnf_rule.body.push_back(BnfRule::Symbol(false, _bnf_rules[0].head.value));
+  extend_bnf_rule.body.push_back(_bnf_rules[0].head);
   _bnf_rules.insert(_bnf_rules.begin(), extend_bnf_rule);
   set<Item> init_kernel_item_set;
   init_kernel_item_set.insert(SLR::Item(0, 0));
@@ -556,6 +556,7 @@ void SLR::parse(Lex &lexer) {
         state_stack.push(_goto_table[state_stack.top()][_bnf_rules[action.rule_pos].head]);
         cout << "reduce ";
         _print_specific_bnf_rule(action.rule_pos); // action...
+        cout << _bnf_rules[action.rule_pos].action_string;
         break;
       case ENUM::ACTION_ACCEPT:
         cout << "accept : parse done!" << endl;

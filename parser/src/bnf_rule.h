@@ -13,10 +13,11 @@ public:
   class Symbol {
   public:
     bool is_terminal;
+    string type;
     string value;
     Symbol();
     Symbol(const Symbol &another);
-    Symbol(bool is_t, string v);
+    Symbol(bool is_t, string v, string t);
     Symbol& operator = (const Symbol &another);
     friend bool operator < (const BnfRule::Symbol& one, const BnfRule::Symbol& another);
     friend bool operator == (const BnfRule::Symbol& one, const BnfRule::Symbol& another);
@@ -24,6 +25,7 @@ public:
 
   BnfRule::Symbol head;
   vector<BnfRule::Symbol> body;
+  string action_string;
 };
 
 #endif
