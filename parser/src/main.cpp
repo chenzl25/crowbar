@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
   if (!myyacc.read_bnf_rule(bnf_rule_path)) {
     error("read bnf rule error");
   }
-  myyacc.parse(mylex);
+  // myyacc.parse(mylex);
   // myyacc.print();
 
 }

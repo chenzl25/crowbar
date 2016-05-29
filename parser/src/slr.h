@@ -9,6 +9,7 @@
 #include "bnf_rule.h"
 #include "../../lexer/src/lex.h"
 #include "../../lexer/src/util.h"
+
 using namespace std;
 
 namespace ENUM {

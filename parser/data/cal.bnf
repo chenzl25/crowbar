@@ -1,12 +1,24 @@
+# -----------------------------------------------------------------
+# union have default : type int_value, double_value, string_value
+# token have default : <double_value> factor , <int_value>  number
+# -----------------------------------------------------------------
 
-%union {
-    int          int_value;
-    double       double_value;
-}
-
-
+# ----------------------------------------
 %token <double_value> factor
 %token <int_value>    number
+# ----------------------------------------
+
+%include {
+  #include <vector>
+}
+
+%union {
+    // int          int_value;
+    // double       double_value;
+    // string       *string_value;
+    Expression          *expression;
+}
+
 %type <double_value> expression term primary_expression
 
 $ expression          : term

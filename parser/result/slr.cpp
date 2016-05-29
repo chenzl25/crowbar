@@ -4,10 +4,11 @@
 #include "../../lexer/src/util.h"
 #include <iomanip>
 #include "yystype.h"
-using namespace std;
 
 /*%include*/
+#include <vector>
 
+using namespace std;
 SLR::SLR() {
   _state_count = 0;
   _has_calculate_follow = false;
@@ -600,152 +601,140 @@ void SLR::parse(Lex &lexer) {
         break;
       case ENUM::ACTION_REDUCE:
         body_length = _bnf_rules[action.rule_pos].body.size();
-        if (body_length > 0) {
-          while (body_length--) state_stack.pop();
-        }
+        while (body_length--) state_stack.pop();
         state_stack.push(_goto_table[state_stack.top()][_bnf_rules[action.rule_pos].head]);
         // action... 
         // cout << "reduce ";
         // _print_specific_bnf_rule(action.rule_pos); 
         // cout << _bnf_rules[action.rule_pos].action_string;
-        //-----------------------------------
         switch (action.rule_pos) {
           /*%action*/
-          case 1:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-            }
-            break;
-          case 2: 
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value + u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 3:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value - u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 4: 
-            {
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              printf("%lf\n",u2.double_value);
-              YYSTYPE u;
-              yystype_stack.push(u);
-            }
-            break;
-          case 5:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-            }
-            break;
-          case 6:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value * u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 7:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value / u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 8:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.int_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 9:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 10:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u2.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 11:
-            {
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = -u1.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
+case 1:
+{
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value;
+yystype_stack.push(u);
+}
+break;
+case 2:
+{
+YYSTYPE u3 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value + u3.double_value;
+yystype_stack.push(u);
+}
+break;
+case 3:
+{
+YYSTYPE u3 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value - u3.double_value;
+yystype_stack.push(u);
+}
+break;
+case 4:
+{
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+printf("%lf\n",u2.double_value);
+yystype_stack.push(u);
+}
+break;
+case 5:
+{
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value;
+yystype_stack.push(u);
+}
+break;
+case 6:
+{
+YYSTYPE u3 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value * u3.double_value;
+yystype_stack.push(u);
+}
+break;
+case 7:
+{
+YYSTYPE u3 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value / u3.double_value;
+yystype_stack.push(u);
+}
+break;
+case 8:
+{
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.int_value;
+yystype_stack.push(u);
+}
+break;
+case 9:
+{
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u1.double_value;
+yystype_stack.push(u);
+}
+break;
+case 10:
+{
+YYSTYPE u3 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = u2.double_value;
+yystype_stack.push(u);
+}
+break;
+case 11:
+{
+YYSTYPE u2 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u1 = yystype_stack.top();
+yystype_stack.pop();
+YYSTYPE u;
+u.double_value = -u2.double_value;
+yystype_stack.push(u);
+}
+break;
           default:
             break;
-        }// end switch
-        //-----------------------------------
+        }
         
         break;
       case ENUM::ACTION_ACCEPT:

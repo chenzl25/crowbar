@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "../../lexer/src/dfa.h"
 #include "yacc.h"
 #include "bnf_rule.h"
 #include "../../lexer/src/util.h"
@@ -50,6 +51,18 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
           break;
         }
         _union_type_string += s + '\n';
+      }
+      continue;
+    } else if (flag == "%include") {
+      ss >> flag;
+      assert(flag == "{", "%include without {");
+      while (getline(bnf_rule_in, s)) {
+        stringstream ss(s);
+        ss >> flag;
+        if (flag == "}") {
+          break;
+        }
+        _include_string += s + '\n';
       }
       continue;
     } else if (flag == "%type") {
@@ -118,9 +131,149 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
   }
   bnf_rule_in.close();
   // _bnf_rules 0 position has the heighest priority
-  print();
-  _build_SLR();
+  // print();
+  // _build_SLR();
+  _fill_template();
   return true; 
+}
+void Yacc::_fill_template() {
+  _fill_yystype();
+  _fill_action();
+}
+void Yacc::_fill_yystype() {
+  ifstream  in("template/yystype.template");
+  ofstream  out("result/yystype.h");
+  if (!in.is_open()) {
+    error("fail to open template/yystype.template");
+  }
+  if (!out.is_open()) {
+    error("fail to open result/yystype.h");
+  }
+  string s;
+  while (getline(in, s)) {
+    string flag;
+    stringstream ss(s);
+    ss >> flag;
+    out << s << endl;
+    if (flag == "/*%union*/") {
+      out << _union_type_string;
+    } else if (flag == "/*%include*/") {
+      out << trim(_include_string);
+    }
+  }
+  in.close();
+  out.close();
+}
+void Yacc::_fill_action() {
+  ifstream  in("template/slr.template");
+  ofstream  out("result/slr.cpp");
+  if (!in.is_open()) {
+    error("fail to open template/slr.template");
+  }
+  if (!out.is_open()) {
+    error("fail to open result/slr.cpp");
+  }
+  string s;
+  while (getline(in, s)) {
+    string flag;
+    stringstream ss(s);
+    ss >> flag;
+    out << s << endl;
+    if (flag == "/*%include*/") {
+      out << trim(_include_string);
+    } else if (flag == "/*%action*/") {
+      for (int i = 0; i < _bnf_rules.size(); i++) {
+        out << "case " + std::to_string(i+1) + ":" << endl;
+        out << "{" << endl; 
+        _replace_action_string(i, out);
+        out << "}" << endl;
+        out << "break;" << endl;
+
+      }
+    }
+  }
+  in.close();
+  out.close();
+}
+void Yacc::_replace_action_string(int rule_pos, ofstream& out) {
+  // YYSTYPE u3 = yystype_stack.top();
+  // yystype_stack.pop();
+  // YYSTYPE u2 = yystype_stack.top();
+  // yystype_stack.pop();
+  // YYSTYPE u1 = yystype_stack.top();
+  // yystype_stack.pop();
+  // YYSTYPE u;
+  // u.double_value = u1.double_value / u3.double_value;
+  // yystype_stack.push(u);
+
+
+  //  expression : double_value
+  //  factor : double_value
+  //  number : int_value
+  //  primary_expression : double_value
+  //  term : double_value
+  auto bnf_rule = _bnf_rules[rule_pos];
+  if (bnf_rule.action_string.empty()) { // no action
+    if (!bnf_rule.head.type.empty()) { // with type
+      if (bnf_rule.body.size() == 0) {
+        out << "YYSTYPE u;" << endl;
+        out << "u." << bnf_rule.head.type << " = NULL" << ";" << endl;
+        out << "yystype_stack.push(u);"  << endl;
+      } else if (bnf_rule.body.size() == 1) { // converse automaticly
+        // convert int <- double, double <- int
+        if ((bnf_rule.head.type == "double_value" || bnf_rule.head.type == "int_value") && 
+            (bnf_rule.body[0].type == "double_value" || bnf_rule.body[0].type == "int_value")) {
+          // do nothing
+        } else if (bnf_rule.head.type != bnf_rule.body[0].type) {
+          _print_specific_bnf_rule(rule_pos);
+          error("the production without action should have have same type");
+        }
+        out << "YYSTYPE u1 = yystype_stack.top();" << endl;
+        out << "yystype_stack.pop();" << endl ;
+        out << "YYSTYPE u;" << endl;
+        out << "u." << bnf_rule.head.type << " = u1." << bnf_rule.body[0].type << ";" << endl;
+        out << "yystype_stack.push(u);"  << endl;
+      } else if (bnf_rule.body.size() > 1) { 
+        error("the production head with type without action should have less than one symbol in body");
+      }
+    } else { // without type , no action
+      // do nothing 
+    }
+  } else { // with action
+    string action_string = bnf_rule.action_string;
+    for (int i = bnf_rule.body.size()-1; i >= 0; i-- ) {
+      out << "YYSTYPE u" << i + 1 << " = yystype_stack.top();" << endl;
+      out << "yystype_stack.pop();" << endl;
+      DFA dfa("$" + std::to_string(i+1));
+      string result;
+      int index = dfa.match(action_string, result);
+      if (index != -1) {
+        action_string.erase(index, result.length());
+        action_string.insert(index, "u" + std::to_string(i+1) + "." + bnf_rule.body[i].type);
+      }
+    }
+    DFA dfa("$$");
+    string result;
+    int index = dfa.match(action_string, result);
+    if (index != -1) {
+      action_string.erase(index, result.length());
+      action_string.insert(index, "u." + bnf_rule.head.type);
+    }
+    out << "YYSTYPE u;" << endl;
+    out << trim(action_string);
+    out << "yystype_stack.push(u);" << endl;
+  }
+}
+void Yacc::_print_specific_bnf_rule(int rule_pos) {
+  auto bnf_rule = _bnf_rules[rule_pos];
+  cout << bnf_rule.head.value << " -> ";
+  if (bnf_rule.body.size() == 0) {
+    cout << "ε";
+  }
+  for (auto symbol : bnf_rule.body) {
+    cout << symbol.value << " ";
+  }
+  cout << endl;
 }
 void Yacc::_build_SLR() {
   _slr.build_from_bnf_rules(_bnf_rules);

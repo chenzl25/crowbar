@@ -1,6 +1,9 @@
 #ifndef YYSTYPE_H
 #define YYSTYPE_H
 
+/*%include*/
+#include <vector>
+
 #include <string>
 using namespace std;
 
@@ -13,6 +16,10 @@ typedef union YYSTYPE
     string       *string_value;
     // below comment use to inject the union from .bnf file
 /*%union*/
+    // int          int_value;
+    // double       double_value;
+    // string       *string_value;
+    Expression          *expression;
 };
 
 #endif

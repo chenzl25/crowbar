@@ -1,6 +1,8 @@
 #ifndef YYSTYPE_H
 #define YYSTYPE_H
 
+/*%include*/
+
 #include <string>
 using namespace std;
 
