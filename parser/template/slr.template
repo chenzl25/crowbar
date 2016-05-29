@@ -20,7 +20,7 @@ void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _construct_terminal_and_nonterminal_set();
   _construct_states(); // _goto_table  construct here implictly
   _construct_action_table();
-  _print_to_yacc_output();
+  //_print_to_yacc_output();
   // _print_terminal_and_nonterminal_set();
   // _print_first_follow();
   // cout << "final state " <<  _states.size() << endl;

@@ -6,7 +6,10 @@
 #include "../../lexer/src/lex.h"
 #include "yacc.h"
 #include "slr.h"
+#include "bnf_rule.h"
 using namespace std;
+vector<Lex::LexRule> hard_code_lex_rule();
+vector<BnfRule> hard_code_bnf_rule();
 int main(int argc, char** argv) {
   string lex_rule_path = "data/cal.lex";
   string code_path     = "data/cal.code";
@@ -26,20 +29,21 @@ int main(int argc, char** argv) {
     }
   } 
   Lex mylex;
-  if (!mylex.read_lex_rule(lex_rule_path)) {
-    error("read lex rule error");
-  }
+  mylex.build_from_lex_rules(hard_code_lex_rule());
+  /*set-string-type-distincter*/
   if (!mylex.read_code(code_path)) {
     error("read code_file error");
   }
   mylex.set_max_token_size(50);
-  // mylex.print();
-  Yacc myyacc;
-  myyacc.set_lexer(mylex);
-  if (!myyacc.read_bnf_rule(bnf_rule_path)) {
-    error("read bnf rule error");
-  }
-  // myyacc.parse();
-  // myyacc.print();
 
+  SLR slr;
+  slr.build_from_bnf_rules(hard_code_bnf_rule());
+  slr.parse(mylex);
+}
+
+vector<Lex::LexRule> hard_code_lex_rule() {
+  /*hard_code_lex_rule*/
+}
+vector<BnfRule> hard_code_bnf_rule() {
+  /*hard_code_bnf_rule*/
 }

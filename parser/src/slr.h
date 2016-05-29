@@ -75,9 +75,9 @@ private:
   void _print_terminal_and_nonterminal_set();
   void _print_to_yacc_output();
   map<BnfRule::Symbol, bool> _nullable_map;
-  map<BnfRule::Symbol, set<string>> _first_map;
-  map< vector<BnfRule::Symbol>, set<string>> _first_vec_map;
-  map<BnfRule::Symbol, set<string>> _follow_map;
+  map<BnfRule::Symbol, set<string> > _first_map;
+  map< vector<BnfRule::Symbol>, set<string> > _first_vec_map;
+  map<BnfRule::Symbol, set<string> > _follow_map;
   bool _nullable(BnfRule::Symbol symbol);
   set<string> _first_vec(vector<BnfRule::Symbol> symbol_vec);
   set<string> _first(BnfRule::Symbol symbol);

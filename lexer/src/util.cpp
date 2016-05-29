@@ -1,6 +1,8 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "util.h"
 using namespace std;
 
@@ -54,4 +56,9 @@ string trim(string& str) {
   size_t first = str.find_first_not_of(' ');
   size_t last  = str.find_last_not_of(' ');
   return str.substr(first, last - first+1);
+}
+
+
+int make_dir(string path) {
+  return mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }

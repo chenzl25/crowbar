@@ -6,13 +6,53 @@ Lex::Lex() {
   _string_type = "string";
   _string_distincter = '\"';
 }
+Lex::Lex(const Lex& another) {
+  _max_token_size = another._max_token_size;
+  _line = another._line;
+  _pos = another._line;
+  _string_type = another._string_type;
+  _string_distincter = another._string_distincter;
+  for (auto lex_rule : another._lex_rules) {
+    _lex_rules.push_back(lex_rule);
+    _lex_rules[_lex_rules.size()-1].dfa = new DFA(lex_rule.pattern);
+  }
+}
+Lex& Lex::operator = (const Lex& another) {
+  if (this == &another) {
+    return *this;
+  }
+  _max_token_size = another._max_token_size;
+  _line = another._line;
+  _pos = another._line;
+  _string_type = another._string_type;
+  _string_distincter = another._string_distincter;
+  for (auto lex_rule : another._lex_rules) {
+    _lex_rules.push_back(lex_rule);
+    _lex_rules[_lex_rules.size()-1].dfa = new DFA(lex_rule.pattern);
+  }
+  return *this;
+}
 Lex::~Lex() {
   for (auto it : _lex_rules) {
-    delete it.dfa;
+    if (it.dfa != NULL) {
+      delete it.dfa;
+    }
   }
 }
 void Lex::set_max_token_size(int n) {
   _max_token_size = n;
+}
+void Lex::set_string_type(string string_type) {
+  _string_type = string_type;
+}
+void Lex::set_string_distincter(char string_distincter) {
+  _string_distincter = string_distincter;
+}
+string Lex::get_string_type() {
+  return _string_type;
+}
+char Lex::get_string_distincter() {
+  return _string_distincter;
 }
 string Lex::_check_escape(string input) {
   string result;
@@ -88,7 +128,13 @@ bool Lex::read_lex_rule (string lex_rule_path) {
   // _lex_rules 0 position has the heighest priority
   return true; 
 }
-
+void Lex::build_from_lex_rules(vector<LexRule> lex_rules) {
+  _lex_rules = lex_rules;
+  for (int i = 0; i < _lex_rules.size(); i++) {
+    assert(_lex_rules[i].dfa == NULL, "build_from_lex_rules: the dfa should be NULL");
+    _lex_rules[i].dfa = new DFA(_lex_rules[i].pattern);
+  }
+}
 bool Lex::read_code(string code_path) {
   ifstream code_in(code_path);
   if (!code_in.is_open()) {
@@ -166,4 +212,11 @@ void Lex::print() {
     cout << lex_rule.type << " : " << lex_rule.pattern << endl;
   }
   cout << "--------------------------------------------------------------" << endl;
+}
+vector<Lex::LexRule> Lex::get_lex_rules() {
+  vector<Lex::LexRule> safe_lex_rules = _lex_rules;
+  for (int i = 0; i < safe_lex_rules.size(); i++) {
+    safe_lex_rules[i].dfa = NULL;
+  }
+  return safe_lex_rules;
 }

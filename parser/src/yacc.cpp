@@ -4,6 +4,7 @@
 #include "../../lexer/src/dfa.h"
 #include "yacc.h"
 #include "bnf_rule.h"
+#include "../../lexer/src/lex.h"
 #include "../../lexer/src/util.h"
 using namespace std;
 Yacc::Yacc() {
@@ -137,17 +138,25 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
   return true; 
 }
 void Yacc::_fill_template() {
+  system("mkdir -p dist/parser/src");
+  system("mkdir -p dist/data");
+  system("mkdir -p dist/lexer/src");
+  system("cp ../lexer/src/* dist/lexer/src");
+  system("cp src/* dist/parser/src");
+  system("cp template/makefile dist");
+  system("cp data/* dist/data");
   _fill_yystype();
   _fill_action();
+  _fill_main();
 }
 void Yacc::_fill_yystype() {
   ifstream  in("template/yystype.template");
-  ofstream  out("result/yystype.h");
+  ofstream  out("dist/parser/src/yystype.h");
   if (!in.is_open()) {
     error("fail to open template/yystype.template");
   }
   if (!out.is_open()) {
-    error("fail to open result/yystype.h");
+    error("fail to open dist/parser/yystype.h");
   }
   string s;
   while (getline(in, s)) {
@@ -164,14 +173,73 @@ void Yacc::_fill_yystype() {
   in.close();
   out.close();
 }
+void Yacc::_fill_main() {
+  ifstream  in("template/main.template");
+  ofstream  out("dist/parser/src/main.cpp");
+  if (!in.is_open()) {
+    error("fail to open template/yystype.template");
+  }
+  if (!out.is_open()) {
+    error("fail to open dist/parser/src/main.cpp");
+  }
+  string s;
+  while (getline(in, s)) {
+    string flag;
+    stringstream ss(s);
+    ss >> flag;
+    out << s << endl;
+    // hard_code_bnf_rule
+    if (flag == "/*hard_code_bnf_rule*/") {
+      out << "vector<BnfRule> _bnf_rules;" << endl;
+      out << "BnfRule::Symbol symbol;" << endl;
+      out << "BnfRule bnf_rule;" << endl;
+      for (auto bnf_rule : _bnf_rules) {
+        out << "bnf_rule.head.value = \"" << bnf_rule.head.value << "\";"<< endl;
+        out << "bnf_rule.head.type = \"" << bnf_rule.head.type << "\";"<< endl;
+        out << "bnf_rule.head.is_terminal = " << (bnf_rule.head.is_terminal?"true":"false") << ";"<< endl;
+        for (auto symbol : bnf_rule.body) {
+          out << "symbol.value = \"" << symbol.value << "\";"<< endl;
+          out << "symbol.type = \"" << symbol.type << "\";"<< endl;
+          out << "symbol.is_terminal = " << (symbol.is_terminal?"true":"false") << ";"<< endl;
+          out << "bnf_rule.body.push_back(symbol);" << endl;
+        }
+        out << "_bnf_rules.push_back(bnf_rule);" << endl;
+        out << "bnf_rule.body.clear();" << endl;
+      }
+      out << "return _bnf_rules;" << endl;
+    }
+    // hard_code_lex_rule
+    if (flag == "/*hard_code_lex_rule*/") {
+      auto lex_rules = _lexer.get_lex_rules();
+      out << "vector<Lex::LexRule> lex_rules;" << endl;
+      out << "Lex::LexRule lex_rule;" << endl;
+      for (auto lex_rule : lex_rules) {
+        out << "lex_rule.type = \"" << lex_rule.type << "\";"<< endl;
+        out << "lex_rule.pattern = \"" << _recover_pattern(lex_rule.pattern) << "\";"<< endl;
+        out << "lex_rule.dfa = NULL;"<< endl;
+        out << "lex_rules.push_back(lex_rule);" << endl;
+      }
+      out << "return lex_rules;" << endl;
+    }
+    // set-string-type-distincter
+    if (flag == "/*set-string-type-distincter*/") {
+      string empty_string;
+      out << "mylex.set_string_type(\"" + _lexer.get_string_type() + "\");" << endl;
+      out << "mylex.set_string_distincter(\'" + empty_string + 
+              _check_escape(_lexer.get_string_distincter()) + "\');" << endl;
+    }
+  }
+  in.close();
+  out.close();
+}
 void Yacc::_fill_action() {
   ifstream  in("template/slr.template");
-  ofstream  out("result/slr.cpp");
+  ofstream  out("dist/parser/src/slr.cpp");
   if (!in.is_open()) {
     error("fail to open template/slr.template");
   }
   if (!out.is_open()) {
-    error("fail to open result/slr.cpp");
+    error("fail to open dist/parser/slr.cpp");
   }
   string s;
   while (getline(in, s)) {
@@ -196,22 +264,6 @@ void Yacc::_fill_action() {
   out.close();
 }
 void Yacc::_replace_action_string(int rule_pos, ofstream& out) {
-  // YYSTYPE u3 = yystype_stack.top();
-  // yystype_stack.pop();
-  // YYSTYPE u2 = yystype_stack.top();
-  // yystype_stack.pop();
-  // YYSTYPE u1 = yystype_stack.top();
-  // yystype_stack.pop();
-  // YYSTYPE u;
-  // u.double_value = u1.double_value / u3.double_value;
-  // yystype_stack.push(u);
-
-
-  //  expression : double_value
-  //  factor : double_value
-  //  number : int_value
-  //  primary_expression : double_value
-  //  term : double_value
   auto bnf_rule = _bnf_rules[rule_pos];
   if (bnf_rule.action_string.empty()) { // no action
     if (!bnf_rule.head.type.empty()) { // with type
@@ -325,6 +377,31 @@ string Yacc::_find_type(string input) {
     return ""; // non-type
   }
 }
-void Yacc::parse(Lex &lexer) {
-  _slr.parse(lexer);
+void Yacc::parse() {
+  _slr.parse(_lexer);
+}
+void Yacc::set_lexer(Lex &lexer) {
+  _lexer = lexer;
+}
+string Yacc::_recover_pattern(string input) {
+  string result;
+  for (auto ch : input) {
+    if (ch == '\\') {
+      result += '\\';
+    }
+    result += ch;
+  }
+  return result;
+}
+string  Yacc::_check_escape(char ch) {
+  string result;
+  switch(ch) {
+    case '\'' :
+    case '\"' :
+      result += '\\';
+    default:
+      break;
+  }
+  result += ch;
+  return result;
 }

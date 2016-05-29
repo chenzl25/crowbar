@@ -11,4 +11,5 @@ bool isdigit(char c);
 bool is_uppercase_letter(char c);
 bool is_lowercase_letter(char c);
 string trim(string& str);
+int make_dir(string path);
 #endif

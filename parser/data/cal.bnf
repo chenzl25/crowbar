@@ -16,7 +16,6 @@
     // int          int_value;
     // double       double_value;
     // string       *string_value;
-    Expression          *expression;
 }
 
 %type <double_value> expression term primary_expression

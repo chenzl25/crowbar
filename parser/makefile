@@ -37,3 +37,4 @@ main.o:
 
 clean:
 	-rm -f $(OBJS) myyacc myyacc.output
+	-rm -rf dist
