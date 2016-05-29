@@ -1,7 +1,9 @@
 #include <iostream>
+#include <cstdio>
 #include "slr.h"
 #include "../../lexer/src/util.h"
 #include <iomanip>
+#include "yystype.h"
 using namespace std;
 SLR::SLR() {
   _state_count = 0;
@@ -15,6 +17,7 @@ void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _construct_terminal_and_nonterminal_set();
   _construct_states(); // _goto_table  construct here implictly
   _construct_action_table();
+  _print_to_yacc_output();
   // _print_terminal_and_nonterminal_set();
   // _print_first_follow();
   // cout << "final state " <<  _states.size() << endl;
@@ -524,18 +527,40 @@ void SLR::_print_goto_table() {
   }
   cout << "--------------------------------------------------------------" << endl;
 }
-
+void SLR::_print_to_yacc_output() {
+  freopen("myyacc.output", "w", stdout);
+  _print_terminal_and_nonterminal_set();
+  cout << endl;
+  _print_first_follow();
+  cout << endl;
+  cout << "final state " <<  _states.size() << endl;
+  for (auto ii : _states) _print_state(ii);
+  cout << endl;
+  _print_state_transition();
+  cout << endl;
+  _print_action_table();
+  cout << endl;
+  _print_goto_table();
+  cout << endl;
+  _print_bnf_rule();
+  cout << endl;
+  freopen ("/dev/tty", "a", stdout);
+}
 void SLR::parse(Lex &lexer) {
   string action_string;
   stack<int> state_stack;
+  stack<YYSTYPE> yystype_stack;
   state_stack.push(0);
   int body_length;
   // EOF Token  <"EOF", "$">
   Lex::Token token = lexer.get_token();
   while(true) {
     // cout << token.type << " -> " << token.lexeme << endl;
+    // cooperate with lexer
     if (token.type == "number") {
       action_string = "number";
+    } else if (token.type == "factor") {
+      action_string = "factor";
     } else if (token.type == "identifier") {
       action_string = "identifier";
     } else if (token.type == "string") {
@@ -547,16 +572,174 @@ void SLR::parse(Lex &lexer) {
     switch(action.type) {
       case ENUM::ACTION_SHIFT:
         state_stack.push(action.state_no);
-        token = lexer.get_token();
+        // cout << "type: " << action_string << endl;
+        //-----------------------------------
+        if (action_string == "number") {
+          YYSTYPE u;
+          u.int_value = token.vint;
+          yystype_stack.push(u);
+        } else if (action_string == "factor") {
+          YYSTYPE u;
+          u.double_value = token.vdouble;
+          yystype_stack.push(u);
+        } else if (action_string == "string") {
+          YYSTYPE u;
+          u.string_value = new string(token.vstring);
+          yystype_stack.push(u);
+        } else {
+          YYSTYPE u;    // empty yystype use only to take place
+          yystype_stack.push(u);
+        }
+        //-----------------------------------
         // cout << "shift " << action.state_no << " <= " << action_string << endl;
+        token = lexer.get_token();
         break;
       case ENUM::ACTION_REDUCE:
         body_length = _bnf_rules[action.rule_pos].body.size();
         while (body_length--) state_stack.pop();
         state_stack.push(_goto_table[state_stack.top()][_bnf_rules[action.rule_pos].head]);
-        cout << "reduce ";
-        _print_specific_bnf_rule(action.rule_pos); // action...
-        cout << _bnf_rules[action.rule_pos].action_string;
+        // action... 
+        // cout << "reduce ";
+        // _print_specific_bnf_rule(action.rule_pos); 
+        // cout << _bnf_rules[action.rule_pos].action_string;
+        //-----------------------------------
+        switch (action.rule_pos) {
+          case 1:
+            {
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value;
+              yystype_stack.push(u);
+            }
+            break;
+          case 2: 
+            {
+              YYSTYPE u3 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value + u3.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 3:
+            {
+              YYSTYPE u3 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value - u3.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 4: 
+            {
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              printf("%lf\n",u2.double_value);
+              YYSTYPE u;
+              yystype_stack.push(u);
+            }
+            break;
+          case 5:
+            {
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value;
+              yystype_stack.push(u);
+            }
+            break;
+          case 6:
+            {
+              YYSTYPE u3 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value * u3.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 7:
+            {
+              YYSTYPE u3 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value / u3.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 8:
+            {
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.int_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 9:
+            {
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u1.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 10:
+            {
+              YYSTYPE u3 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = u2.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          case 11:
+            {
+              YYSTYPE u2 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u1 = yystype_stack.top();
+              yystype_stack.pop();
+              YYSTYPE u;
+              u.double_value = -u1.double_value;
+              yystype_stack.push(u);
+              // cout << u.double_value << "!!!!!" << endl;
+            }
+            break;
+          default:
+            break;
+        }// end switch
+        //-----------------------------------
+        
         break;
       case ENUM::ACTION_ACCEPT:
         cout << "accept : parse done!" << endl;

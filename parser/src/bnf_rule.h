@@ -8,13 +8,15 @@
 #define EOF_STRING ("$")
 
 using namespace std;
+
+
 class BnfRule {
 public:
   class Symbol {
   public:
     bool is_terminal;
     string type;
-    string value;
+    string value; // a string stand for terminal or non-terminal
     Symbol();
     Symbol(const Symbol &another);
     Symbol(bool is_t, string v, string t);

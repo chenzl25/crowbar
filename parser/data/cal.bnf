@@ -5,7 +5,8 @@
 }
 
 
-%token <double_value> number
+%token <double_value> factor
+%token <int_value>    number
 %type <double_value> expression term primary_expression
 
 $ expression          : term
@@ -19,7 +20,7 @@ $ expression          : term
                       }
                       | 'print' expression
                       {
-                        printf("%d\n",$$);
+                        printf("%lf\n",$2);
                       }
                       ;
 
@@ -35,6 +36,7 @@ $ term                : primary_expression
                       ;
 
 $ primary_expression  : number
+                      | factor
                       | '(' expression ')'
                       {
                           $$ = $2;

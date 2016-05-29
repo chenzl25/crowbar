@@ -127,7 +127,8 @@ Lex::Token Lex::get_token() {
       _pos++;
     }
     _pos++; // skip the last _string_distincter
-    Lex::Token token(_string_type, _code.substr(old_pos, _pos - old_pos));
+    Lex::Token token(_string_type, _string_distincter + _code.substr(old_pos, _pos - old_pos) + _string_distincter);
+    token.vstring = _code.substr(old_pos, _pos - old_pos);
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );
@@ -146,6 +147,9 @@ Lex::Token::Token(string t, string l) {
   if (type == "identifier") {
 
   } else if (type == "number") {
+    stringstream ss(lexeme);
+    ss >> vint;
+  } else if (type == "factor") {
     stringstream ss(lexeme);
     ss >> vdouble;
   } else if (type == "type") {

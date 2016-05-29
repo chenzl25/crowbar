@@ -72,6 +72,7 @@ private:
   void _print_action_table();
   void _print_goto_table();
   void _print_terminal_and_nonterminal_set();
+  void _print_to_yacc_output();
   map<BnfRule::Symbol, bool> _nullable_map;
   map<BnfRule::Symbol, set<string>> _first_map;
   map< vector<BnfRule::Symbol>, set<string>> _first_vec_map;
