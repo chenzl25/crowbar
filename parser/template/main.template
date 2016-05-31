@@ -11,17 +11,9 @@ using namespace std;
 vector<Lex::LexRule> hard_code_lex_rule();
 vector<BnfRule> hard_code_bnf_rule();
 int main(int argc, char** argv) {
-  string lex_rule_path = "data/cal.lex";
-  string code_path     = "data/cal.code";
-  string bnf_rule_path = "data/cal.bnf";
+  string code_path     = "data/crowbar.code";
   for (int i = 1; i < argc;) {
-    if (strcmp(argv[i],"-lex") == 0) {
-      lex_rule_path = argv[i+1];
-      i+=2;
-    } else if (strcmp(argv[i], "-bnf") == 0) {
-      bnf_rule_path = argv[i+1];
-      i+=2;
-    } else if (strcmp(argv[i], "-code") == 0) {
+    if (strcmp(argv[i], "-code") == 0) {
       code_path = argv[i+1];
       i+=2;
     } else {

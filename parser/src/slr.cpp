@@ -440,7 +440,11 @@ void SLR::_construct_action_table() {
             cout << "state.no " << state.no << " on input " << it_follow << " ";
             cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
             cout << "r" << item.rule_pos << endl;
-            error("reduce reduce conflit");
+            cout << "we prefer the most first bnf_rule one" << endl;
+            if (item.rule_pos < _action_table[state.no][it_follow].rule_pos) {
+              _action_table[state.no][it_follow] = SLR::Action(ENUM::ACTION_REDUCE, NULL, item.rule_pos);
+            }
+            // error("reduce reduce conflit");
           } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_SHIFT) {
             cout << "shift reduce conflit : "; 
             cout << "state.no " << state.no << " on input " << it_follow << " ";
@@ -755,7 +759,7 @@ void SLR::parse(Lex &lexer) {
       case ENUM::ACTION_ERROR:
         cout << action_string << endl;
         cout << state_stack.top() << endl;
-        error("fail: parse error");
+        error("line " + std::to_string(token.line) + ": parse error");
         break;
       default:
         error("wrong action type");

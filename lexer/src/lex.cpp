@@ -153,17 +153,21 @@ Lex::Token Lex::get_token() {
   int not_empty_pos = _pos;
   for (int i = _pos; i < _code.length(); i++) {
     if (_code[i] == ' ' || _code[i] == '\t') {
-      not_empty_pos++;
+      // do nothing
     } else if (_code[i] == '\n') {
       _line++;
-      not_empty_pos++;
+    } else if (_code[i] == '#') {
+      while(i < _code.length() && _code[i] != '\n') {
+        i++;
+      } // now i point to \n
     } else {
       break;
     }
+    not_empty_pos = i+1;
   }
   _pos = not_empty_pos;
   if (_pos >= _code.length()) {
-    Lex::Token token("EOF", "$");
+    Lex::Token token("EOF", "$", _line);
     return token;
   }
   if(_code[_pos] == _string_distincter) { // enter string mode
@@ -173,7 +177,7 @@ Lex::Token Lex::get_token() {
       _pos++;
     }
     _pos++; // skip the last _string_distincter
-    Lex::Token token(_string_type, _string_distincter + _code.substr(old_pos, _pos - old_pos) + _string_distincter);
+    Lex::Token token(_string_type, _string_distincter + _code.substr(old_pos, _pos - old_pos) + _string_distincter, _line);
     token.vstring = _code.substr(old_pos, _pos - old_pos);
     return token;
   }
@@ -181,15 +185,16 @@ Lex::Token Lex::get_token() {
   for (int i = 0; i < _lex_rules.size(); i++) {
     if (_lex_rules[i].dfa->match_from_head(sub_string, result)) {
       _pos += result.length();
-      Lex::Token token(_lex_rules[i].type, result);
+      Lex::Token token(_lex_rules[i].type, result, _line);
       return token;
     }
   }
   error(_line , "bad lexeme ");
 }
-Lex::Token::Token(string t, string l) {
+Lex::Token::Token(string t, string l, int line_) {
   type = t;
   lexeme = l;
+  line = line_;
   if (type == "identifier") {
 
   } else if (type == "number") {

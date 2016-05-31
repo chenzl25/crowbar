@@ -20,8 +20,10 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
     return false;
   }
   string s;
+  int line = 0;
   // build the bnf rule
   while (getline(bnf_rule_in, s)) {
+    line++;
     if (s.length() == 0) continue; // empty line
     stringstream ss(s);
     string flag;
@@ -44,8 +46,9 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
       continue;
     } else if (flag == "%union") {
       ss >> flag;
-      assert(flag == "{", "%union without {");
+      assert(flag == "{", std::to_string(line) + ": %union without {");
       while (getline(bnf_rule_in, s)) {
+        line++;
         stringstream ss(s);
         ss >> flag;
         if (flag == "}") {
@@ -56,8 +59,9 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
       continue;
     } else if (flag == "%include") {
       ss >> flag;
-      assert(flag == "{", "%include without {");
+      assert(flag == "{", std::to_string(line) + ": %include without {");
       while (getline(bnf_rule_in, s)) {
+        line++;
         stringstream ss(s);
         ss >> flag;
         if (flag == "}") {
@@ -75,7 +79,7 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
           _type_map[raw_string] = type_string;
         }
       } else {
-        error("not type in %type <...>");
+        error(std::to_string(line) + ": not type in %type <...>");
       }
       continue;
     } else if (flag == "$") {
@@ -85,7 +89,7 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
       string raw_string;
       // getline(ss, raw_string);
       ss >> raw_string;
-      assert(raw_string == ":", " : should after the head");
+      assert(raw_string == ":", std::to_string(line) + ": ':' should after the head");
       int or_count = 0;
       vector< BnfRule > bnf_rule_tem_set;
       BnfRule tmp;
@@ -96,12 +100,14 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
         bnf_rule_tem_set[or_count].body.push_back(symbol);
       }
       while (getline(bnf_rule_in, s)) {
+        line++;
         stringstream ss(s);
         ss >> flag;
         if (flag == ";") break;
         else if (flag == "{") {
           string action_string;
           while (getline(bnf_rule_in, s)) {
+            line++;
             stringstream ss(s);
             ss >> flag;
             if (flag == "}") break;
@@ -110,7 +116,7 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
           bnf_rule_tem_set[or_count].action_string = action_string; 
           continue; 
         }
-        else assert(flag == "|", "use | to separate the production body");
+        else assert(flag == "|", std::to_string(line) + ": use | to separate the production body");
         or_count++;
         BnfRule tmp;
         bnf_rule_tem_set.push_back(tmp);

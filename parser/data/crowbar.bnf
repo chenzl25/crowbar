@@ -1,0 +1,121 @@
+# -----------------------------------------------------------------
+# union have default : type int_value, double_value, string_value
+# token have default : <double_value> factor , <int_value>  number
+# -----------------------------------------------------------------
+
+
+%include {
+  #include <vector>
+}
+
+%union {
+    // int          int_value;
+    // double       double_value;
+    // string       *string_value;
+}
+
+%token string identifier number factor  
+
+
+
+
+$ translation_unit : definition_or_statement
+        | translation_unit definition_or_statement
+        ;
+$ definition_or_statement : function_definition
+        | statement
+        ;
+$ function_definition : 'function' identifier '(' parameter_list ')' block
+        | 'function' identifier '(' ')' block
+        ;
+$ parameter_list : identifier
+        | parameter_list ',' identifier
+        ;
+$ argument_list : expression
+        | argument_list ',' expression
+        ;
+$ statement_list : statement
+        | statement_list statement
+        ;
+$ expression : logical_or_expression
+        | identifier '=' expression
+        ;
+$ logical_or_expression : logical_and_expression
+        | logical_or_expression '||' logical_and_expression
+        ;
+$ logical_and_expression : equality_expression
+        | logical_and_expression '&&' equality_expression
+        ;
+$ equality_expression : relational_expression
+        | equality_expression '==' relational_expression
+        | equality_expression '!=' relational_expression
+        ;
+$ relational_expression : additive_expression
+        | relational_expression '>' additive_expression
+        | relational_expression '>=' additive_expression
+        | relational_expression '<=' additive_expression
+        | relational_expression '<' additive_expression
+        ;
+$ additive_expression : multiplicative_expression
+        | additive_expression '+' multiplicative_expression
+        | additive_expression '-' multiplicative_expression
+        ;
+$ multiplicative_expression : unary_expression
+        | multiplicative_expression '*' unary_expression
+        | multiplicative_expression '/' unary_expression
+        | multiplicative_expression '%' unary_expression
+        ;
+$ unary_expression : primary_expression
+        | '-' unary_expression
+        ;
+$ primary_expression : identifier '(' argument_list ')'
+        | identifier '(' ')'
+        | '(' expression ')'
+        | identifier
+        | number
+        | factor
+        | string
+        | 'true'
+        | 'false'
+        | 'null'
+        ;
+$ statement : expression ';'
+        | global_statement
+        | if_statement
+        | while_statement
+        | for_statement
+        | return_statement
+        | break_statement
+        | continue_statement
+        ;
+$ global_statement : 'global' identifier_list ';'
+        ;
+$ identifier_list : identifier
+        | identifier_list ',' identifier
+        ;
+$ if_statement : 'if' '(' expression ')' block
+        | 'if' '(' expression ')' block 'else' block
+        | 'if' '(' expression ')' block elsif_list
+        | 'if' '(' expression ')' block elsif_list 'else' block
+        ;
+$ elsif_list : elsif_
+        | elsif_list elsif_
+        ;
+$ elsif_ : 'elsif' '(' expression ')' block
+        ;
+$ while_statement : 'while' '(' expression ')' block
+        ;
+$ for_statement : 'for' '(' expression_opt ';' expression_opt ';' expression_opt ')' block
+        ;
+$ expression_opt : 
+        | expression
+        ;
+$ return_statement : 'return' expression_opt ';'
+        ;
+$ break_statement : 'break' ';'
+        ;
+$ continue_statement : 'continue' ';'
+        ;
+$ block : '{' statement_list '}'
+        | '{' '}'
+        ;

@@ -16,7 +16,8 @@ public:
     int vint;
     string vstring;
     double vdouble;
-    Token(string t, string l);
+    int line;
+    Token(string t, string l, int line_);
   };
   struct LexRule {
     string type;
