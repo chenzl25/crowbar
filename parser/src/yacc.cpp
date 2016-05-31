@@ -293,23 +293,31 @@ void Yacc::_replace_action_string(int rule_pos, ofstream& out) {
     }
   } else { // with action
     string action_string = bnf_rule.action_string;
-    for (int i = bnf_rule.body.size()-1; i >= 0; i-- ) {
+    for (int i = bnf_rule.body.size()-1; i >= 0; i-- ) { // from big to small
       out << "YYSTYPE u" << i + 1 << " = yystype_stack.top();" << endl;
       out << "yystype_stack.pop();" << endl;
       DFA dfa("$" + std::to_string(i+1));
+      while (true) { // replace all $(i+1) 
+        string result;
+        int index = dfa.match(action_string, result);
+        if (index != -1) {
+          action_string.erase(index, result.length());
+          action_string.insert(index, "u" + std::to_string(i+1) + "." + bnf_rule.body[i].type);
+        } else {
+          break;
+        }
+      }
+    }
+    DFA dfa("$$");
+    while(true) { // replace all $$
       string result;
       int index = dfa.match(action_string, result);
       if (index != -1) {
         action_string.erase(index, result.length());
-        action_string.insert(index, "u" + std::to_string(i+1) + "." + bnf_rule.body[i].type);
+        action_string.insert(index, "u." + bnf_rule.head.type);
+      } else {
+        break;
       }
-    }
-    DFA dfa("$$");
-    string result;
-    int index = dfa.match(action_string, result);
-    if (index != -1) {
-      action_string.erase(index, result.length());
-      action_string.insert(index, "u." + bnf_rule.head.type);
     }
     out << "YYSTYPE u;" << endl;
     out << trim(action_string);
