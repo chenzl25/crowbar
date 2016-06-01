@@ -594,6 +594,10 @@ void SLR::parse(Lex &lexer) {
           YYSTYPE u;
           u.string_value = new string(token.vstring);
           yystype_stack.push(u);
+        } else if (action_string == "identifier") {
+          YYSTYPE u;
+          u.string_value = new string(token.lexeme);
+          yystype_stack.push(u);
         } else {
           YYSTYPE u;    // empty yystype use only to take place
           yystype_stack.push(u);

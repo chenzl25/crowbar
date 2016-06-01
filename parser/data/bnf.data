@@ -1,7 +1,0 @@
-# ε should be empty | 
-
-% number
-
-$ E -> E '+' T | T
-$ T -> T '*' F | F
-$ F -> '(' E ')' | number
