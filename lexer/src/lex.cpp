@@ -160,6 +160,7 @@ Lex::Token Lex::get_token() {
       while(i < _code.length() && _code[i] != '\n') {
         i++;
       } // now i point to \n
+      _line++;
     } else {
       break;
     }

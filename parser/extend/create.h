@@ -16,7 +16,9 @@ StatementList *crb_create_statement_list(Statement *statement);
 StatementList *crb_chain_statement_list(StatementList *list,
                                         Statement *statement);
 Expression *crb_alloc_expression(CRB_TYPE::ExpressionType type);
-Expression *crb_create_assign_expression(string *variable,
+ExpressionList *crb_create_expression_list(Expression *expression);
+ExpressionList *crb_chain_expression_list(ExpressionList *list, Expression *expr);
+Expression *crb_create_assign_expression(Expression *variable,
                                              Expression *operand);
 Expression *crb_create_binary_expression(CRB_TYPE::ExpressionType operator_type,
                                          Expression *left,
@@ -47,5 +49,10 @@ Statement *crb_create_return_statement(Expression *expression);
 Statement *crb_create_break_statement(void);
 Statement *crb_create_continue_statement(void);
 
+Expression *crb_create_index_expression(Expression *array, Expression *index);
+Expression *crb_create_method_call_expression(Expression *expression,
+                                  string *method_name, ArgumentList *argument);
+Expression *crb_create_incdec_expression(Expression *operand, CRB_TYPE::ExpressionType inc_or_dec);
+Expression *crb_create_array_expression(ExpressionList *list);
 
 #endif

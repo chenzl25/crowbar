@@ -49,3 +49,9 @@ IdentifierList::IdentifierList() {
 IdentifierList::~IdentifierList() {
   
 }
+ExpressionList::ExpressionList() {
+
+}
+ExpressionList::~ExpressionList() {
+
+}
