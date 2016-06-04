@@ -140,6 +140,9 @@ bool Lex::read_code(string code_path) {
   if (!code_in.is_open()) {
     return false;
   }
+  _code.clear();
+  _pos = 0;
+  _line = 1;
   string s;
   while (getline(code_in, s)) {
     _code += s + '\n';
@@ -183,14 +186,27 @@ Lex::Token Lex::get_token() {
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );
+  // need to find the longest one to avoid , like: "return_func"  return "return"
+  bool found = false;
+  int longest_length = 0;
+  string longest_result;
+  string longest_type;
   for (int i = 0; i < _lex_rules.size(); i++) {
     if (_lex_rules[i].dfa->match_from_head(sub_string, result)) {
-      _pos += result.length();
-      Lex::Token token(_lex_rules[i].type, result, _line);
-      return token;
+      if (result.length() > longest_length) {
+        longest_type = _lex_rules[i].type;
+        longest_result = result;
+        found = true;
+        longest_length = result.length();
+      }
     }
   }
-  error(_line , "bad lexeme ");
+  if (!found) {
+    error(_line , "bad lexeme ");
+  }
+  _pos += longest_result.length();
+  Lex::Token token(longest_type, longest_result, _line);
+  return token;
 }
 Lex::Token::Token(string t, string l, int line_) {
   type = t;

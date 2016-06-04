@@ -559,6 +559,7 @@ void SLR::parse(Lex &lexer) {
   stack<YYSTYPE> yystype_stack;
   state_stack.push(0);
   int body_length;
+  vector<string*> vec_string_ptr;
   // EOF Token  <"EOF", "$">
   Lex::Token token = lexer.get_token();
   while(true) {
@@ -594,6 +595,12 @@ void SLR::parse(Lex &lexer) {
           YYSTYPE u;
           u.string_value = new string(token.vstring);
           yystype_stack.push(u);
+          vec_string_ptr.push_back(u.string_value);
+        } else if (action_string == "identifier") {
+          YYSTYPE u;
+          u.string_value = new string(token.lexeme);
+          yystype_stack.push(u);
+          vec_string_ptr.push_back(u.string_value);
         } else {
           YYSTYPE u;    // empty yystype use only to take place
           yystype_stack.push(u);
@@ -617,10 +624,13 @@ void SLR::parse(Lex &lexer) {
         }
         
         break;
-      case ENUM::ACTION_ACCEPT:
+      case ENUM::ACTION_ACCEPT: {
         cout << "accept : parse done!" << endl;
+        for (int i = 0; i < vec_string_ptr.size(); i++) {
+          delete vec_string_ptr[i];
+        }
         return;
-        break;
+      }
       case ENUM::ACTION_ERROR:
         cout << action_string << endl;
         cout << state_stack.top() << endl;
