@@ -2,38 +2,64 @@
 #define CRB_H
 #include <iostream>
 #include <string>
-#include <stack>
+#include <vector>
 #include <map>
-#include <set>
+#include <list>
 #include "crowbar_type.h"
 #include "crowbar.h"
 using namespace std;
+
+
 namespace CRB {
 
 class Interpreter {
+private:
+  struct Heap;
+  struct Stack;
 public:
   static Interpreter* getInstance();
   void chain_statement_list(Statement* statement);
-  CRB_TYPE::Value eval_constant(CRB_TYPE::ExpressionType operator_type,
-                                         Expression *left,
-                                         Expression *right);
-  void eval();
+  // CRB_TYPE::Value eval_constant(CRB_TYPE::ExpressionType operator_type,
+  //                                        Expression *left,
+  //                                        Expression *right);
+  // void eval();
+
   void add_function(FunctionDefinition* fd);
+  void set_line(int line_);
+  int get_line();
+  Interpreter::Heap* get_heap();
+  Interpreter::Stack* get_stack();
 private:
   struct Heap {
+    // the heap only calculate the current size, actually alloc is controlled by OS
     Heap();
+    ~Heap();
     CRB_TYPE::Object* alloc(CRB_TYPE::ObjectType);
-
-    set<CRB_TYPE::Object*> heap_set;
+    CRB_TYPE::Object* alloc(string* string_value, bool is_literal_);
+    int _threshold;
+    int _current_size;
+    list<CRB_TYPE::Object*> _heap_list;
   };
-  Heap _heap;
+  struct Stack {
+    // for the Value reason we use pointer
+    // actually, it should not alloc the stack value to the heap
+    Stack();
+    vector<CRB_TYPE::Value*> _stack_vec; 
+    CRB_TYPE::Value* pop();
+    CRB_TYPE::Value* peek(int pos);
+    void push(CRB_TYPE::Value*);
+  };
+  Heap *_heap;
+  Stack * _stack;
   map<string*, FunctionDefinition*> _function_map;
-  map<string*, CRB_TYPE::Value> _variable_map;
-  stack<CRB_TYPE::Value> _stack;
+  map<string*, CRB_TYPE::Value*> _variable_map;
   StatementList _statement_list;
+  int _line;
+  static Interpreter* _instance;
   Interpreter();
   ~Interpreter();
 };
+
 
 Interpreter *create_interpreter(void);
 void compile(Interpreter *interpreter, string code_path);

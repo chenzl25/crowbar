@@ -153,7 +153,6 @@ void Yacc::_fill_template() {
   system("cp template/makefile dist");
   system("cp data/* dist/data");
   system("cp extend/* dist/extend");
-  system("mv dist/extend/makefile dist");
   _fill_yystype();
   _fill_action();
   _fill_main();

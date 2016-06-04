@@ -1,7 +1,8 @@
-#ifndef EXPRESSION_TYPE_H
-#define EXPRESSION_TYPE_H
+#ifndef CROWBAR_TYPE_H
+#define CROWBAR_TYPE_H
 #include <string>
 using namespace std;
+
 namespace CRB_TYPE  {
 
 class ParameterList;
@@ -12,39 +13,12 @@ enum ValueType {
   BOOLEAN_VALUE = 1,
   INT_VALUE,
   DOUBLE_VALUE,
-  STRING_VALUE,
   NULL_VALUE,
-  ARRAY_VALUE,
-  ASSOC_VALUE,
+  OBJECT_VALUE,
   CLOSURE_VALUE,
   FAKE_METHOD_VALUE,
   SCOPE_CHAIN_VALUE
 };
-
-enum FunctionDefinitionType {
-    CROWBAR_FUNCTION_DEFINITION = 1,
-    NATIVE_FUNCTION_DEFINITION,
-    FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1
-};
-
-// struct FakeMethod {
-//     string    *method_name;
-//     Object    *object;
-// } ;
-
-// struct CRB_Array_tag {
-//     int         size;
-//     int         alloc_size;
-//     CRB_Value   *array;
-// };
-
-
-// typedef struct {
-//     Object  *frame; /* Assoc */
-//     Object  *next;  /* ScopeChain */
-// } ScopeChain;
-
-
 enum ObjectType {
     ARRAY_OBJECT = 1,
     STRING_OBJECT,
@@ -52,38 +26,92 @@ enum ObjectType {
     SCOPE_CHAIN_OBJECT,
     OBJECT_TYPE_COUNT_PLUS_1
 };
+enum FunctionDefinitionType {
+    CROWBAR_FUNCTION_DEFINITION = 1,
+    NATIVE_FUNCTION_DEFINITION,
+    FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1
+};
 
-struct Object {
+class Value {
+public:
+  Value();
+  Value(CRB_TYPE::ValueType type_);
+  CRB_TYPE::ValueType  type;
+};
+
+class IntValue: public Value {
+public:
+  IntValue(int int_value_);
+  int int_value;
+};
+
+class DoubleValue: public Value {
+public:
+  DoubleValue(double double_value_);
+  double double_value;
+};
+
+class BooleanValue: public Value {
+public:
+  BooleanValue(bool boolean_value_);
+  bool boolean_value;
+};
+
+class Object : public Value {
+public:
+  Object(CRB_TYPE::ObjectType type_);
   ObjectType  type;
   bool        marked;
-  string*     str;
   // Array       array;
   // Assoc       assoc;
   // ScopeChain  scope_chain;
 };
 
-// struct FakeMethod {
-//     string  *method_name;
-//     Object  *object;
-// };
-
-struct Closure {
+class Closure : public Value {
+public:
+  Closure(FunctionDefinition * f, Object *env);
   FunctionDefinition *function;
   Object          *environment; /* CRB_ScopeChain */
 };
 
-struct Value {
-  CRB_TYPE::ValueType  type;
-  union {
-    bool              boolean_value;
-    int               int_value;
-    double            double_value;
-    Object            *object;
-    Closure           *closure;
-    // FakeMethod        *fake_method;
-  } u;
+
+class String : public Object {
+public:
+  String(string *string_value_, bool is_literal_);
+  bool is_literal;
+  string   *string_value;
+};
+class Array : public Value {
+public:
+  Array(int size);
+  int     size;
+  int     alloc_size;  // like the vector memory management
+  Value   *array;      // like  new Value[10]         
 };
 
+class Assoc : public Value {
+public:
+  Assoc(int size);
+  int member_count;
+  struct AssocMember {
+    string *name;    // this come from expression name not heap
+    Value   value;   // not pointer, because  a = 100; o1.one = a; o2.one = a; we need to distinct o1.one and o2.one
+  };
+  AssocMember *member;
+};
+class FakeMethod : public Value {
+public:
+  FakeMethod();
+  String    *method_name;
+  Object    *object;
+};
+
+class ScopeChain : public Value {
+public:
+  ScopeChain();
+  Object  *frame; /* CRB_Assoc */
+  Object  *next;  /* ScopeChain */
+};
 
 enum StatementType {
     EXPRESSION_STATEMENT = 1,

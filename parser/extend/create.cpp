@@ -45,11 +45,11 @@ ExpressionList *crb_chain_expression_list(ExpressionList *list, Expression *expr
   // return list;
 }
 Expression *crb_create_comma_expression(Expression *left, Expression *right) {
-  // return new Expression(CRB_TYPE::COMMA_EXPRESSION, left, right);
+  return new CommaExpression(left, right);
 }
 Expression *crb_create_assign_expression(CRB_TYPE::ExpressionType assign_type, Expression *variable,
                                              Expression *operand) {
-  // return new Expression(assign_type, variable, operand);
+  return new AssignExpression(assign_type, variable, operand);
 }
 Expression *crb_create_binary_expression(CRB_TYPE::ExpressionType operator_type,
                                          Expression *left,
@@ -78,25 +78,25 @@ Expression *crb_create_minus_expression(Expression *operand) {
   // }
 }
 Expression *crb_create_logical_not_expression(Expression *operand) {
-  // return new Expression(CRB_TYPE::LOGICAL_NOT_EXPRESSION ,operand);
+  return new LogicalNotExpression(operand);
 }
 Expression *crb_create_identifier_expression(string *identifier) {
-  return new Expression(CRB_TYPE::IDENTIFIER_EXPRESSION ,identifier);
+  return new IdentifierExpression(identifier);
 }
-Expression *crb_create_int_expression(int n) {
-  return new Expression(CRB_TYPE::INT_EXPRESSION, n);
+Expression *crb_create_int_expression(int int_value) {
+  return new IntExpression(int_value);
 }
-Expression *crb_create_double_expression(double d) {
-  return new Expression(CRB_TYPE::DOUBLE_EXPRESSION, d);
+Expression *crb_create_double_expression(double double_value) {
+  return new DoubleExpression(double_value);
 }
-Expression *crb_create_string_expression(string *s) {
-  return new Expression(CRB_TYPE::STRING_EXPRESSION, s);
+Expression *crb_create_string_expression(string *string_value) {
+  return new StringExpression(string_value);
 }
-Expression *crb_create_boolean_expression(bool value) {
- return new Expression(CRB_TYPE::BOOLEAN_EXPRESSION, value); 
+Expression *crb_create_boolean_expression(bool boolean_value) {
+ return new BooleanExpression(boolean_value); 
 }
 Expression *crb_create_null_expression(void) {
-  return new Expression(CRB_TYPE::NULL_EXPRESSION);
+  return new NullExpression();
 }
 Expression *crb_create_function_call_expression(Expression *function,
                                                 ArgumentList *argument_list) {

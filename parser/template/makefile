@@ -9,12 +9,17 @@ SRCS += lexer/src/digraph.cpp
 SRCS += lexer/src/re_parse.cpp
 SRCS += lexer/src/lex.cpp
 
+SRCS += extend/crowbar.cpp
+SRCS += extend/CRB.cpp
+SRCS += extend/create.cpp
+SRCS += extend/crowbar_type.cpp
+
 OBJS=$(SRCS:.cpp=.o)
 
 CXX?=g++
 CPPFLAGS =-w -std=c++11
 # CPPFLAGS +=-D DEBUG
-all:	$(OBJS)
+all:  $(OBJS)
 	$(CXX) -o dcompile $(OBJS)
 
 yacc.o:     parser/src/yacc.h
@@ -35,5 +40,13 @@ re_parse.o: lexer/src/re_parse.h
 
 main.o:
 
+crowbar.o:  extend/crowbar.h
+
+create.o:   extend/create.h
+
+CRB.o:      extend/CRB.h
+
+crowbar_type.o: extend/crowbar_type.h
+  
 clean:
 	-rm -f $(OBJS) dcompile
