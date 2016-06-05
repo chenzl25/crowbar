@@ -59,6 +59,12 @@ Interpreter::Stack* Interpreter::get_stack() {
 Interpreter::Stack::Stack() {
 
 }
+Interpreter::Stack::~Stack() {
+  // TODO
+}
+int Interpreter::Stack::size() {
+  return _stack_vec.size();
+}
 CRB_TYPE::Value* Interpreter::Stack::pop() {
   auto result = _stack_vec[_stack_vec.size()-1];
   _stack_vec.erase(_stack_vec.end()-1);

@@ -14,7 +14,9 @@ enum ValueType {
   INT_VALUE,
   DOUBLE_VALUE,
   NULL_VALUE,
-  OBJECT_VALUE,
+  ARRAY_VALUE,
+  STRING_VALUE,
+  ASSOC_VALUE,
   CLOSURE_VALUE,
   FAKE_METHOD_VALUE,
   SCOPE_CHAIN_VALUE
@@ -36,30 +38,40 @@ class Value {
 public:
   Value();
   Value(CRB_TYPE::ValueType type_);
+  virtual ~Value() = default;
+  virtual void print();
   CRB_TYPE::ValueType  type;
 };
 
 class IntValue: public Value {
 public:
   IntValue(int int_value_);
+  virtual ~IntValue();
+  virtual void print();
   int int_value;
 };
 
 class DoubleValue: public Value {
 public:
   DoubleValue(double double_value_);
+  virtual ~DoubleValue();
+  virtual void print();
   double double_value;
 };
 
 class BooleanValue: public Value {
 public:
   BooleanValue(bool boolean_value_);
+  virtual ~BooleanValue();
+  virtual void print();
   bool boolean_value;
 };
 
 class Object : public Value {
 public:
-  Object(CRB_TYPE::ObjectType type_);
+  Object(CRB_TYPE::ValueType type_);
+  virtual ~Object();
+  virtual void print();
   ObjectType  type;
   bool        marked;
   // Array       array;
@@ -70,6 +82,8 @@ public:
 class Closure : public Value {
 public:
   Closure(FunctionDefinition * f, Object *env);
+  virtual ~Closure();
+  virtual void print();
   FunctionDefinition *function;
   Object          *environment; /* CRB_ScopeChain */
 };
@@ -78,12 +92,16 @@ public:
 class String : public Object {
 public:
   String(string *string_value_, bool is_literal_);
+  virtual ~String();
+  virtual void print();
   bool is_literal;
   string   *string_value;
 };
 class Array : public Value {
 public:
   Array(int size);
+  virtual ~Array();
+  virtual void print();
   int     size;
   int     alloc_size;  // like the vector memory management
   Value   *array;      // like  new Value[10]         
@@ -92,6 +110,8 @@ public:
 class Assoc : public Value {
 public:
   Assoc(int size);
+  virtual ~Assoc();
+  virtual void print();
   int member_count;
   struct AssocMember {
     string *name;    // this come from expression name not heap
@@ -102,6 +122,8 @@ public:
 class FakeMethod : public Value {
 public:
   FakeMethod();
+  virtual ~FakeMethod();
+  virtual void print();
   String    *method_name;
   Object    *object;
 };
@@ -109,6 +131,8 @@ public:
 class ScopeChain : public Value {
 public:
   ScopeChain();
+  virtual ~ScopeChain();
+  virtual void print();
   Object  *frame; /* CRB_Assoc */
   Object  *next;  /* ScopeChain */
 };

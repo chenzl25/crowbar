@@ -437,20 +437,20 @@ void SLR::_construct_action_table() {
         for (auto it_follow : follow_set) {
           if (_action_table[state.no][it_follow].type == ENUM::ACTION_REDUCE &&
               _action_table[state.no][it_follow].rule_pos != item.rule_pos) {
-            cout << "state.no " << state.no << " on input " << it_follow << " ";
-            cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer the most first bnf_rule one" << endl;
+            // cout << "state.no " << state.no << " on input " << it_follow << " ";
+            // cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer the most first bnf_rule one" << endl;
             if (item.rule_pos < _action_table[state.no][it_follow].rule_pos) {
               _action_table[state.no][it_follow] = SLR::Action(ENUM::ACTION_REDUCE, NULL, item.rule_pos);
             }
             // error("reduce reduce conflit");
           } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_SHIFT) {
-            cout << "shift reduce conflit : "; 
-            cout << "state.no " << state.no << " on input " << it_follow << " ";
-            cout << "s" << _action_table[state.no][it_follow].state_no << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer shift" << endl;
+            // cout << "shift reduce conflit : "; 
+            // cout << "state.no " << state.no << " on input " << it_follow << " ";
+            // cout << "s" << _action_table[state.no][it_follow].state_no << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer shift" << endl;
             continue;
             // error("shift reduce conflit");
           } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_ACCEPT) {
@@ -463,11 +463,11 @@ void SLR::_construct_action_table() {
         if (dot_right.is_terminal) {
           int shift_state_no =  _goto_table[state.no][dot_right];
           if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_REDUCE) {
-            cout << "shift reduce conflit : ";
-            cout << "state.no " << state.no << " on input " << dot_right.value << " ";
-            cout << "s" << _action_table[state.no][dot_right.value].state_no << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer shift" << endl;
+            // cout << "shift reduce conflit : ";
+            // cout << "state.no " << state.no << " on input " << dot_right.value << " ";
+            // cout << "s" << _action_table[state.no][dot_right.value].state_no << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer shift" << endl;
             // error("shift reduce conflit");
           } else if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_SHIFT &&
                      _action_table[state.no][dot_right.value].state_no != shift_state_no) {

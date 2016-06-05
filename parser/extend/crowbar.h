@@ -1,7 +1,24 @@
 #ifndef CROWBAR_H
 #define CROWBAR_H
 #include <string>
+#include <vector>
 #include "crowbar_type.h"
+
+#define is_numeric_type(type) \
+  ((type) == CRB_TYPE::INT_VALUE || (type) == CRB_TYPE::DOUBLE_VALUE)
+#define is_math_operator(op) \
+  ((op) == CRB_TYPE::ADD_EXPRESSION || (op) == CRB_TYPE::SUB_EXPRESSION || \ 
+   (op) == CRB_TYPE::MUL_EXPRESSION || (op) == CRB_TYPE::DIV_EXPRESSION || \
+   (op) == CRB_TYPE::MOD_EXPRESSION)
+#define is_compare_operator(op) \
+  ((op) == CRB_TYPE::EQ_EXPRESSION || (op) == CRB_TYPE::NE_EXPRESSION || \ 
+   (op) == CRB_TYPE::GT_EXPRESSION || (op) == CRB_TYPE::GE_EXPRESSION || \
+   (op) == CRB_TYPE::LT_EXPRESSION || (op) == CRB_TYPE::LE_EXPRESSION)
+#define is_logical_operator(op) \
+  ((op) == CRB_TYPE::LOGICAL_AND_EXPRESSION || (op) == CRB_TYPE::LOGICAL_OR_EXPRESSION)
+#define is_object_value(type) \
+  ((type) == CRB_TYPE::STRING_VALUE || (type) == CRB_TYPE::ARRAY_VALUE || \
+   (type) == CRB_TYPE::ASSOC_VALUE  || (type) == CRB_TYPE::SCOPE_CHAIN_VALUE)
 
 using namespace std;
 
@@ -9,13 +26,21 @@ class ParameterList {
 public:  
   ParameterList();
   ~ParameterList();
+  void add_parameter(string* identifier);
+  vector<string*> _parameter_vec;
 private:
 
-};       
+}; 
+class Expression;
+class ExpressionList;
+class Block;  
+class FunctionDefinition;
 class ArgumentList {
 public:  
   ArgumentList();
   ~ArgumentList();
+  void add_argument(Expression* expression);
+  vector<Expression*> _argument_vec;
 private:
 
 };
@@ -23,7 +48,7 @@ private:
 class Expression {
 public:  
   Expression(CRB_TYPE::ExpressionType type_);
-  ~Expression();
+  virtual ~Expression() = default;
   virtual void eval();
   int line;
   CRB_TYPE::ExpressionType type;
@@ -32,55 +57,55 @@ private:
 class IntExpression : public Expression {
 public:  
   IntExpression(int int_value_);
-  ~IntExpression();
+  virtual ~IntExpression();
   virtual void eval();
   int int_value;
 };
 class DoubleExpression : public Expression {
 public:  
-  DoubleExpression(int double_value_);
-  ~DoubleExpression();
+  DoubleExpression(double double_value_);
+  virtual ~DoubleExpression();
   virtual void eval();
   double double_value;
 };
 class StringExpression : public Expression {
 public:  
   StringExpression(string *string_value_);
-  ~StringExpression();
+  virtual ~StringExpression();
   virtual void eval();
   string* string_value;
 };
 class BooleanExpression : public Expression {
 public:  
   BooleanExpression(bool boolean_value_);
-  ~BooleanExpression();
+  virtual ~BooleanExpression();
   virtual void eval();
   bool boolean_value;
 };
 class NullExpression : public Expression {
 public:  
   NullExpression();
-  ~NullExpression();
+  virtual ~NullExpression();
   virtual void eval();
 };
 class IdentifierExpression : public Expression {
 public:  
   IdentifierExpression(string *identifier_);
-  ~IdentifierExpression();
+  virtual ~IdentifierExpression();
   virtual void eval();
   string *identifier;
 };
 class MinusExpression : public Expression {
 public:  
   MinusExpression(Expression *operand_);
-  ~MinusExpression();
+  virtual ~MinusExpression();
   virtual void eval();
   Expression *operand;
 };
 class LogicalNotExpression : public Expression {
 public:  
   LogicalNotExpression(Expression *operand_);
-  ~LogicalNotExpression();
+  virtual ~LogicalNotExpression();
   virtual void eval();
   Expression *operand;
 };
@@ -89,66 +114,119 @@ public:
   BinaryExpression(CRB_TYPE::ExpressionType operator_type_,
                    Expression *left_,
                    Expression *right_);
-  ~BinaryExpression();
+  virtual ~BinaryExpression();
   virtual void eval();
+  CRB_TYPE::Value* constant_folding_eval();
   Expression *left, *right;
 };
+
+class IncrementExpression : public Expression {
+public:  
+  IncrementExpression(Expression *operand_);
+  virtual ~IncrementExpression();
+  virtual void eval();
+  Expression *operand;
+};
+
+class DecrementExpression : public Expression {
+public:  
+  DecrementExpression(Expression *operand_);
+  virtual ~DecrementExpression();
+  virtual void eval();
+  Expression *operand;
+};
+
+
+class IndexExpression : public Expression {
+public:  
+  IndexExpression(Expression *array, Expression *index);
+  virtual ~IndexExpression();
+  virtual void eval();
+  Expression *array;
+  Expression *index;
+};
+
+class FunctionCallExpression :public Expression {
+public:
+  FunctionCallExpression(Expression *function_, ArgumentList *argument_list_);
+  virtual ~FunctionCallExpression();
+  virtual void eval();
+  Expression* function;
+  ArgumentList* argument_list;
+private:
+};
+
+class MemberExpression :public Expression {
+public:
+  MemberExpression(Expression *expression_, string *member_name_);
+  virtual ~MemberExpression();
+  virtual void eval();
+  Expression* expression;
+  string* member_name;
+private:
+};
+
+
+class ArrayExpression :public Expression {
+public:
+  ArrayExpression(ExpressionList *array_literal_);
+  virtual ~ArrayExpression();
+  virtual void eval();
+  ExpressionList* array_literal;
+private:
+};
+class ClousreExpression :public Expression {
+public:
+  ClousreExpression(string *identifier_, ParameterList *parameter_list_,
+                   Block *block_);
+  virtual ~ClousreExpression();
+  virtual void eval();
+  FunctionDefinition* function_definition;
+private:
+};
+
 class AssignExpression : public Expression {
 public:  
   AssignExpression( CRB_TYPE::ExpressionType assign_type_, 
                     Expression *variable_,
                     Expression *operand_);
-  ~AssignExpression();
+  virtual ~AssignExpression();
   virtual void eval();
   Expression *variable, *operand;
 };
 class CommaExpression : public Expression {
 public:  
   CommaExpression(Expression *left_, Expression *right_);
-  ~CommaExpression();
+  virtual ~CommaExpression();
   virtual void eval();
   Expression *left, *right;
 };
-  
-class Statement {
+
+class Elsif {
 public:  
-  Statement();
-  ~Statement();
+  Elsif(Expression *condition_, Block *block_);
+  ~Elsif();
+  Expression* condition;
+  Block* block;
 private:
 
-};          
-class StatementList {
-public:  
-  StatementList();
-  ~StatementList();
-private:
-
-};      
-class Block {
-public:  
-  Block();
-  ~Block();
-private:
-
-};              
+};           
 class ElsifList {
 public:  
   ElsifList();
   ~ElsifList();
+  void add_elsif(Elsif * elsif);
+  vector<Elsif*> _elsif_vec;
 private:
 
 };            
-class Elsif {
-public:  
-  Elsif();
-  ~Elsif();
-private:
 
-};
 class IdentifierList {
 public:  
   IdentifierList();
   ~IdentifierList();
+  void add_identifier(string *identifier);
+  vector<string*> _identifier_vec;
 private:
 
 };     
@@ -156,9 +234,13 @@ class ExpressionList {
 public:
   ExpressionList();
   ~ExpressionList();
+  void add_expression(Expression* expression_);
+  vector<Expression*> _expression_vec;
 private:
 
 };
+
+
 class FunctionDefinition {
 public:
   FunctionDefinition();
@@ -171,5 +253,102 @@ public:
   Block           *block;
 };
 
+
+////////////////////////////////////////////////////////////////////////////////////
+
+class Statement {
+public:  
+  Statement(CRB_TYPE::StatementType type_);
+  virtual ~Statement();
+  CRB_TYPE::StatementType type;
+private:
+
+};          
+class StatementList {
+public:  
+  StatementList();
+  ~StatementList();
+  void add_statement(Statement *statement);
+  vector<Statement*> _statement_vec;
+private:
+
+};  
+
+
+
+class IfStatement : public Statement {
+public:  
+  IfStatement(Expression *condition_, Block *then_block_, 
+              ElsifList *elsif_list_, Block *else_block_);
+  virtual ~IfStatement();
+  Expression* condition;
+  Block*      then_block;
+  ElsifList*  elsif_list;
+  Block*      else_block;
+private:
+};
+
+class WhileStatement : public Statement {
+public:  
+  WhileStatement(Expression *condition_, Block *block_);
+  virtual ~WhileStatement();
+  Expression* condition;
+  Block*      block;
+private:
+};
+class ForStatement : public Statement {
+public:  
+  ForStatement(Expression *init_, Expression *cond_,
+               Expression *post_, Block *block_);
+  virtual ~ForStatement();
+  Expression* init;
+  Expression* cond;
+  Expression* post;
+  Block*      block;
+private:
+};
+
+class ExpressionStatement : public Statement {
+public:  
+  ExpressionStatement(Expression *expression_);
+  virtual ~ExpressionStatement();
+  Expression* expression;
+private:
+};
+
+class ReturnStatement : public Statement {
+public:  
+  ReturnStatement(Expression *expression_);
+  virtual ~ReturnStatement();
+  Expression* expression;
+private:
+};
+class BreakStatement : public Statement {
+public:  
+  BreakStatement();
+  virtual ~BreakStatement();
+private:
+};
+class ContinueStatement : public Statement {
+public:  
+  ContinueStatement();
+  virtual ~ContinueStatement();
+private:
+};
+class GlobalStatement : public Statement {
+public:  
+  GlobalStatement(IdentifierList* identifier_list_);
+  virtual ~GlobalStatement();
+  IdentifierList* identifier_list;
+private:
+};
+class Block {
+public:  
+  Block(StatementList* statement_list_);
+  ~Block();
+  StatementList* statement_list;
+private:
+
+};
 
 #endif

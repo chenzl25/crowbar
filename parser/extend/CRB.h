@@ -13,24 +13,20 @@ using namespace std;
 namespace CRB {
 
 class Interpreter {
-private:
+ private:
   struct Heap;
   struct Stack;
-public:
+ public:
   static Interpreter* getInstance();
   void chain_statement_list(Statement* statement);
-  // CRB_TYPE::Value eval_constant(CRB_TYPE::ExpressionType operator_type,
-  //                                        Expression *left,
-  //                                        Expression *right);
-  // void eval();
-
   void add_function(FunctionDefinition* fd);
   void set_line(int line_);
   int get_line();
   Interpreter::Heap* get_heap();
   Interpreter::Stack* get_stack();
-private:
-  struct Heap {
+ private:
+  class Heap {
+   public:
     // the heap only calculate the current size, actually alloc is controlled by OS
     Heap();
     ~Heap();
@@ -38,16 +34,21 @@ private:
     CRB_TYPE::Object* alloc(string* string_value, bool is_literal_);
     int _threshold;
     int _current_size;
+   private:
     list<CRB_TYPE::Object*> _heap_list;
   };
-  struct Stack {
+  class Stack {
+   public:
     // for the Value reason we use pointer
     // actually, it should not alloc the stack value to the heap
     Stack();
-    vector<CRB_TYPE::Value*> _stack_vec; 
+    ~Stack();
     CRB_TYPE::Value* pop();
     CRB_TYPE::Value* peek(int pos);
     void push(CRB_TYPE::Value*);
+    int size();
+   private:
+    vector<CRB_TYPE::Value*> _stack_vec; 
   };
   Heap *_heap;
   Stack * _stack;

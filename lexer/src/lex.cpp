@@ -175,14 +175,14 @@ Lex::Token Lex::get_token() {
     return token;
   }
   if(_code[_pos] == _string_distincter) { // enter string mode
-    int old_pos = _pos;
     _pos++; // skip the first _string_distincter
+    int old_pos = _pos;
     while (!(_code[_pos] == _string_distincter && _code[_pos-1] != '\\')) {
       _pos++;
     }
-    _pos++; // skip the last _string_distincter
     Lex::Token token(_string_type, _string_distincter + _code.substr(old_pos, _pos - old_pos) + _string_distincter, _line);
     token.vstring = _code.substr(old_pos, _pos - old_pos);
+    _pos++; // skip the last _string_distincter
     return token;
   }
   string sub_string = _code.substr(_pos, (_code.length()-_pos < _max_token_size?_code.length()-_pos:_max_token_size) );
