@@ -136,6 +136,22 @@ public:
   Object  *frame; /* CRB_Assoc */
   Object  *next;  /* ScopeChain */
 };
+enum StatementResultType{
+  NORMAL_STATEMENT_RESULT = 1,
+  RETURN_STATEMENT_RESULT,
+  BREAK_STATEMENT_RESULT,
+  CONTINUE_STATEMENT_RESULT,
+  STATEMENT_RESULT_TYPE_COUNT_PLUS_1
+};
+
+class StatementResult {
+public:
+  StatementResult(StatementResultType type_);
+  StatementResult(Value* value_);
+  ~StatementResult();
+  StatementResultType type;
+  Value*       value;
+} ;
 
 enum StatementType {
     EXPRESSION_STATEMENT = 1,

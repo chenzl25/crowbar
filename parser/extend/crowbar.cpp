@@ -1,9 +1,9 @@
 #include "crowbar.h"
 #include "CRB.h"
 #include "crowbar_type.h"
-#include "../lexer/src/util.h"
 #include "eval.h"
-
+#include "execute.h"
+#include "crowbar_util.h"
 using namespace CRB;
 
 FunctionDefinition::FunctionDefinition() {
@@ -29,7 +29,8 @@ ParameterList::ParameterList() {
 }
 ParameterList::~ParameterList() {
   for (int i = 0; i < _parameter_vec.size(); i++) {
-    delete _parameter_vec[i];
+    if(_parameter_vec[i] != NULL) delete _parameter_vec[i];
+    _parameter_vec[i] = NULL;
   }
 }
 void ParameterList::add_parameter(string* identifier) {
@@ -40,7 +41,8 @@ ArgumentList::ArgumentList() {
 }
 ArgumentList::~ArgumentList() {
   for (int i = 0; i < _argument_vec.size(); i++) {
-    delete _argument_vec[i];
+    if(_argument_vec[i] != NULL) delete _argument_vec[i];
+    _argument_vec[i] = NULL;
   }
 }
 void ArgumentList::add_argument(Expression* expression) {
@@ -49,6 +51,10 @@ void ArgumentList::add_argument(Expression* expression) {
 Expression::Expression(CRB_TYPE::ExpressionType type_) {
   type = type_;
   line = Interpreter::getInstance()->get_line();
+}
+CRB_TYPE::Value* Expression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void Expression::eval() {
 
@@ -60,6 +66,10 @@ IntExpression::IntExpression(int int_value_) : Expression(CRB_TYPE::INT_EXPRESSI
 IntExpression::~IntExpression() {
 
 }
+CRB_TYPE::Value* IntExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
+}
 void IntExpression::eval() {
   auto value = new CRB_TYPE::IntValue(int_value);
   Interpreter::getInstance()->get_stack()->push(value);
@@ -67,6 +77,10 @@ void IntExpression::eval() {
 }
 DoubleExpression::DoubleExpression(double double_value_) : Expression(CRB_TYPE::DOUBLE_EXPRESSION) {
   double_value = double_value_;
+}
+CRB_TYPE::Value* DoubleExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void DoubleExpression::eval() {
   auto value = new CRB_TYPE::DoubleValue(double_value);
@@ -82,6 +96,10 @@ BooleanExpression::BooleanExpression(bool boolean_value_) : Expression(CRB_TYPE:
 BooleanExpression::~BooleanExpression() {
   
 }
+CRB_TYPE::Value* BooleanExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
+}
 void BooleanExpression::eval() {
   auto value = new CRB_TYPE::BooleanValue(boolean_value);
   Interpreter::getInstance()->get_stack()->push(value);
@@ -91,6 +109,10 @@ NullExpression::NullExpression() : Expression(CRB_TYPE::NULL_EXPRESSION) {
 }
 NullExpression::~NullExpression() {
   
+}
+CRB_TYPE::Value* NullExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void NullExpression::eval() {
   auto value = new CRB_TYPE::Value();
@@ -102,8 +124,13 @@ StringExpression::StringExpression(string *string_value_) : Expression(CRB_TYPE:
   string_value = string_value_; 
 }
 StringExpression::~StringExpression() {
-  delete string_value;
+  if(string_value != NULL) delete string_value;
+  string_value = NULL;
   // cout << "success delete the slr new string" << endl;
+}
+CRB_TYPE::Value* StringExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void StringExpression::eval() {
   auto value = Interpreter::getInstance()->get_heap()->alloc(string_value, true);
@@ -115,8 +142,13 @@ IdentifierExpression::IdentifierExpression(string *identifier_): Expression(CRB_
   identifier = identifier_;
 }
 IdentifierExpression::~IdentifierExpression() {
-  delete identifier;
+  if(identifier != NULL) delete identifier;
+  identifier = NULL;
   // cout << "success delete the slr new string" << endl;
+}
+CRB_TYPE::Value* IdentifierExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void IdentifierExpression::eval() {
 
@@ -125,7 +157,12 @@ MinusExpression::MinusExpression(Expression *operand_): Expression(CRB_TYPE::MIN
   operand_ = operand_;
 }
 MinusExpression::~MinusExpression() {
-  delete operand;
+  if(operand != NULL) delete operand;
+  operand = NULL;
+}
+CRB_TYPE::Value* MinusExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void MinusExpression::eval() {
   operand->eval();
@@ -137,14 +174,19 @@ void MinusExpression::eval() {
     CRB_TYPE::DoubleValue* value =  dynamic_cast<CRB_TYPE::DoubleValue*>(value);
     value->double_value = -value->double_value;
   } else {
-    error(std::to_string(this->line) + " wrong type in minus expression");
+    CRB::error(std::to_string(this->line) + " wrong type in minus expression");
   }
 }
 LogicalNotExpression::LogicalNotExpression(Expression *operand_): Expression(CRB_TYPE::LOGICAL_NOT_EXPRESSION) {
   operand = operand_;
 }
 LogicalNotExpression::~LogicalNotExpression() {
-  delete operand;
+  if(operand != NULL) delete operand;
+  operand = NULL;
+}
+CRB_TYPE::Value* LogicalNotExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void LogicalNotExpression::eval() {
   operand->eval();
@@ -153,7 +195,7 @@ void LogicalNotExpression::eval() {
     CRB_TYPE::BooleanValue* value =  dynamic_cast<CRB_TYPE::BooleanValue*>(value);
     value->boolean_value = !value->boolean_value;
   } else {
-    error(std::to_string(this->line) + " wrong type in logical not expression");
+    CRB::error(std::to_string(this->line) + " wrong type in logical not expression");
   }
 }
 BinaryExpression::BinaryExpression(CRB_TYPE::ExpressionType operator_type_,
@@ -163,8 +205,14 @@ BinaryExpression::BinaryExpression(CRB_TYPE::ExpressionType operator_type_,
   right = right_;
 }
 BinaryExpression::~BinaryExpression() {
-  delete left;
-  delete right;
+  if(left != NULL) delete left;
+  left = NULL;
+  if(right != NULL) delete right;
+  right = NULL;
+}
+CRB_TYPE::Value*  BinaryExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void  BinaryExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
@@ -229,7 +277,12 @@ IncrementExpression::IncrementExpression(Expression *operand_): Expression(CRB_T
   operand = operand_;
 }
 IncrementExpression::~IncrementExpression() {
-  delete operand;
+  if(operand != NULL) delete operand;
+  operand = NULL;
+}
+CRB_TYPE::Value* IncrementExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void IncrementExpression::eval() {
   //TODO
@@ -238,7 +291,12 @@ DecrementExpression::DecrementExpression(Expression *operand_): Expression(CRB_T
   operand = operand_;
 }
 DecrementExpression::~DecrementExpression() {
-  delete operand;
+  if(operand != NULL) delete operand;
+  operand = NULL;
+}
+CRB_TYPE::Value* DecrementExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void DecrementExpression::eval() {
   //TODO
@@ -248,8 +306,14 @@ IndexExpression::IndexExpression(Expression *array_, Expression *index_): Expres
   index = index_;
 }
 IndexExpression::~IndexExpression() {
-  delete array;
-  delete index;
+  if(array != NULL) delete array;
+  array = NULL;
+  if(index != NULL) delete index;
+  index = NULL;
+}
+CRB_TYPE::Value* IndexExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void IndexExpression::eval() {
   //TODO
@@ -261,11 +325,40 @@ AssignExpression::AssignExpression( CRB_TYPE::ExpressionType assign_type_,
   operand = operand_;
 }
 AssignExpression::~AssignExpression() {
-  delete variable;
-  delete operand;
+  if(variable != NULL) delete variable;
+  variable = NULL;
+  if(operand != NULL) delete operand;
+  operand = NULL;
+}
+CRB_TYPE::Value* AssignExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void AssignExpression::eval() {
+  auto Istack = Interpreter::getInstance()->get_stack();
+  operand->eval();
+  auto src = Istack->peek(0);
+  if (variable->type == CRB_TYPE::MEMBER_EXPRESSION) {
+    // TODO;
+    return;
+  }
 
+  CRB_TYPE::Value* dest = get_lvalue(operand);
+  if (variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION && dest == NULL) {
+    // init assign
+    if (this->type != CRB_TYPE::NORMAL_ASSIGN_EXPRESSION) {
+      CRB::error("init assign must use = ");
+    }
+    // TODO
+    // add to local
+    // add to gobal
+    // find function name
+
+
+  } else {
+    CRB::assert(dest != NULL, "dest muse not equal NULL");
+    do_assign(src, dest, this->type, this->line);
+  }
 }
 
 FunctionCallExpression::FunctionCallExpression(Expression *function_, 
@@ -274,8 +367,14 @@ FunctionCallExpression::FunctionCallExpression(Expression *function_,
   argument_list = argument_list_;
 }
 FunctionCallExpression::~FunctionCallExpression() {
-  delete function;
-  delete argument_list;
+  if(function != NULL) delete function;
+  function = NULL;
+  if(argument_list != NULL) delete argument_list;
+  argument_list = NULL;
+}
+CRB_TYPE::Value* FunctionCallExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void FunctionCallExpression::eval() {
 
@@ -287,8 +386,14 @@ MemberExpression::MemberExpression(Expression *expression_,
   member_name = member_name_;
 }
 MemberExpression::~MemberExpression() {
-  delete expression;
-  delete member_name;
+  if(expression != NULL) delete expression;
+  expression = NULL;
+  if(member_name != NULL) delete member_name;
+  member_name = NULL;
+}
+CRB_TYPE::Value* MemberExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void MemberExpression::eval() {
 
@@ -298,7 +403,12 @@ ArrayExpression::ArrayExpression(ExpressionList *array_literal_):Expression(CRB_
   array_literal = array_literal_;
 }
 ArrayExpression::~ArrayExpression() {
-  delete array_literal;
+  if(array_literal != NULL) delete array_literal;
+  array_literal = NULL;
+}
+CRB_TYPE::Value* ArrayExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void ArrayExpression::eval() {
 
@@ -310,7 +420,12 @@ ClousreExpression::ClousreExpression(string *identifier_, ParameterList *paramet
         identifier_, parameter_list_, block_, true);
 }
 ClousreExpression::~ClousreExpression() {
-  delete function_definition;
+  if(function_definition != NULL) delete function_definition;
+  function_definition = NULL;
+}
+CRB_TYPE::Value* ClousreExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void ClousreExpression::eval() {
 
@@ -322,8 +437,14 @@ CommaExpression::CommaExpression(Expression *left_,
   right = right_;
 }
 CommaExpression::~CommaExpression() {
-  delete left;
-  delete right;
+  if(left != NULL) delete left;
+  left = NULL;
+  if(right != NULL) delete right;
+  right = NULL;
+}
+CRB_TYPE::Value* CommaExpression::eval_and_pop() {
+  eval();
+  return Interpreter::getInstance()->get_stack()->pop();
 }
 void CommaExpression::eval() {
 
@@ -335,26 +456,51 @@ ElsifList::ElsifList() {
 }
 ElsifList::~ElsifList() {
   for (int i = 0; i < _elsif_vec.size(); i++) {
-    delete _elsif_vec[i];
+    if(_elsif_vec[i] != NULL) delete _elsif_vec[i];
+    _elsif_vec[i] = NULL;
   }
 }
 void ElsifList::add_elsif(Elsif* elsif) {
   _elsif_vec.push_back(elsif);
+}
+CRB_TYPE::StatementResult* ElsifList::execute() {
+  for (int i = 0 ; i < _elsif_vec.size(); i++) {
+    auto result = _elsif_vec[i]->execute();
+    if (result != NULL) {
+      return result;
+    }
+  }
+  return NULL;
 }
 Elsif::Elsif(Expression *condition_, Block *block_) {
   condition = condition_;
   block = block_;
 }
 Elsif::~Elsif() {
-  delete condition;
-  delete block;
+  if(condition != NULL) delete condition;
+  condition = NULL;
+  if(block != NULL) delete block;
+  block = NULL;
+}
+CRB_TYPE::StatementResult* Elsif::execute() {
+  auto value = condition->eval_and_pop();
+  assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+         " condition expression should be bool");
+  if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value)  {
+    delete value; // delete the stack pop
+    return this->block->execute();
+  } else {
+    return NULL;
+  }
+
 }
 IdentifierList::IdentifierList() {
   
 }
 IdentifierList::~IdentifierList() {
   for (int i = 0; i < _identifier_vec.size(); i++) {
-    delete _identifier_vec[i];
+    if(_identifier_vec[i] != NULL) delete _identifier_vec[i];
+    _identifier_vec[i] = NULL;
   }
 }
 void IdentifierList::add_identifier(string *identifier) {
@@ -366,7 +512,8 @@ ExpressionList::ExpressionList() {
 }
 ExpressionList::~ExpressionList() {
   for (int i = 0; i < _expression_vec.size(); i++) {
-    delete _expression_vec[i];
+    if(_expression_vec[i] != NULL) delete _expression_vec[i];
+    _expression_vec[i] = NULL;
   }
 }
 void ExpressionList::add_expression(Expression* expression_) {
@@ -374,20 +521,37 @@ void ExpressionList::add_expression(Expression* expression_) {
 }
 Statement::Statement(CRB_TYPE::StatementType type_) {
   type = type_;
+  line = Interpreter::getInstance()->get_line();
 }
 Statement::~Statement() {
   
+}
+CRB_TYPE::StatementResult* Statement::execute() {
+
 }
 StatementList::StatementList() {
   
 }
 StatementList::~StatementList() {
   for (int i = 0; i < _statement_vec.size(); i++) {
-    delete _statement_vec[i];
+    if(_statement_vec[i] != NULL) delete _statement_vec[i];
+    _statement_vec[i] = NULL;
   }
 }
 void StatementList::add_statement(Statement *statement) {
   _statement_vec.push_back(statement);
+}
+CRB_TYPE::StatementResult* StatementList::execute() {
+  CRB_TYPE::StatementResult* result;
+  for (int i = 0; i < _statement_vec.size(); i++) {
+    result = _statement_vec[i]->execute();
+    if (result->type != CRB_TYPE::NORMAL_STATEMENT_RESULT) {
+      return result;
+    } else {
+      delete result;
+    }
+  }
+  return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 
 IfStatement::IfStatement(Expression *condition_, Block *then_block_, ElsifList *elsif_list_,
@@ -398,10 +562,33 @@ IfStatement::IfStatement(Expression *condition_, Block *then_block_, ElsifList *
   else_block = else_block_;
 }
 IfStatement::~IfStatement() {
-  delete condition;
-  delete then_block;
-  delete elsif_list;
-  delete else_block;
+  if(condition != NULL) delete condition;
+  condition = NULL;
+  if(then_block != NULL) delete then_block;
+  then_block = NULL;
+  if(elsif_list != NULL) delete elsif_list;
+  elsif_list = NULL;
+  if(else_block != NULL) delete else_block;
+  else_block = NULL;
+}
+CRB_TYPE::StatementResult* IfStatement::execute() {
+  CRB_TYPE::StatementResult* result;
+  auto value = condition->eval_and_pop();
+  assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+         std::to_string(this->line) + " condition expression should be bool");
+  if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
+    delete value; // delete the stack pop
+    result = this->then_block->statement_list->execute();
+  } else if (this->elsif_list) {
+    result = this->elsif_list->execute();
+    if (result != NULL) {
+      return result;
+    } else if (this->else_block) {
+      result = this->else_block->execute();
+    }
+  } else if (this->else_block) {
+    result = this->else_block->execute();
+  }
 }
 WhileStatement::WhileStatement(Expression *condition_,
                                Block *block_): Statement(CRB_TYPE::WHILE_STATEMENT) {
@@ -409,8 +596,35 @@ WhileStatement::WhileStatement(Expression *condition_,
   block = block_;
 }
 WhileStatement::~WhileStatement() {
-  delete condition;
-  delete block;
+  if(condition != NULL) delete condition;
+  condition = NULL;
+  if(block != NULL) delete block;
+  block = NULL;
+}
+CRB_TYPE::StatementResult* WhileStatement::execute() {
+  CRB_TYPE::StatementResult* result;
+  while(true) {
+    auto value = condition->eval_and_pop();
+    assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+           std::to_string(this->line) + " condition expression should be bool");
+    if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
+      delete value; // delete the stack pop
+      result = this->block->execute();
+      if (result->type == CRB_TYPE::BREAK_STATEMENT_RESULT) {
+        delete result;
+        break;
+      } else if(result->type == CRB_TYPE::CONTINUE_STATEMENT_RESULT) {
+        delete result;
+        // do nothing beacuse we don't use label
+      } else {
+        delete result;
+        // do nothing
+      }
+    } else {
+      break;
+    }
+  }
+  return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 ForStatement::ForStatement(Expression *init_, Expression *cond_, Expression *post_, 
                            Block *block_): Statement(CRB_TYPE::FOR_STATEMENT) {
@@ -420,22 +634,76 @@ ForStatement::ForStatement(Expression *init_, Expression *cond_, Expression *pos
   block = block_;
 }
 ForStatement::~ForStatement() {
-  delete init;
-  delete cond;
-  delete post;
-  delete block;
+  if(init != NULL) delete init;
+  init = NULL;
+  if(cond != NULL) delete cond;
+  cond = NULL;
+  if(post != NULL) delete post;
+  post = NULL;
+  if(block != NULL) delete block;
+  block = NULL;
+}
+CRB_TYPE::StatementResult* ForStatement::execute() {
+  CRB_TYPE::StatementResult* result;
+  if (this->init) {
+    this->init->eval_and_pop();
+  }
+  while(true) {
+    auto value = this->cond->eval_and_pop();
+    assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+           std::to_string(this->line) + " condition expression should be bool");
+    if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
+      delete value; // delete the stack pop
+      result = this->block->execute();
+      if (result->type == CRB_TYPE::RETURN_STATEMENT_RESULT) {
+        return result;
+      } else if (result->type == CRB_TYPE::BREAK_STATEMENT_RESULT) {
+        delete result;
+        break;
+      } else if(result->type == CRB_TYPE::CONTINUE_STATEMENT_RESULT) {
+        delete result;
+        // do nothing beacuse we don't use label
+      } else {
+        delete result;
+        // do nothing
+      }
+      if (this->post) {
+        this->post->eval_and_pop();
+      }
+    } else { // conditoin false
+      break;
+    }
+  }
+  return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 ExpressionStatement::ExpressionStatement(Expression *expression_): Statement(CRB_TYPE::EXPRESSION_STATEMENT) {
   expression = expression_;
 }
 ExpressionStatement::~ExpressionStatement() {
-  delete expression;
+  if(expression != NULL) delete expression;
+  expression = NULL;
+}
+CRB_TYPE::StatementResult* ExpressionStatement::execute() {
+  CRB_TYPE::StatementResult *result;
+  result = new CRB_TYPE::StatementResult(value_copy(expression->eval_and_pop()));
+  return result;
 }
 ReturnStatement::ReturnStatement(Expression *expression_): Statement(CRB_TYPE::RETURN_STATEMENT) {
   expression = expression_;
 }
 ReturnStatement::~ReturnStatement() {
-  delete expression;
+  if(expression != NULL) delete expression;
+  expression = NULL;
+}
+CRB_TYPE::StatementResult* ReturnStatement::execute() {
+  if (this->expression) {
+    auto value = this->expression->eval_and_pop();
+    // because the stack pop need to delete
+    // here we use it instead of value_copy
+    return new CRB_TYPE::StatementResult(value); 
+  } else {
+    return new CRB_TYPE::StatementResult(new CRB_TYPE::Value());
+  }
 }
 BreakStatement::BreakStatement(): Statement(CRB_TYPE::BREAK_STATEMENT) {
 
@@ -443,21 +711,39 @@ BreakStatement::BreakStatement(): Statement(CRB_TYPE::BREAK_STATEMENT) {
 BreakStatement::~BreakStatement() {
 
 }
+CRB_TYPE::StatementResult* BreakStatement::execute() {
+  return new CRB_TYPE::StatementResult(CRB_TYPE::BREAK_STATEMENT_RESULT);
+}
 ContinueStatement::ContinueStatement(): Statement(CRB_TYPE::CONTINUE_STATEMENT) {
 
 }
 ContinueStatement::~ContinueStatement() {
 
 }
+CRB_TYPE::StatementResult* ContinueStatement::execute() {
+  return new CRB_TYPE::StatementResult(CRB_TYPE::CONTINUE_STATEMENT_RESULT);
+}
 GlobalStatement::GlobalStatement(IdentifierList* identifier_list_) :Statement(CRB_TYPE::GLOBAL_STATEMENT) {
   identifier_list = identifier_list_;
 }
 GlobalStatement::~GlobalStatement() {
-  delete identifier_list;
+  if(identifier_list != NULL) delete identifier_list;
+  identifier_list = NULL;
+}
+CRB_TYPE::StatementResult* GlobalStatement::execute() {
+
 }
 Block::Block(StatementList* statement_list_) {
   statement_list = statement_list_;
 }
 Block::~Block() {
-  delete statement_list;
+  if(statement_list != NULL) delete statement_list;
+  statement_list = NULL;
+}
+CRB_TYPE::StatementResult* Block::execute() {
+  if (statement_list) {
+    return statement_list->execute();
+  } else {
+    return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
+  }
 }

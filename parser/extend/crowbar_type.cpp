@@ -96,3 +96,19 @@ void String::print() {
   cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
   cout << "value value: " << *(this->string_value) << endl;
 }
+StatementResult::StatementResult(StatementResultType type_) {
+  CRB::assert(type != CRB_TYPE::RETURN_STATEMENT_RESULT,
+         "the statement result without value should not return ");
+  type = type_;
+}
+StatementResult::StatementResult(Value* value_) {
+  type = CRB_TYPE::RETURN_STATEMENT_RESULT;
+  CRB::assert(value_ != NULL, "the statement result _value should not NULL");
+  value = value_;
+}
+StatementResult::~StatementResult() {
+  if (value) {
+    delete value; // maybe need to change when consider other value from heap
+  }
+}
+

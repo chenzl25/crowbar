@@ -31,10 +31,12 @@ public:
 private:
 
 }; 
+
 class Expression;
 class ExpressionList;
 class Block;  
 class FunctionDefinition;
+
 class ArgumentList {
 public:  
   ArgumentList();
@@ -50,6 +52,7 @@ public:
   Expression(CRB_TYPE::ExpressionType type_);
   virtual ~Expression() = default;
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   int line;
   CRB_TYPE::ExpressionType type;
 private:
@@ -59,6 +62,7 @@ public:
   IntExpression(int int_value_);
   virtual ~IntExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   int int_value;
 };
 class DoubleExpression : public Expression {
@@ -66,6 +70,7 @@ public:
   DoubleExpression(double double_value_);
   virtual ~DoubleExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   double double_value;
 };
 class StringExpression : public Expression {
@@ -73,6 +78,7 @@ public:
   StringExpression(string *string_value_);
   virtual ~StringExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   string* string_value;
 };
 class BooleanExpression : public Expression {
@@ -80,6 +86,7 @@ public:
   BooleanExpression(bool boolean_value_);
   virtual ~BooleanExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   bool boolean_value;
 };
 class NullExpression : public Expression {
@@ -87,12 +94,14 @@ public:
   NullExpression();
   virtual ~NullExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
 };
 class IdentifierExpression : public Expression {
 public:  
   IdentifierExpression(string *identifier_);
   virtual ~IdentifierExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   string *identifier;
 };
 class MinusExpression : public Expression {
@@ -100,6 +109,7 @@ public:
   MinusExpression(Expression *operand_);
   virtual ~MinusExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *operand;
 };
 class LogicalNotExpression : public Expression {
@@ -107,6 +117,7 @@ public:
   LogicalNotExpression(Expression *operand_);
   virtual ~LogicalNotExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *operand;
 };
 class BinaryExpression : public Expression {
@@ -116,6 +127,7 @@ public:
                    Expression *right_);
   virtual ~BinaryExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   CRB_TYPE::Value* constant_folding_eval();
   Expression *left, *right;
 };
@@ -125,6 +137,7 @@ public:
   IncrementExpression(Expression *operand_);
   virtual ~IncrementExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *operand;
 };
 
@@ -133,6 +146,7 @@ public:
   DecrementExpression(Expression *operand_);
   virtual ~DecrementExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *operand;
 };
 
@@ -142,6 +156,7 @@ public:
   IndexExpression(Expression *array, Expression *index);
   virtual ~IndexExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *array;
   Expression *index;
 };
@@ -151,6 +166,7 @@ public:
   FunctionCallExpression(Expression *function_, ArgumentList *argument_list_);
   virtual ~FunctionCallExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression* function;
   ArgumentList* argument_list;
 private:
@@ -161,6 +177,7 @@ public:
   MemberExpression(Expression *expression_, string *member_name_);
   virtual ~MemberExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression* expression;
   string* member_name;
 private:
@@ -172,6 +189,7 @@ public:
   ArrayExpression(ExpressionList *array_literal_);
   virtual ~ArrayExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   ExpressionList* array_literal;
 private:
 };
@@ -181,6 +199,7 @@ public:
                    Block *block_);
   virtual ~ClousreExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   FunctionDefinition* function_definition;
 private:
 };
@@ -192,6 +211,7 @@ public:
                     Expression *operand_);
   virtual ~AssignExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *variable, *operand;
 };
 class CommaExpression : public Expression {
@@ -199,6 +219,7 @@ public:
   CommaExpression(Expression *left_, Expression *right_);
   virtual ~CommaExpression();
   virtual void eval();
+  virtual CRB_TYPE::Value* eval_and_pop();
   Expression *left, *right;
 };
 
@@ -206,6 +227,7 @@ class Elsif {
 public:  
   Elsif(Expression *condition_, Block *block_);
   ~Elsif();
+  CRB_TYPE::StatementResult* execute();
   Expression* condition;
   Block* block;
 private:
@@ -215,6 +237,7 @@ class ElsifList {
 public:  
   ElsifList();
   ~ElsifList();
+  CRB_TYPE::StatementResult* execute();
   void add_elsif(Elsif * elsif);
   vector<Elsif*> _elsif_vec;
 private:
@@ -260,7 +283,9 @@ class Statement {
 public:  
   Statement(CRB_TYPE::StatementType type_);
   virtual ~Statement();
+  virtual CRB_TYPE::StatementResult* execute();
   CRB_TYPE::StatementType type;
+  int line;
 private:
 
 };          
@@ -268,6 +293,7 @@ class StatementList {
 public:  
   StatementList();
   ~StatementList();
+  virtual CRB_TYPE::StatementResult* execute();
   void add_statement(Statement *statement);
   vector<Statement*> _statement_vec;
 private:
@@ -281,6 +307,7 @@ public:
   IfStatement(Expression *condition_, Block *then_block_, 
               ElsifList *elsif_list_, Block *else_block_);
   virtual ~IfStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   Expression* condition;
   Block*      then_block;
   ElsifList*  elsif_list;
@@ -292,6 +319,7 @@ class WhileStatement : public Statement {
 public:  
   WhileStatement(Expression *condition_, Block *block_);
   virtual ~WhileStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   Expression* condition;
   Block*      block;
 private:
@@ -301,6 +329,7 @@ public:
   ForStatement(Expression *init_, Expression *cond_,
                Expression *post_, Block *block_);
   virtual ~ForStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   Expression* init;
   Expression* cond;
   Expression* post;
@@ -312,6 +341,7 @@ class ExpressionStatement : public Statement {
 public:  
   ExpressionStatement(Expression *expression_);
   virtual ~ExpressionStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   Expression* expression;
 private:
 };
@@ -320,6 +350,7 @@ class ReturnStatement : public Statement {
 public:  
   ReturnStatement(Expression *expression_);
   virtual ~ReturnStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   Expression* expression;
 private:
 };
@@ -327,18 +358,21 @@ class BreakStatement : public Statement {
 public:  
   BreakStatement();
   virtual ~BreakStatement();
+  virtual CRB_TYPE::StatementResult* execute();
 private:
 };
 class ContinueStatement : public Statement {
 public:  
   ContinueStatement();
   virtual ~ContinueStatement();
+  virtual CRB_TYPE::StatementResult* execute();
 private:
 };
 class GlobalStatement : public Statement {
 public:  
   GlobalStatement(IdentifierList* identifier_list_);
   virtual ~GlobalStatement();
+  virtual CRB_TYPE::StatementResult* execute();
   IdentifierList* identifier_list;
 private:
 };
@@ -346,6 +380,7 @@ class Block {
 public:  
   Block(StatementList* statement_list_);
   ~Block();
+  CRB_TYPE::StatementResult* execute();
   StatementList* statement_list;
 private:
 

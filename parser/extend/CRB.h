@@ -22,6 +22,7 @@ class Interpreter {
   void add_function(FunctionDefinition* fd);
   void set_line(int line_);
   int get_line();
+  void execute();
   Interpreter::Heap* get_heap();
   Interpreter::Stack* get_stack();
  private:
@@ -52,8 +53,8 @@ class Interpreter {
   };
   Heap *_heap;
   Stack * _stack;
-  map<string*, FunctionDefinition*> _function_map;
-  map<string*, CRB_TYPE::Value*> _variable_map;
+  map<string, FunctionDefinition*> _function_map;
+  map<string, CRB_TYPE::Value*> _variable_map;
   StatementList _statement_list;
   int _line;
   static Interpreter* _instance;

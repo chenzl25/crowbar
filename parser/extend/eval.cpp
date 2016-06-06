@@ -232,3 +232,10 @@ void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value,
     string concat_std_string = *(dynamic_cast<CRB_TYPE::String*>(left_value)->string_value) + right_std_string;
     result_value = Iheap->alloc(&concat_std_string, false);
 }
+CRB_TYPE::Value* get_lvalue(Expression* expression) {
+
+}
+void do_assign(CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
+               CRB_TYPE::ExpressionType type, int line_number) {
+    
+}

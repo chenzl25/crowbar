@@ -15,6 +15,7 @@ SRCS += extend/create.cpp
 SRCS += extend/crowbar_type.cpp
 SRCS += extend/crowbar_util.cpp
 SRCS += extend/eval.cpp
+SRCS += extend/execute.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
@@ -53,6 +54,8 @@ crowbar_type.o: extend/crowbar_type.h
 crowbar_util.o: extend/crowbar_util.h
 
 eval.o: 				extend/eval.h
+
+execute.o:			extend/execute.h
 
 clean:
 	-rm -f $(OBJS) dcompile

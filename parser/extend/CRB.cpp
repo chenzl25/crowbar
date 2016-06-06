@@ -35,10 +35,10 @@ Interpreter::Heap* Interpreter::get_heap() {
   return _heap;
 }
 void Interpreter::add_function(FunctionDefinition* fd) {
-  if (_function_map.count(fd->name)) {
+  if (_function_map.count(*(fd->name))) {
     error("multi definition of " + *(fd->name));
   }
-  _function_map[fd->name] = fd;
+  _function_map[*(fd->name)] = fd;
   cout << "add function: " << *(fd->name) << endl;
 }
 Interpreter *create_interpreter(void) {
@@ -108,6 +108,9 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(string* string_value, bool is_literal
     _current_size += sizeof(CRB_TYPE::String) + string_value->length();
     return new CRB_TYPE::String(new string(*string_value), is_literal_);
   }
+}
+void Interpreter::execute() {
+  _statement_list.execute();
 }
 
 } // CRB
