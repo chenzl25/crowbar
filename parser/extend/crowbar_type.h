@@ -87,8 +87,8 @@ public:
   String(string *string_value_, bool is_literal_);
   virtual ~String();
   virtual void print();
-  bool is_literal;
   string   *string_value;
+  bool is_literal;
 };
 class Array : public Value {
 public:

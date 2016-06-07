@@ -1,5 +1,7 @@
 #include "CRB.h"
 #include "../lexer/src/util.h"
+#include <set>
+using namespace std;
 
 namespace CRB {
 
@@ -91,6 +93,9 @@ Interpreter::Heap::~Heap() {
     delete *it;
   }
 }
+
+
+
 CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
   CRB_TYPE::Object* alloc_ptr;
   switch (type_) {
@@ -115,16 +120,24 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
       error("heap alloc type error");
   }
 }
+
+set<CRB_TYPE::Object*> fix_bug_set;
+
 CRB_TYPE::Object* Interpreter::Heap::alloc(string* string_value, bool is_literal_) {
-  CRB_TYPE::Object* alloc_ptr;
+  CRB_TYPE::Object* alloc_ptr = NULL;
+  AGAIN:
   if (is_literal_) { // when gc we do not sweep literal
     alloc_ptr = new CRB_TYPE::String(string_value, is_literal_);
-    _heap_list.push_back(alloc_ptr);
   } else {
     alloc_ptr = new CRB_TYPE::String(new string(*string_value), is_literal_);
     _current_size += sizeof(CRB_TYPE::String) + string_value->length();
-    _heap_list.push_back(alloc_ptr);
   }
+  if (fix_bug_set.count(alloc_ptr)) { // so strang here
+    goto AGAIN;
+  }
+  fix_bug_set.insert(alloc_ptr);
+  cout << alloc_ptr << endl;
+  _heap_list.push_back(alloc_ptr);
   return alloc_ptr;
 }
 void Interpreter::execute() {
@@ -169,6 +182,7 @@ void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_
     if (_global_function_map.count(name)) {
       error("there are same function name: " +name+ " in global");
     }
+    assert(_global_variable_map.count(name) == 0, "add variable should just init");
     _global_variable_map[name] = local_value;
     cout << "add global varible: " << name << endl;
     local_value->print();
@@ -189,7 +203,11 @@ void Interpreter::Environment::add_global_declare(string name) {
 }
 CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
   if (_in_global) {
-    return _global_variable_map[name];
+    if (_global_variable_map.count(name)) {
+      return _global_variable_map[name];
+    } else {
+      return NULL;
+    }
   } else {
     CRB_TYPE::Value* result = _scope_chain->frame->search_member(name);
     if (result != NULL) return result;
@@ -198,7 +216,11 @@ CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
   return NULL;
 }
 FunctionDefinition* Interpreter::Environment::search_function(string name) {
-  return _global_function_map[name];
+  if (_global_function_map.count(name)) {
+    return _global_function_map[name];
+  } else {
+    return NULL;
+  }
 }
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
   if (_in_global) {

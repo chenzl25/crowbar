@@ -2,6 +2,7 @@
 #include "string"
 #include "CRB.h"
 using namespace std;
+
 CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
   CRB_TYPE::Value* result;
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
