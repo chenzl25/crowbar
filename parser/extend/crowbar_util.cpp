@@ -108,7 +108,7 @@ string expression_type_to_string(CRB_TYPE::ExpressionType type) {
         return "undefined type";
   }
 }
-string statememt_type_to_string(CRB_TYPE::StatementType type) {
+string statement_type_to_string(CRB_TYPE::StatementType type) {
   switch(type) {
     case CRB_TYPE::EXPRESSION_STATEMENT:
       return "EXPRESSION_STATEMENT";

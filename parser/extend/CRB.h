@@ -14,18 +14,40 @@ namespace CRB {
 
 class Interpreter {
  private:
-  struct Heap;
-  struct Stack;
+  class Heap;
+  class Stack;
+  class  Environment;
  public:
   static Interpreter* getInstance();
+  void dealloc();
   void chain_statement_list(Statement* statement);
-  void add_function(FunctionDefinition* fd);
   void set_line(int line_);
   int get_line();
   void execute();
   Interpreter::Heap* get_heap();
   Interpreter::Stack* get_stack();
+  Interpreter::Environment* get_environment();
  private:
+  class Environment {
+   public:
+    Environment();
+    ~Environment();
+    void alloc_env(CRB_TYPE::ScopeChain* next_);
+    void dealloc_env();
+    void add_function(FunctionDefinition* fd);
+    void add_variable(string name, CRB_TYPE::Value*);
+    void add_global_declare(string name);
+    void assign_variable(string name, CRB_TYPE::Value*);
+    CRB_TYPE::Value* search_variable(string name);
+    void assign(string name, CRB_TYPE::Value*);
+    FunctionDefinition* search_function(string name);
+   private:
+    bool _in_global;
+    CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
+    map<string, CRB_TYPE::Value*> _global_declare_map;
+    map<string, FunctionDefinition*> _global_function_map;
+    map<string, CRB_TYPE::Value*> _global_variable_map;
+  };
   class Heap {
    public:
     // the heap only calculate the current size, actually alloc is controlled by OS
@@ -53,9 +75,8 @@ class Interpreter {
   };
   Heap *_heap;
   Stack * _stack;
-  map<string, FunctionDefinition*> _function_map;
-  map<string, CRB_TYPE::Value*> _variable_map;
-  StatementList _statement_list;
+  Environment *_environment;
+  StatementList *_statement_list;
   int _line;
   static Interpreter* _instance;
   Interpreter();

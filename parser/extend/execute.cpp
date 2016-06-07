@@ -1,7 +1,10 @@
 #include "execute.h"
 #include "string"
+#include "CRB.h"
 using namespace std;
 CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
+  CRB_TYPE::Value* result;
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
   switch(value->type) {
     case CRB_TYPE::BOOLEAN_VALUE: {
       return new CRB_TYPE::BooleanValue(dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value);
@@ -19,8 +22,9 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       // return new 
     } 
     case CRB_TYPE::STRING_VALUE: {
-      string* tem_string_ptr = new string(*(dynamic_cast<CRB_TYPE::String*>(value)->string_value));
-      return new CRB_TYPE::String(tem_string_ptr, false);
+      string* tem_string_ptr = dynamic_cast<CRB_TYPE::String*>(value)->string_value;
+      result = Iheap->alloc(tem_string_ptr, false);
+      return result;
     } 
     case CRB_TYPE::ASSOC_VALUE: {
       // return new 

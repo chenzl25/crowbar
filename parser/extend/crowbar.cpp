@@ -151,7 +151,14 @@ CRB_TYPE::Value* IdentifierExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void IdentifierExpression::eval() {
-
+  auto Ienv = Interpreter::getInstance()->get_environment();
+  auto Istack = Interpreter::getInstance()->get_stack();
+  auto search_result = Ienv->search_variable(*(this->identifier));
+  if (search_result == NULL) {
+    auto fd = Ienv->search_function(*(this->identifier));
+    assert(fd != NULL, std::to_string(this->line)+ " :undefined identifier :" + *(this->identifier));
+  }
+  Istack->push(value_copy(search_result));
 }
 MinusExpression::MinusExpression(Expression *operand_): Expression(CRB_TYPE::MINUS_EXPRESSION) {
   operand_ = operand_;
@@ -335,29 +342,35 @@ CRB_TYPE::Value* AssignExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void AssignExpression::eval() {
+  auto Ienv = CRB::Interpreter::getInstance()->get_environment();
   auto Istack = Interpreter::getInstance()->get_stack();
   operand->eval();
-  auto src = Istack->peek(0);
-  if (variable->type == CRB_TYPE::MEMBER_EXPRESSION) {
+  auto src = Istack->peek(0); // for the result of eval 
+  if (this->variable->type == CRB_TYPE::MEMBER_EXPRESSION) {
     // TODO;
     return;
   }
-
-  CRB_TYPE::Value* dest = get_lvalue(operand);
-  if (variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION && dest == NULL) {
+  // find the the dest value
+  CRB_TYPE::Value* dest = get_lvalue(variable);
+  // if no dest value, we init it
+  if (this->variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION && dest == NULL) {
     // init assign
     if (this->type != CRB_TYPE::NORMAL_ASSIGN_EXPRESSION) {
       CRB::error("init assign must use = ");
     }
-    // TODO
-    // add to local
-    // add to gobal
-    // find function name
-
-
+    string variable_name = *(dynamic_cast<IdentifierExpression*>(this->variable)->identifier);
+    Ienv->add_variable(variable_name, value_copy(src));
   } else {
     CRB::assert(dest != NULL, "dest muse not equal NULL");
-    do_assign(src, dest, this->type, this->line);
+    // The most difficult problem is we can't change what *Value point to
+    if (this->variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
+      string variable_name = *(dynamic_cast<IdentifierExpression*>(this->variable)->identifier);
+      do_assign(variable_name, value_copy(src), dest, this->type, this->line);
+    } else if (this->variable->type == CRB_TYPE::INDEX_EXPRESSION) {
+      // TODO
+    } else {
+
+    }
   }
 }
 
@@ -377,7 +390,10 @@ CRB_TYPE::Value* FunctionCallExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void FunctionCallExpression::eval() {
+  // if () {
 
+  // }
+  // cout << "function call : " + 
 }
 
 MemberExpression::MemberExpression(Expression *expression_, 
@@ -544,6 +560,7 @@ void StatementList::add_statement(Statement *statement) {
 CRB_TYPE::StatementResult* StatementList::execute() {
   CRB_TYPE::StatementResult* result;
   for (int i = 0; i < _statement_vec.size(); i++) {
+    cout << statement_type_to_string(_statement_vec[i]->type) << endl;
     result = _statement_vec[i]->execute();
     if (result->type != CRB_TYPE::NORMAL_STATEMENT_RESULT) {
       return result;
@@ -684,9 +701,11 @@ ExpressionStatement::~ExpressionStatement() {
   expression = NULL;
 }
 CRB_TYPE::StatementResult* ExpressionStatement::execute() {
-  CRB_TYPE::StatementResult *result;
-  result = new CRB_TYPE::StatementResult(value_copy(expression->eval_and_pop()));
-  return result;
+  auto stack_pop_value = expression->eval_and_pop();
+  if (!is_object_value(stack_pop_value->type)) {
+    delete stack_pop_value;
+  }
+  return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 ReturnStatement::ReturnStatement(Expression *expression_): Statement(CRB_TYPE::RETURN_STATEMENT) {
   expression = expression_;

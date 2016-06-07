@@ -623,6 +623,8 @@ void SLR::parse(Lex &lexer) {
         
         break;
       case ENUM::ACTION_ACCEPT: {
+        CRB::Interpreter::getInstance()->execute();
+        CRB::Interpreter::getInstance()->dealloc();
         cout << "accept : parse done!" << endl;
         return;
       }

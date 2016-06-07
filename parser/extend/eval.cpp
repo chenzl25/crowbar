@@ -1,10 +1,11 @@
 #include <cmath>
+#include <string>
 #include "CRB.h"
 #include "eval.h"
 #include "crowbar.h"
 #include "crowbar_util.h"
 #include "crowbar_type.h"
-
+using namespace std;
 
 
 void eval_binary_int(CRB_TYPE::ExpressionType op,
@@ -233,9 +234,52 @@ void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value,
     result_value = Iheap->alloc(&concat_std_string, false);
 }
 CRB_TYPE::Value* get_lvalue(Expression* expression) {
-
+    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
+    CRB_TYPE::Value* dest = NULL;
+    if (expression->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
+        dest = Ienv->search_variable(*(dynamic_cast<IdentifierExpression*>(expression)->identifier));
+    } else if (expression->type == CRB_TYPE::INDEX_EXPRESSION) {
+        //TODO
+        // dest = get_array_element_lvalue(inter, env, expr);
+    } else {
+        CRB::error("not lvalue in assign left side");
+    }
+    return dest;
 }
-void do_assign(CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
+void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number) {
-    
+    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
+    CRB_TYPE::Value* result;
+    if (type == CRB_TYPE::NORMAL_ASSIGN_EXPRESSION) {
+        Ienv->assign_variable(variable_name, src);
+    } else {
+        switch (type) {
+        case CRB_TYPE::NORMAL_ASSIGN_EXPRESSION:
+            CRB::error(("NORMAL_ASSIGN.\n"));
+        case CRB_TYPE::ADD_ASSIGN_EXPRESSION:
+            type = CRB_TYPE::ADD_EXPRESSION;
+            break;
+        case CRB_TYPE::SUB_ASSIGN_EXPRESSION:
+            type = CRB_TYPE::SUB_EXPRESSION;
+            break;
+        case CRB_TYPE::MUL_ASSIGN_EXPRESSION:
+            type = CRB_TYPE::MUL_EXPRESSION;
+            break;
+        case CRB_TYPE::DIV_ASSIGN_EXPRESSION:
+            type = CRB_TYPE::DIV_EXPRESSION;
+            break;
+        case CRB_TYPE::MOD_ASSIGN_EXPRESSION:
+            type = CRB_TYPE::MOD_EXPRESSION;
+            break;
+        default:
+            CRB::error(("bad default.\n"));
+        }
+        if (dest->type == CRB_TYPE::STRING_VALUE
+            && type == CRB_TYPE::ADD_EXPRESSION) {
+            chain_string(dest, src, result, line_number);
+        } else {
+            eval_binary_numeric(type, dest, src, result, line_number);
+        }
+        Ienv->assign_variable(variable_name, result);
+    }
 }

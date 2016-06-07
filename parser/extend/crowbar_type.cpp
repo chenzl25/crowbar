@@ -1,5 +1,7 @@
 #include "crowbar_type.h"
 #include "crowbar_util.h"
+#include "crowbar.h"
+#include "CRB.h"
 #include <iostream>
 using namespace std;
 using namespace CRB_TYPE;
@@ -43,17 +45,7 @@ void BooleanValue::print() {
   cout << "value type : " << CRB::value_type_to_string(this->type) << endl;
   cout << "value value: " << this->boolean_value << endl;
 }
-Closure::Closure(FunctionDefinition * f, Object *env):Value(CRB_TYPE::CLOSURE_VALUE) {
-  function = f;
-  environment = env;
-}
-Closure::~Closure(){
-  // TODO
-}
-void Closure::print() {
-  cout << "value type : " << CRB::value_type_to_string(this->type) << endl;
-  // cout << "value value: "  << endl;
-}
+
 Object::Object(CRB_TYPE::ValueType type_):Value(type_) {
   switch (type_) {
     case CRB_TYPE::STRING_VALUE:
@@ -100,6 +92,7 @@ StatementResult::StatementResult(StatementResultType type_) {
   CRB::assert(type != CRB_TYPE::RETURN_STATEMENT_RESULT,
          "the statement result without value should not return ");
   type = type_;
+  value = NULL;
 }
 StatementResult::StatementResult(Value* value_) {
   type = CRB_TYPE::RETURN_STATEMENT_RESULT;
@@ -110,5 +103,67 @@ StatementResult::~StatementResult() {
   if (value) {
     delete value; // maybe need to change when consider other value from heap
   }
+}
+
+Closure::Closure(FunctionDefinition * function_definition_,
+                 ScopeChain *scope_chain_):Value(CRB_TYPE::CLOSURE_VALUE) {
+  function_definition = function_definition_;
+  scope_chain = scope_chain_;
+}
+Closure::~Closure(){
+  if (function_definition) delete function_definition;
+  if (scope_chain) delete scope_chain;
+}
+void Closure::print() {
+  cout << "value type : " << CRB::value_type_to_string(this->type) << endl;
+  // cout << "value value: "  << endl;
+}
+ScopeChain::ScopeChain() : Object(CRB_TYPE::SCOPE_CHAIN_VALUE) {
+  frame = NULL;
+  next = NULL; 
+}
+ScopeChain::ScopeChain(ScopeChain  *next_) : Object(CRB_TYPE::SCOPE_CHAIN_VALUE) {
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  frame = dynamic_cast<Assoc*>(Iheap->alloc(CRB_TYPE::ASSOC_OBJECT));
+  next = next_;
+}
+ScopeChain::ScopeChain(Assoc  *frame_, ScopeChain  *next_) : Object(CRB_TYPE::SCOPE_CHAIN_VALUE) {
+  frame = frame_;
+  next = next_;
+}
+ScopeChain::~ScopeChain() {
+  if (frame) delete frame;
+  if (next)  delete next;
+}
+
+void ScopeChain::print() {
+}
+
+Assoc::Assoc() : Object(CRB_TYPE::ASSOC_VALUE) {
+
+}
+Assoc::~Assoc() {
+  for (auto it : member_map) {
+    delete it.second;
+  }
+}
+void Assoc::add_member(string name, Value* value) {
+  member_map[name] = value;
+}
+
+Value* Assoc::search_member(string name) {
+  return member_map[name];
+}
+void Assoc::assign_member(string name, Value* value) {
+  CRB::assert(member_map.count(name), "the value be assigned should exist");
+  if (is_object_value(member_map[name]->type)) {
+    // remain for the Heap to delete
+  } else {
+    delete member_map[name];
+  }
+  member_map[name] = value;
+}
+void Assoc::print() {
+
 }
 

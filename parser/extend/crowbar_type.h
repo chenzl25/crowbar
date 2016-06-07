@@ -1,6 +1,7 @@
 #ifndef CROWBAR_TYPE_H
 #define CROWBAR_TYPE_H
 #include <string>
+#include <map>
 using namespace std;
 
 namespace CRB_TYPE  {
@@ -79,14 +80,6 @@ public:
   // ScopeChain  scope_chain;
 };
 
-class Closure : public Value {
-public:
-  Closure(FunctionDefinition * f, Object *env);
-  virtual ~Closure();
-  virtual void print();
-  FunctionDefinition *function;
-  Object          *environment; /* CRB_ScopeChain */
-};
 
 
 class String : public Object {
@@ -107,17 +100,15 @@ public:
   Value   *array;      // like  new Value[10]         
 };
 
-class Assoc : public Value {
+class Assoc : public Object {
 public:
-  Assoc(int size);
+  Assoc();
   virtual ~Assoc();
   virtual void print();
-  int member_count;
-  struct AssocMember {
-    string *name;    // this come from expression name not heap
-    Value   value;   // not pointer, because  a = 100; o1.one = a; o2.one = a; we need to distinct o1.one and o2.one
-  };
-  AssocMember *member;
+  void add_member(string name, Value* value);
+  Value* search_member(string name);
+  void assign_member(string name, Value* value);
+  map<string, Value*> member_map;
 };
 class FakeMethod : public Value {
 public:
@@ -128,14 +119,27 @@ public:
   Object    *object;
 };
 
-class ScopeChain : public Value {
+class ScopeChain : public Object {
 public:
   ScopeChain();
+  ScopeChain(ScopeChain  *next_);
+  ScopeChain(Assoc  *frame_, ScopeChain  *next_);
   virtual ~ScopeChain();
   virtual void print();
-  Object  *frame; /* CRB_Assoc */
-  Object  *next;  /* ScopeChain */
+  Assoc  *frame; /* CRB_Assoc */
+  ScopeChain  *next;  /* ScopeChain */
 };
+
+class Closure : public Value {
+public:
+  Closure(FunctionDefinition * function_definition_, ScopeChain *scope_chain_);
+  virtual ~Closure();
+  virtual void print();
+  FunctionDefinition  *function_definition;
+  ScopeChain          *scope_chain; /* CRB_ScopeChain */
+};
+
+
 enum StatementResultType{
   NORMAL_STATEMENT_RESULT = 1,
   RETURN_STATEMENT_RESULT,

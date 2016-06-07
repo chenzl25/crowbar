@@ -6,7 +6,7 @@
 void crb_function_define(string *identifier, ParameterList *parameter_list,
                          Block *block) {
   auto fd = new FunctionDefinition(identifier, parameter_list, block, false);
-  CRB::Interpreter::getInstance()->add_function(fd);
+  CRB::Interpreter::getInstance()->get_environment()->add_function(fd);
 }
 ParameterList *crb_create_parameter_list(string *identifier) {
   auto list = new ParameterList();
