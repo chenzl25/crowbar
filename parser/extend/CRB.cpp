@@ -100,6 +100,7 @@ Interpreter::Heap::~Heap() {
     (*it)->print();
     delete *it;
   }
+  cout << "-------------------------------------------------" << endl;
 }
 
 
@@ -159,6 +160,9 @@ Interpreter::Environment* Interpreter::get_environment() {
 }
 Interpreter::Environment::Environment() {
   _in_global = true;
+  _use_caller_env = false;
+  _caller_env = NULL;
+  _callee_env = NULL;
 }
 Interpreter::Environment::~Environment() {
   cout << "-------------------------------------------------" << endl;
@@ -174,24 +178,51 @@ Interpreter::Environment::~Environment() {
     cout << "delete function: " << *it->second->name << endl;
     delete it->second;
   }
+  cout << "-------------------------------------------------" << endl;
 }
+
 void Interpreter::Environment::alloc_env(CRB_TYPE::ScopeChain* next_) {
-  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
-  _scope_chain = dynamic_cast<CRB_TYPE::ScopeChain*>(Iheap->alloc(CRB_TYPE::SCOPE_CHAIN_OBJECT));
-  _scope_chain->next = next_;
+  if (_local_env_vec.empty()) {
+    _caller_env = NULL;
+  } else {
+    _caller_env = _local_env_vec[_local_env_vec.size()-1];
+  }
+  _local_env_vec.push_back(new LocalEnv(next_));
+  _callee_env = _local_env_vec[_local_env_vec.size()-1];
   _in_global = false;
 }
-void Interpreter::Environment::dealloc_env() {
+
+Interpreter::Environment::LocalEnv::LocalEnv(CRB_TYPE::ScopeChain *next_) {
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  _scope_chain = dynamic_cast<CRB_TYPE::ScopeChain*>(Iheap->alloc(CRB_TYPE::SCOPE_CHAIN_OBJECT));
+  _scope_chain->frame = dynamic_cast<CRB_TYPE::Assoc*>(Iheap->alloc(CRB_TYPE::ASSOC_OBJECT));
+  _scope_chain->next = next_;
+}
+Interpreter::Environment::LocalEnv::~LocalEnv() {
   // delete _scope_chain;   remain for heap
   _scope_chain = NULL;
-  _in_global = true;
+}
+void Interpreter::Environment::dealloc_env() {
+  delete _local_env_vec[_local_env_vec.size()-1];
+  _local_env_vec.erase(_local_env_vec.end()-1);
+  if (_local_env_vec.size() >= 2) {
+    _callee_env = _local_env_vec[_local_env_vec.size()-1];
+    _caller_env = _local_env_vec[_local_env_vec.size()-2];
+  } else if (_local_env_vec.size() == 1) {
+    _callee_env = _local_env_vec[_local_env_vec.size()-1];
+    _caller_env = NULL;
+  } else if (_local_env_vec.empty()) {
+    _callee_env = NULL;
+    _caller_env = NULL;
+    _in_global = true;
+  }
 }
 
 
 
 // also use to add global varible
 void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_value) {
-  if (_in_global) { 
+  if (_in_global || (_use_caller_env && _caller_env == NULL)) { 
     if (_global_function_map.count(name)) {
       error("there are same function name: " +name+ " in global");
     }
@@ -200,31 +231,50 @@ void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_
     cout << "add global varible: " << name << endl;
     local_value->print();
   } else {
-    _scope_chain->frame->add_member(name, local_value);
+    auto in_use_env = _use_caller_env?_caller_env:_callee_env;
+    cout << "add local varible: " << name << endl;
+    local_value->print();
+    in_use_env->_scope_chain->frame->add_member(name, local_value);
   }
 }
+void Interpreter::Environment::use_caller_env() {
+  _use_caller_env = true;
+}
+void Interpreter::Environment::use_callee_env() {
+  _use_caller_env = false;
+}
 void Interpreter::Environment::add_global_declare(string name) {
-  if (_in_global) { 
+  if (_in_global || (_use_caller_env && _caller_env == NULL)) { 
     error("global statement in global environment");
   } else {
+    auto in_use_env = _use_caller_env?_caller_env:_callee_env;
     if (_global_variable_map.count(name)) {
-      _global_declare_map[name] = _global_variable_map[name]; 
+      in_use_env->_global_declare_map[name] = _global_variable_map[name]; 
     } else {
       error("without this varible in global environment");
     }
   }
 }
 CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
-  if (_in_global) {
+  if (_in_global || (_use_caller_env && _caller_env == NULL)) {
     if (_global_variable_map.count(name)) {
       return _global_variable_map[name];
     } else {
       return NULL;
     }
   } else {
-    CRB_TYPE::Value* result = _scope_chain->frame->search_member(name);
-    if (result != NULL) return result;
-    else return _global_declare_map[name];
+    auto in_use_env = _use_caller_env?_caller_env:_callee_env;
+    CRB_TYPE::Value* result;
+    auto head_scope = in_use_env->_scope_chain;
+    result = in_use_env->_global_declare_map[name];
+    if (result) return result;
+
+    do {
+      result = head_scope->frame->search_member(name);
+      if (result != NULL) return result;
+      else head_scope = head_scope->next;
+    } while(head_scope);
+
   }
   return NULL;
 }
@@ -236,20 +286,30 @@ FunctionDefinition* Interpreter::Environment::search_function(string name) {
   }
 }
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
-  if (_in_global) {
+  if (_in_global || (_use_caller_env && _caller_env == NULL)) {
     assert(_global_variable_map.count(name), "the value be assigned should exist");
-    if (is_object_value(_global_variable_map[name]->type)) {
-      // remain for the Heap to delete
-    } else {
-      delete _global_variable_map[name];
-      _global_variable_map.erase(name);
-    }
+    delete _global_variable_map[name];
     _global_variable_map[name] = assign_value;
     cout << "assign global varible: " << name << endl;
     assign_value->print();
     return;
   } else {
-    _scope_chain->frame->assign_member(name, assign_value);
+    auto in_use_env = _use_caller_env?_caller_env:_callee_env;
+    CRB_TYPE::Value* dest;
+    auto head_scope = in_use_env->_scope_chain;
+    if (in_use_env->_global_declare_map.count(name)) {
+      delete in_use_env->_global_declare_map[name];
+      in_use_env->_global_declare_map.erase(name);
+      in_use_env->_global_declare_map[name] = assign_value;
+    }
+
+    do {
+      dest = head_scope->frame->search_member(name);
+      if (dest != NULL) head_scope->frame->assign_member(name, assign_value);
+      else head_scope = head_scope->next;
+    } while(head_scope);
+
+    error("the value be assigned should exist");
   }
 }
 void Interpreter::Environment::add_function(FunctionDefinition* fd) {

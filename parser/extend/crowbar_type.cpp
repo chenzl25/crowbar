@@ -100,9 +100,9 @@ StatementResult::StatementResult(Value* value_) {
   value = value_;
 }
 StatementResult::~StatementResult() {
-  if (value) {
-    delete value; // maybe need to change when consider other value from heap
-  }
+  // if (value) {
+  //   delete value; // maybe need to change when consider other value from heap
+  // }
 }
 
 Closure::Closure(FunctionDefinition *function_definition_,
@@ -116,7 +116,7 @@ Closure::~Closure(){
   // don't delete scope_chain_;         remain for heap
 }
 void Closure::print() {
-  cout << "value type : " << CRB::value_type_to_string(this->type) << endl;
+  cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
   // cout << "value value: "  << endl;
 }
 ScopeChain::ScopeChain() : Object(CRB_TYPE::SCOPE_CHAIN_VALUE) {
@@ -133,38 +133,42 @@ ScopeChain::ScopeChain(Assoc  *frame_, ScopeChain  *next_) : Object(CRB_TYPE::SC
   next = next_;
 }
 ScopeChain::~ScopeChain() {
-  if (frame) delete frame;
-  if (next)  delete next;
+  // let Heap delete
+  // if (frame) delete frame;
+  // if (next)  delete next;
 }
 
 void ScopeChain::print() {
+  cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
 }
 
 Assoc::Assoc() : Object(CRB_TYPE::ASSOC_VALUE) {
 
 }
 Assoc::~Assoc() {
+  // we can delete the Value, because Value only delete itself 
+  // the Object in the Value will be delete by Heap
   for (auto it : member_map) {
     delete it.second;
   }
 }
 void Assoc::add_member(string name, Value* value) {
+  CRB::assert(member_map.count(name) == 0, "add_member: the member exist before adding");
   member_map[name] = value;
 }
 
 Value* Assoc::search_member(string name) {
-  return member_map[name];
+  if (member_map.count(name)) {
+    return member_map[name];
+  }
+  return NULL;
 }
 void Assoc::assign_member(string name, Value* value) {
   CRB::assert(member_map.count(name), "the value be assigned should exist");
-  if (is_object_value(member_map[name]->type)) {
-    // remain for the Heap to delete
-  } else {
-    delete member_map[name];
-  }
+  delete member_map[name]; // delete is ok the Object is independent from Value now
   member_map[name] = value;
 }
 void Assoc::print() {
-
+  cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
 }
 

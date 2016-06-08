@@ -307,9 +307,18 @@ void do_function_call(FunctionCallExpression* expression,
 }
 void call_crowbar_function(FunctionCallExpression* expression, 
                            CRB_TYPE::Closure* closure_value) {
-    int argument_size = expression->argument_list->_argument_vec.size();
-    int parameter_size = closure_value->function_definition->parameter_list->_parameter_vec.size();
-    cout << argument_size << endl;
+    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
+    auto Istack = CRB::Interpreter::getInstance()->get_stack();
+    int argument_size = 0 ;
+    int parameter_size = 0;
+    if (expression->argument_list) {
+        argument_size = expression->argument_list->_argument_vec.size();
+    }
+    if (closure_value->function_definition->parameter_list) {
+        parameter_size = closure_value->function_definition->parameter_list->_parameter_vec.size();
+    }
+    CRB_TYPE::StatementResult* statement_result;
+    CRB_TYPE::Value* result_value;
     if (argument_size > parameter_size) {
         CRB::error(std::to_string(expression->line) +
                    " : too much argument for function : " + 
@@ -321,5 +330,19 @@ void call_crowbar_function(FunctionCallExpression* expression,
                    *closure_value->function_definition->name +
                    " which need " + std::to_string(parameter_size));
     }
-
+    for (int i = 0; i < argument_size; i++) {
+        Ienv->use_caller_env();
+        auto arg_value = expression->argument_list->_argument_vec[i]->eval_and_pop();
+        Ienv->use_callee_env();
+        Ienv->add_variable(*closure_value->function_definition->parameter_list->_parameter_vec[i],
+                           arg_value);
+    }
+    statement_result = closure_value->function_definition->block->execute();
+    if (statement_result->type == CRB_TYPE::RETURN_STATEMENT_RESULT) {
+        result_value = statement_result->value;
+    } else {
+        result_value = new CRB_TYPE::Value();
+    }
+    Istack->push(result_value);
+    delete statement_result; // delete statement_result will not delete the return value
 }

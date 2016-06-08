@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 #include <list>
 #include "crowbar_type.h"
@@ -32,6 +33,15 @@ class Interpreter {
    public:
     Environment();
     ~Environment();
+    class LocalEnv {
+     public:
+      LocalEnv(CRB_TYPE::ScopeChain *next_);
+      ~LocalEnv();
+      CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
+      map<string, CRB_TYPE::Value*> _global_declare_map;
+    };
+    void use_caller_env();
+    void use_callee_env();
     void alloc_env(CRB_TYPE::ScopeChain* next_);
     void dealloc_env();
     void add_function(FunctionDefinition* fd);
@@ -42,7 +52,11 @@ class Interpreter {
     void assign(string name, CRB_TYPE::Value*);
     FunctionDefinition* search_function(string name);
    private:
+    LocalEnv* _caller_env;
+    LocalEnv* _callee_env;
+    bool _use_caller_env;
     bool _in_global;
+    vector<LocalEnv*> _local_env_vec;
     CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
     map<string, CRB_TYPE::Value*> _global_declare_map;
     map<string, FunctionDefinition*> _global_function_map;
