@@ -17,7 +17,8 @@ FunctionDefinition::FunctionDefinition(string *name_,
   parameter_list = parameter_list_;
   block = block_;
   is_closure = is_closure_;
-  type = CRB_TYPE::CROWBAR_FUNCTION_DEFINITION; // maybe change
+  type = CRB_TYPE::CROWBAR_FUNCTION_DEFINITION; // default tpye
+  proc = NULL;
 }
 
 FunctionDefinition::~FunctionDefinition() {
@@ -279,8 +280,8 @@ CRB_TYPE::Value* BinaryExpression::constant_folding_eval() {
   // eval_binary_null
   // ....
   // error
-  delete Istack->pop(); // delete when pop
-  delete Istack->pop(); // delete then pop
+  CRB::stack_value_delete(Istack->pop()); // delete when pop
+  CRB::stack_value_delete(Istack->pop()); // delete then pop
   // result_value->print();
   return result_value;
 }
@@ -296,7 +297,16 @@ CRB_TYPE::Value* IncrementExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void IncrementExpression::eval() {
-  //TODO
+  auto Istack = Interpreter::getInstance()->get_stack();
+  string line_string = std::to_string(this->line);
+  assert(this->operand != NULL, line_string + " : IncrementExpression: operand_expression should exist");
+  auto operand_value = get_lvalue(this->operand);
+  assert(operand_value != NULL, line_string + " : IncrementExpression: operand_value should exist");
+  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
+  auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
+  int old_int = cast_operand_value->int_value;
+  cast_operand_value->int_value++;
+  Istack->push(new CRB_TYPE::IntValue(old_int));
 }
 DecrementExpression::DecrementExpression(Expression *operand_): Expression(CRB_TYPE::DECREMENT_EXPRESSION) {
   operand = operand_;
@@ -310,7 +320,16 @@ CRB_TYPE::Value* DecrementExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void DecrementExpression::eval() {
-  //TODO
+  auto Istack = Interpreter::getInstance()->get_stack();
+  string line_string = std::to_string(this->line);
+  assert(this->operand != NULL, line_string + " : DecrementExpression: operand_expression should exist");
+  auto operand_value = get_lvalue(this->operand);
+  assert(operand_value != NULL, line_string + " : DecrementExpression: operand_value should exist");
+  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator -- should only work on interger");
+  auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
+  int old_int = cast_operand_value->int_value;
+  cast_operand_value->int_value--;
+  Istack->push(new CRB_TYPE::IntValue(old_int));
 }
 IndexExpression::IndexExpression(Expression *array_, Expression *index_): Expression(CRB_TYPE::INDEX_EXPRESSION) {
   array = array_;
@@ -415,7 +434,7 @@ void FunctionCallExpression::eval() {
   do_function_call(this, closure_value);
   Ienv->dealloc_env();
   auto return_value = Istack->pop();
-  delete Istack->pop(); // closure value delete here
+  CRB::stack_value_delete(Istack->pop()); // closure value delete here
   Istack->push(return_value);
 }
 
@@ -435,7 +454,7 @@ CRB_TYPE::Value* MemberExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void MemberExpression::eval() {
-
+  //TODO
 }
 
 ArrayExpression::ArrayExpression(ExpressionList *array_literal_):Expression(CRB_TYPE::ARRAY_EXPRESSION) {
@@ -450,7 +469,7 @@ CRB_TYPE::Value* ArrayExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void ArrayExpression::eval() {
-
+  //TODO
 }
 
 ClousreExpression::ClousreExpression(string *identifier_, ParameterList *parameter_list_,
@@ -467,7 +486,7 @@ CRB_TYPE::Value* ClousreExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void ClousreExpression::eval() {
-
+  //TODO
 }
 
 CommaExpression::CommaExpression(Expression *left_, 
@@ -486,7 +505,8 @@ CRB_TYPE::Value* CommaExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void CommaExpression::eval() {
-
+  stack_value_delete(left->eval_and_pop());
+  right->eval();
 }
 
 
@@ -583,7 +603,6 @@ void StatementList::add_statement(Statement *statement) {
 CRB_TYPE::StatementResult* StatementList::execute() {
   CRB_TYPE::StatementResult* result;
   for (int i = 0; i < _statement_vec.size(); i++) {
-    cout << statement_type_to_string(_statement_vec[i]->type) << endl;
     result = _statement_vec[i]->execute();
     if (result->type != CRB_TYPE::NORMAL_STATEMENT_RESULT) {
       return result;
@@ -648,7 +667,7 @@ CRB_TYPE::StatementResult* WhileStatement::execute() {
     assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
            std::to_string(this->line) + " condition expression should be bool");
     if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
-      delete value; // delete the stack pop
+      stack_value_delete(value); // delete the stack pop
       result = this->block->execute();
       if (result->type == CRB_TYPE::BREAK_STATEMENT_RESULT) {
         delete result;
@@ -724,10 +743,8 @@ ExpressionStatement::~ExpressionStatement() {
   expression = NULL;
 }
 CRB_TYPE::StatementResult* ExpressionStatement::execute() {
-  auto stack_pop_value = expression->eval_and_pop();
-  if (!is_object_value(stack_pop_value->type)) {
-    delete stack_pop_value;
-  }
+  // cout << CRB::expression_type_to_string(expression->type) << endl;
+  CRB::stack_value_delete(expression->eval_and_pop());
   return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 ReturnStatement::ReturnStatement(Expression *expression_): Statement(CRB_TYPE::RETURN_STATEMENT) {

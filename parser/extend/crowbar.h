@@ -263,17 +263,19 @@ private:
 
 };
 
+typedef CRB_TYPE::Value* NativeFunctionProc(int arg_cnt);
 
 class FunctionDefinition {
 public:
   FunctionDefinition();
   FunctionDefinition(string *name_, ParameterList *parameter_list_, Block *block_, bool is_closure_);
   ~FunctionDefinition();
-  string * name;
+  string *name;
   CRB_TYPE::FunctionDefinitionType  type;
   bool            is_closure;
   ParameterList   *parameter_list;
   Block           *block;
+  NativeFunctionProc *proc;
 };
 
 

@@ -23,4 +23,6 @@ void do_function_call(FunctionCallExpression* expression,
                       CRB_TYPE::Value* func_value);
 void call_crowbar_function(FunctionCallExpression* expression, 
                            CRB_TYPE::Closure* closure_value);
+void call_native_function(FunctionCallExpression* expression, 
+                           CRB_TYPE::Closure* closure_value);
 #endif

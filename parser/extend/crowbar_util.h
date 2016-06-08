@@ -14,7 +14,6 @@ string expression_type_to_string(CRB_TYPE::ExpressionType type);
 string statement_type_to_string(CRB_TYPE::StatementType type);
 string value_type_to_string(CRB_TYPE::ValueType type);
 string value_to_string(CRB_TYPE::Value *value, int line_number);
-
-
+void stack_value_delete(CRB_TYPE::Value *value);
 } // CRB
 #endif

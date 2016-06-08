@@ -276,5 +276,11 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
   return result;
 }
 
+void stack_value_delete(CRB_TYPE::Value *value) {
+  if (!is_object_value(value->type)) {
+    delete value;
+  }
+}
+
 } // CRB
 

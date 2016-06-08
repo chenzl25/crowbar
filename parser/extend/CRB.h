@@ -20,6 +20,7 @@ class Interpreter {
   class  Environment;
  public:
   static Interpreter* getInstance();
+  void before_hook();
   void dealloc();
   void chain_statement_list(Statement* statement);
   void set_line(int line_);

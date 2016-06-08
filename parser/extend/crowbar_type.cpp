@@ -100,9 +100,9 @@ StatementResult::StatementResult(Value* value_) {
   value = value_;
 }
 StatementResult::~StatementResult() {
-  // if (value) {
-  //   delete value; // maybe need to change when consider other value from heap
-  // }
+  if (value) {
+    delete value; // maybe need to change when consider other value from heap
+  }
 }
 
 Closure::Closure(FunctionDefinition *function_definition_,

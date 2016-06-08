@@ -1,5 +1,6 @@
 #include "CRB.h"
-#include "../lexer/src/util.h"
+#include "native_func.h"
+#include "crowbar_util.h"
 #include <set>
 using namespace std;
 
@@ -19,6 +20,7 @@ Interpreter::~Interpreter() { // order is importance
   delete _statement_list;  // statemet at last
 }
 void Interpreter::dealloc() {
+  cout << "\n=======================================\n";
   delete _instance;
   _instance = NULL;
 }
@@ -26,10 +28,13 @@ void Interpreter::dealloc() {
 Interpreter* Interpreter::getInstance() {
   if (_instance == NULL) {
     _instance = new Interpreter();
+    _instance->before_hook();
   } 
   return _instance;
 }
-
+void Interpreter::before_hook() {
+  CRB::add_native_function(); // from native_fun.cpp
+}
 void Interpreter::chain_statement_list(Statement* statement) {
   _statement_list->add_statement(statement);
 }
@@ -81,7 +86,7 @@ CRB_TYPE::Value* Interpreter::Stack::pop() {
   return result;
 }
 CRB_TYPE::Value* Interpreter::Stack::peek(int pos) {
-  assert(_stack_vec.size() > pos, "can't peek the stack over the size");
+  CRB::assert(_stack_vec.size() > pos, "can't peek the stack over the size");
   return _stack_vec[_stack_vec.size() - pos - 1];
 }
 void Interpreter::Stack::push(CRB_TYPE::Value* v) {
@@ -96,8 +101,8 @@ Interpreter::Heap::~Heap() {
   cout << "-------------------------------------------------" << endl;
   cout << "Heap delete :" << endl; 
   for (auto it = _heap_list.begin(); it != _heap_list.end(); it++) {
-    cout << *it << endl;
-    (*it)->print();
+    // cout << *it << endl;
+    // (*it)->print();
     delete *it;
   }
   cout << "-------------------------------------------------" << endl;
@@ -109,7 +114,7 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
   CRB_TYPE::Object* alloc_ptr;
   switch (type_) {
     case CRB_TYPE::STRING_OBJECT:
-      error("should use another string alloc");
+      CRB::error("should use another string alloc");
       break;
     case CRB_TYPE::ARRAY_OBJECT:
 
@@ -126,7 +131,7 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
       break;
     }
     default:
-      error("heap alloc type error");
+      CRB::error("heap alloc type error");
   }
   return alloc_ptr;
 }
@@ -146,7 +151,7 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(string* string_value, bool is_literal
     goto AGAIN;
   }
   fix_bug_set.insert(alloc_ptr);
-  cout << alloc_ptr << endl;
+  // cout << alloc_ptr << endl;
   _heap_list.push_back(alloc_ptr);
   return alloc_ptr;
 }
@@ -175,6 +180,9 @@ Interpreter::Environment::~Environment() {
     }
   }
   for (auto it = _global_function_map.begin(); it != _global_function_map.end(); it++) {
+    if (it->second->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION) {
+      delete it->second->name;
+    }
     cout << "delete function: " << *it->second->name << endl;
     delete it->second;
   }
@@ -224,16 +232,16 @@ void Interpreter::Environment::dealloc_env() {
 void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_value) {
   if (_in_global || (_use_caller_env && _caller_env == NULL)) { 
     if (_global_function_map.count(name)) {
-      error("there are same function name: " +name+ " in global");
+      CRB::error("there are same function name: " +name+ " in global");
     }
-    assert(_global_variable_map.count(name) == 0, "add variable should just init");
+    CRB::assert(_global_variable_map.count(name) == 0, "add variable should just init");
     _global_variable_map[name] = local_value;
-    cout << "add global varible: " << name << endl;
-    local_value->print();
+    // cout << "add global varible: " << name << endl;
+    // local_value->print();
   } else {
     auto in_use_env = _use_caller_env?_caller_env:_callee_env;
-    cout << "add local varible: " << name << endl;
-    local_value->print();
+    // cout << "add local varible: " << name << endl;
+    // local_value->print();
     in_use_env->_scope_chain->frame->add_member(name, local_value);
   }
 }
@@ -245,13 +253,13 @@ void Interpreter::Environment::use_callee_env() {
 }
 void Interpreter::Environment::add_global_declare(string name) {
   if (_in_global || (_use_caller_env && _caller_env == NULL)) { 
-    error("global statement in global environment");
+    CRB::error("global statement in global environment");
   } else {
     auto in_use_env = _use_caller_env?_caller_env:_callee_env;
     if (_global_variable_map.count(name)) {
       in_use_env->_global_declare_map[name] = _global_variable_map[name]; 
     } else {
-      error("without this varible in global environment");
+      CRB::error("without this varible in global environment");
     }
   }
 }
@@ -287,11 +295,11 @@ FunctionDefinition* Interpreter::Environment::search_function(string name) {
 }
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
   if (_in_global || (_use_caller_env && _caller_env == NULL)) {
-    assert(_global_variable_map.count(name), "the value be assigned should exist");
+    CRB::assert(_global_variable_map.count(name), "the value be assigned should exist");
     delete _global_variable_map[name];
     _global_variable_map[name] = assign_value;
-    cout << "assign global varible: " << name << endl;
-    assign_value->print();
+    // cout << "assign global varible: " << name << endl;
+    // assign_value->print();
     return;
   } else {
     auto in_use_env = _use_caller_env?_caller_env:_callee_env;
@@ -309,15 +317,15 @@ void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* ass
       else head_scope = head_scope->next;
     } while(head_scope);
 
-    error("the value be assigned should exist");
+    CRB::error("the value be assigned should exist");
   }
 }
 void Interpreter::Environment::add_function(FunctionDefinition* fd) {
   if (_global_function_map.count(*(fd->name))) {
-    error("multi definition of " + *(fd->name));
+    CRB::error("multi definition of " + *(fd->name));
   }
   _global_function_map[*(fd->name)] = fd;
-  cout << "add function: " << *(fd->name) << endl;
+  // cout << "add function: " << *(fd->name) << endl;
 }
 
 

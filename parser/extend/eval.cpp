@@ -297,13 +297,28 @@ void do_function_call(FunctionCallExpression* expression,
         call_crowbar_function(expression, closure_value);
         break;
     case CRB_TYPE::NATIVE_FUNCTION_DEFINITION:
-        // call_native_function(inter, env, caller_env, expr,
-        //                      func->u.closure.function->u.native_f.proc);
+        call_native_function(expression, closure_value);
         break;
     case CRB_TYPE::FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1:
     default:
         CRB::error(std::to_string(expression->line) + " :bad case in do_function_call");
     }
+}
+void call_native_function(FunctionCallExpression* expression, 
+                          CRB_TYPE::Closure* closure_value) {
+    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
+    auto Istack = CRB::Interpreter::getInstance()->get_stack();
+    int argument_size = expression->argument_list->_argument_vec.size();
+    Ienv->use_caller_env();
+    for (int i = 0; i < argument_size; i++) {
+        expression->argument_list->_argument_vec[i]->eval();
+    }
+    Ienv->use_callee_env();
+    auto result_value = closure_value->function_definition->proc(argument_size);
+    for(int i = 0; i < argument_size; i++) {
+        CRB::stack_value_delete(Istack->pop());
+    }
+    Istack->push(result_value);
 }
 void call_crowbar_function(FunctionCallExpression* expression, 
                            CRB_TYPE::Closure* closure_value) {
