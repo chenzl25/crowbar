@@ -4,11 +4,12 @@
 #include <map>
 using namespace std;
 
-namespace CRB_TYPE  {
-
 class ParameterList;
 class Block;
 class FunctionDefinition;
+
+namespace CRB_TYPE  {
+
 
 enum ValueType {
   BOOLEAN_VALUE = 1,
@@ -132,7 +133,7 @@ public:
 
 class Closure : public Value {
 public:
-  Closure(FunctionDefinition * function_definition_, ScopeChain *scope_chain_);
+  Closure(FunctionDefinition *function_definition_, ScopeChain *scope_chain_);
   virtual ~Closure();
   virtual void print();
   FunctionDefinition  *function_definition;

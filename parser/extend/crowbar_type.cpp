@@ -105,14 +105,15 @@ StatementResult::~StatementResult() {
   }
 }
 
-Closure::Closure(FunctionDefinition * function_definition_,
-                 ScopeChain *scope_chain_):Value(CRB_TYPE::CLOSURE_VALUE) {
+Closure::Closure(FunctionDefinition *function_definition_,
+                 ScopeChain *scope_chain_): Value(CRB_TYPE::CLOSURE_VALUE) {
   function_definition = function_definition_;
   scope_chain = scope_chain_;
 }
 Closure::~Closure(){
-  if (function_definition) delete function_definition;
-  if (scope_chain) delete scope_chain;
+  // this function maybe called by environment, just delete itself without its member
+  // don't delete function_definition.  remain for environment
+  // don't delete scope_chain_;         remain for heap
 }
 void Closure::print() {
   cout << "value type : " << CRB::value_type_to_string(this->type) << endl;

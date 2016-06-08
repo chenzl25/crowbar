@@ -15,7 +15,6 @@ Interpreter::Interpreter() {
 }
 Interpreter::~Interpreter() { // order is importance
   delete _environment;
-  delete _stack;
   delete _heap;  // heap should delete after environment
   delete _statement_list;  // statemet at last
 }
@@ -58,6 +57,15 @@ void dispose_interpreter(Interpreter *interpreter) {
 Interpreter::Stack* Interpreter::get_stack() {
   return _stack;
 }
+
+// when we use Stack. we need to delete when stack pop garbage (which doesn't use again)
+// to simplify , we just need to delete.
+// the value will just delete itself without deleting Object (which maintains by Heap)
+// so when we alloc a Object we need to use heap
+// however the Value itself, we need to delete by hand.
+// sometimes what we pop will be used for other aspect, like environment and other
+// then we use copy_value to main the pop-delete invariant
+// copy_value may be deep or shallow
 Interpreter::Stack::Stack() {
 
 }
@@ -119,6 +127,7 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
     default:
       error("heap alloc type error");
   }
+  return alloc_ptr;
 }
 
 set<CRB_TYPE::Object*> fix_bug_set;
@@ -161,16 +170,20 @@ Interpreter::Environment::~Environment() {
       delete it->second;
     }
   }
-  // for (auto it : _global_function_map) {
-  //   delete it.second;
-  // }
+  for (auto it = _global_function_map.begin(); it != _global_function_map.end(); it++) {
+    cout << "delete function: " << *it->second->name << endl;
+    delete it->second;
+  }
 }
 void Interpreter::Environment::alloc_env(CRB_TYPE::ScopeChain* next_) {
-  _scope_chain = new CRB_TYPE::ScopeChain(next_);
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  _scope_chain = dynamic_cast<CRB_TYPE::ScopeChain*>(Iheap->alloc(CRB_TYPE::SCOPE_CHAIN_OBJECT));
+  _scope_chain->next = next_;
   _in_global = false;
 }
 void Interpreter::Environment::dealloc_env() {
-  delete _scope_chain;
+  // delete _scope_chain;   remain for heap
+  _scope_chain = NULL;
   _in_global = true;
 }
 

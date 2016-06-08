@@ -31,7 +31,9 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       // return new 
     } 
     case CRB_TYPE::CLOSURE_VALUE: {
-      // return new 
+      auto function_definition = dynamic_cast<CRB_TYPE::Closure*>(value)->function_definition;
+      auto scope_chain =  dynamic_cast<CRB_TYPE::Closure*>(value)->scope_chain;
+      return new CRB_TYPE::Closure(function_definition, scope_chain);
     } 
     case CRB_TYPE::FAKE_METHOD_VALUE: {
       // return new 

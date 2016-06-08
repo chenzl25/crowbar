@@ -21,7 +21,8 @@ FunctionDefinition::FunctionDefinition(string *name_,
 }
 
 FunctionDefinition::~FunctionDefinition() {
-
+  delete parameter_list;
+  delete block;
 }
 
 ParameterList::ParameterList() {
@@ -157,8 +158,11 @@ void IdentifierExpression::eval() {
   if (search_result == NULL) {
     auto fd = Ienv->search_function(*(this->identifier));
     assert(fd != NULL, std::to_string(this->line)+ " :undefined identifier :" + *(this->identifier));
+    auto closure_value = new CRB_TYPE::Closure(fd, NULL);
+    Istack->push(closure_value);
+  } else {
+    Istack->push(value_copy(search_result)); // copy maintains stack delete invariant
   }
-  Istack->push(value_copy(search_result));
 }
 MinusExpression::MinusExpression(Expression *operand_): Expression(CRB_TYPE::MINUS_EXPRESSION) {
   operand_ = operand_;
@@ -390,10 +394,29 @@ CRB_TYPE::Value* FunctionCallExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void FunctionCallExpression::eval() {
-  // if () {
-
-  // }
-  // cout << "function call : " + 
+  auto Ienv = Interpreter::getInstance()->get_environment();
+  auto Istack = Interpreter::getInstance()->get_stack();
+  CRB_TYPE::Closure* closure_value = NULL;
+  this->function->eval();
+  auto function_value = value_copy(Istack->peek(0));
+  if (function_value->type == CRB_TYPE::CLOSURE_VALUE) {
+    closure_value = dynamic_cast<CRB_TYPE::Closure*>(function_value);
+  } else if (function_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
+    
+  } else {
+    CRB::error("not function call");
+  }
+  Ienv->alloc_env(closure_value->scope_chain);
+  if (closure_value && closure_value->function_definition->is_closure
+      && closure_value->function_definition->name) {
+    // support name closure recursion
+    Ienv->add_variable(*closure_value->function_definition->name, closure_value);
+  }
+  do_function_call(this, closure_value);
+  Ienv->dealloc_env();
+  auto return_value = Istack->pop();
+  delete Istack->pop(); // closure value delete here
+  Istack->push(return_value);
 }
 
 MemberExpression::MemberExpression(Expression *expression_, 

@@ -283,3 +283,43 @@ void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest
         Ienv->assign_variable(variable_name, result);
     }
 }
+void do_function_call(FunctionCallExpression* expression, 
+                      CRB_TYPE::Value* func_value) {
+    if (func_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
+        // call_fake_method(inter, env, caller_env, expr, &func->u.fake_method);
+        return;
+    }
+
+    CRB::assert(func_value->type == CRB_TYPE::CLOSURE_VALUE, "should be closure_value in do_function_call");
+    auto closure_value = dynamic_cast<CRB_TYPE::Closure*>(func_value);
+    switch (closure_value->function_definition->type) {
+    case CRB_TYPE::CROWBAR_FUNCTION_DEFINITION:
+        call_crowbar_function(expression, closure_value);
+        break;
+    case CRB_TYPE::NATIVE_FUNCTION_DEFINITION:
+        // call_native_function(inter, env, caller_env, expr,
+        //                      func->u.closure.function->u.native_f.proc);
+        break;
+    case CRB_TYPE::FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1:
+    default:
+        CRB::error(std::to_string(expression->line) + " :bad case in do_function_call");
+    }
+}
+void call_crowbar_function(FunctionCallExpression* expression, 
+                           CRB_TYPE::Closure* closure_value) {
+    int argument_size = expression->argument_list->_argument_vec.size();
+    int parameter_size = closure_value->function_definition->parameter_list->_parameter_vec.size();
+    cout << argument_size << endl;
+    if (argument_size > parameter_size) {
+        CRB::error(std::to_string(expression->line) +
+                   " : too much argument for function : " + 
+                   *closure_value->function_definition->name +
+                   " which need " + std::to_string(parameter_size));
+    } else if (argument_size < parameter_size) {
+        CRB::error(std::to_string(expression->line) +
+                   " : too few argument for function : " + 
+                   *closure_value->function_definition->name +
+                   " which need " + std::to_string(parameter_size));
+    }
+
+}

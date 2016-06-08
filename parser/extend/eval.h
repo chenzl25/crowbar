@@ -19,4 +19,8 @@ void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value,
 CRB_TYPE::Value* get_lvalue(Expression* expression);
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number);
+void do_function_call(FunctionCallExpression* expression, 
+                      CRB_TYPE::Value* func_value);
+void call_crowbar_function(FunctionCallExpression* expression, 
+                           CRB_TYPE::Closure* closure_value);
 #endif
