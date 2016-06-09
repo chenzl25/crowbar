@@ -264,7 +264,7 @@ $ array_literal : '{' expression_list '}'
         {
             $$ = crb_create_array_expression($2);
         }
-        | '{' expression_list ',' '}'
+        | '{' expression_list ':' '}'
         {
             $$ = crb_create_array_expression($2);
         }
@@ -294,7 +294,7 @@ $ expression_list :
         {
             $$ = crb_create_expression_list($1);
         }
-        | expression_list ',' expression
+        | expression_list ':' expression
         {
             $$ = crb_chain_expression_list($1, $3);
         }

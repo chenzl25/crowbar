@@ -3,6 +3,7 @@
 #include "CRB.h"
 #include "eval.h"
 #include "crowbar.h"
+#include "execute.h"
 #include "crowbar_util.h"
 #include "crowbar_type.h"
 using namespace std;
@@ -269,18 +270,25 @@ void eval_binary_null( CRB_TYPE::ExpressionType op,
     }
     result_value = new CRB_TYPE::BooleanValue(b);
 }
-CRB_TYPE::Value* get_lvalue(Expression* expression) {
-    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
-    CRB_TYPE::Value* dest = NULL;
-    if (expression->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
-        dest = Ienv->search_variable(*(dynamic_cast<IdentifierExpression*>(expression)->identifier));
-    } else if (expression->type == CRB_TYPE::INDEX_EXPRESSION) {
-        //TODO
-        // dest = get_array_element_lvalue(inter, env, expr);
-    } else {
-        CRB::error(std::to_string(expression->line) + " :not lvalue in assign left side");
-    }
-    return dest;
+// assign_value will be in the array
+void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* assign_value) {
+    string line_string = std::to_string(index_expression->line);
+    // we use eval insteat of eval pop to avoid GC collect the temporary variable
+    auto Istack = CRB::Interpreter::getInstance()->get_stack();
+    index_expression->array->eval();
+    index_expression->index->eval();
+    auto index_value = Istack->pop();
+    auto array_value = Istack->pop();
+    CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a array");
+    CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
+    auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
+    auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(array_value);
+    CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
+    CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
+            ": index exceeds the array size");
+    cout << "!!!" << endl;
+    CRB::non_object_delete(cast_array_value->vec[cast_index_value->int_value]);
+    cast_array_value->vec[cast_index_value->int_value] = assign_value;
 }
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number) {
@@ -319,6 +327,7 @@ void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest
         Ienv->assign_variable(variable_name, result);
     }
 }
+
 void do_function_call(FunctionCallExpression* expression, 
                       CRB_TYPE::Value* func_value) {
     if (func_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {

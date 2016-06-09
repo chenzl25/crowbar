@@ -15,6 +15,7 @@ Interpreter::Interpreter() {
   _statement_list = new StatementList();
 }
 Interpreter::~Interpreter() { // order is importance
+  delete _stack;
   delete _environment;
   delete _heap;  // heap should delete after environment
   delete _statement_list;  // statemet at last
@@ -75,7 +76,7 @@ Interpreter::Stack::Stack() {
 
 }
 Interpreter::Stack::~Stack() {
-  // TODO
+  assert(_stack_vec.size() == 0, "after execution, there should nothing in the stack");
 }
 int Interpreter::Stack::size() {
   return _stack_vec.size();
@@ -117,7 +118,9 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
       CRB::error("should use another string alloc");
       break;
     case CRB_TYPE::ARRAY_OBJECT:
-
+      alloc_ptr = new CRB_TYPE::Array();
+      _current_size += sizeof(CRB_TYPE::Array);
+      _heap_list.push_back(alloc_ptr);
       break;
     case CRB_TYPE::SCOPE_CHAIN_OBJECT:
       alloc_ptr = new CRB_TYPE::ScopeChain();
@@ -296,7 +299,7 @@ FunctionDefinition* Interpreter::Environment::search_function(string name) {
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
   if (_in_global || (_use_caller_env && _caller_env == NULL)) {
     CRB::assert(_global_variable_map.count(name), "the value be assigned should exist");
-    delete _global_variable_map[name];
+    env_value_delete(_global_variable_map[name]);
     _global_variable_map[name] = assign_value;
     // cout << "assign global varible: " << name << endl;
     // assign_value->print();
@@ -306,9 +309,10 @@ void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* ass
     CRB_TYPE::Value* dest;
     auto head_scope = in_use_env->_scope_chain;
     if (in_use_env->_global_declare_map.count(name)) {
-      delete in_use_env->_global_declare_map[name];
-      in_use_env->_global_declare_map.erase(name);
+      env_value_delete(_global_variable_map[name]);
+      _global_variable_map[name] = assign_value;
       in_use_env->_global_declare_map[name] = assign_value;
+      return;
     }
 
     do {

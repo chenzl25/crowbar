@@ -283,14 +283,28 @@ CRB_TYPE::Value* IncrementExpression::eval_and_pop() {
 }
 void IncrementExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
+  auto Ienv = Interpreter::getInstance()->get_environment();
   string line_string = std::to_string(this->line);
   assert(this->operand != NULL, line_string + " : IncrementExpression: operand_expression should exist");
-  auto operand_value = get_lvalue(this->operand);
+  
+  CRB_TYPE::Value*  operand_value;  
+  if (operand->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
+    operand_value = Ienv->search_variable(*(dynamic_cast<IdentifierExpression*>(operand)->identifier));
+  } else {
+    operand_value = operand->eval_and_pop();// we can pop, because it should be the int, GC will not collect it.
+  }
   assert(operand_value != NULL, line_string + " : IncrementExpression: operand_value should exist");
   assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
   auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
   int old_int = cast_operand_value->int_value;
-  cast_operand_value->int_value++;
+  if (this->operand->type == CRB_TYPE::INDEX_EXPRESSION) {
+    cast_operand_value->int_value++;
+    assign_array_element(dynamic_cast<IndexExpression*>(this->operand), 
+                         cast_operand_value); // reuse the cast_operand_value, because cast_operand_value from the stack must be copied
+  } else {
+    // maybe it should extend the object later, like obj.a++;
+    cast_operand_value->int_value++;
+  }
   Istack->push(new CRB_TYPE::IntValue(old_int));
 }
 DecrementExpression::DecrementExpression(Expression *operand_): Expression(CRB_TYPE::DECREMENT_EXPRESSION) {
@@ -306,14 +320,28 @@ CRB_TYPE::Value* DecrementExpression::eval_and_pop() {
 }
 void DecrementExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
+  auto Ienv = Interpreter::getInstance()->get_environment();
   string line_string = std::to_string(this->line);
   assert(this->operand != NULL, line_string + " : DecrementExpression: operand_expression should exist");
-  auto operand_value = get_lvalue(this->operand);
+  
+  CRB_TYPE::Value*  operand_value;  
+  if (operand->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
+    operand_value = Ienv->search_variable(*(dynamic_cast<IdentifierExpression*>(operand)->identifier));
+  } else {
+    operand_value = operand->eval_and_pop();// we can pop, because it should be the int, GC will not collect it.
+  }
   assert(operand_value != NULL, line_string + " : DecrementExpression: operand_value should exist");
-  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator -- should only work on interger");
+  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
   auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
   int old_int = cast_operand_value->int_value;
-  cast_operand_value->int_value--;
+  if (this->operand->type == CRB_TYPE::INDEX_EXPRESSION) {
+    cast_operand_value->int_value--;
+    assign_array_element(dynamic_cast<IndexExpression*>(this->operand), 
+                         cast_operand_value); // reuse the cast_operand_value, because cast_operand_value from the stack must be copied
+  } else {
+    // maybe it should extend the object later, like obj.a--;
+    cast_operand_value->int_value--;
+  }
   Istack->push(new CRB_TYPE::IntValue(old_int));
 }
 IndexExpression::IndexExpression(Expression *array_, Expression *index_): Expression(CRB_TYPE::INDEX_EXPRESSION) {
@@ -331,7 +359,21 @@ CRB_TYPE::Value* IndexExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void IndexExpression::eval() {
-  //TODO
+  auto Istack = Interpreter::getInstance()->get_stack();
+  string line_string = std::to_string(this->line);
+  // we use eval insteat of eval pop to avoid GC collect the temporary variable
+  this->array->eval();
+  this->index->eval();
+  auto index_value = Istack->pop();
+  auto array_value = Istack->pop();
+  CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a array");
+  CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
+  auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
+  auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(array_value);
+  CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
+  CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
+          ": index exceeds the array size");
+  Istack->push(value_copy(cast_array_value->vec[cast_index_value->int_value]));
 }
 AssignExpression::AssignExpression( CRB_TYPE::ExpressionType assign_type_, 
                                     Expression *variable_,
@@ -358,8 +400,14 @@ void AssignExpression::eval() {
     // TODO;
     return;
   }
+  if (this->variable->type == CRB_TYPE::INDEX_EXPRESSION) {
+    // for the stack delete reason
+    assign_array_element(dynamic_cast<IndexExpression*>(this->variable), value_copy(src));
+    return;
+  } 
   // find the the dest value
-  CRB_TYPE::Value* dest = get_lvalue(variable);
+  CRB_TYPE::Value* dest = Ienv->search_variable(*(dynamic_cast<IdentifierExpression*>(this->variable)->identifier));
+
   // if no dest value, we init it
   if (this->variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION && dest == NULL) {
     // init assign
@@ -374,8 +422,6 @@ void AssignExpression::eval() {
     if (this->variable->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
       string variable_name = *(dynamic_cast<IdentifierExpression*>(this->variable)->identifier);
       do_assign(variable_name, value_copy(src), dest, this->type, this->line);
-    } else if (this->variable->type == CRB_TYPE::INDEX_EXPRESSION) {
-      // TODO
     } else {
 
     }
@@ -454,7 +500,15 @@ CRB_TYPE::Value* ArrayExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void ArrayExpression::eval() {
-  //TODO
+  auto Istack = Interpreter::getInstance()->get_stack();
+  auto Iheap = Interpreter::getInstance()->get_heap();
+  auto array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
+  int array_size = array_literal->_expression_vec.size();
+  array_value->vec.resize(array_size);
+  Istack->push(array_value);
+  for (int i = 0; i < array_size; i++) {
+    array_value->vec[i] = array_literal->_expression_vec[i]->eval_and_pop(); 
+  }
 }
 
 ClousreExpression::ClousreExpression(string *identifier_, ParameterList *parameter_list_,
@@ -531,7 +585,7 @@ CRB_TYPE::StatementResult* Elsif::execute() {
   assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
          " condition expression should be bool");
   if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value)  {
-    delete value; // delete the stack pop
+    stack_value_delete(value); // delete the stack pop
     return this->block->execute();
   } else {
     return NULL;
@@ -621,7 +675,7 @@ CRB_TYPE::StatementResult* IfStatement::execute() {
   assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
          std::to_string(this->line) + " condition expression should be bool");
   if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
-    delete value; // delete the stack pop
+    stack_value_delete(value); // delete the stack pop
     result = this->then_block->statement_list->execute();
   } else if (this->elsif_list) {
     result = this->elsif_list->execute();
@@ -697,7 +751,7 @@ CRB_TYPE::StatementResult* ForStatement::execute() {
     assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
            std::to_string(this->line) + " condition expression should be bool");
     if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
-      delete value; // delete the stack pop
+      stack_value_delete(value); // delete the stack pop
       result = this->block->execute();
       if (result->type == CRB_TYPE::RETURN_STATEMENT_RESULT) {
         return result;
@@ -775,7 +829,11 @@ GlobalStatement::~GlobalStatement() {
   identifier_list = NULL;
 }
 CRB_TYPE::StatementResult* GlobalStatement::execute() {
-
+  auto Ienv = Interpreter::getInstance()->get_environment();
+  for (int i = 0; i < identifier_list->_identifier_vec.size(); i++) {
+    Ienv->add_global_declare(*identifier_list->_identifier_vec[i]);
+  }
+  return new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
 }
 Block::Block(StatementList* statement_list_) {
   statement_list = statement_list_;

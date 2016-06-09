@@ -20,7 +20,11 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       return new CRB_TYPE::Value(); // default NULL
     } 
     case CRB_TYPE::ARRAY_VALUE: {
-      // return new 
+      // we don't copy the array 
+      // because we just use the the copy value to the stack
+      // and stack will use stack_value_delete() to delete the copy value
+      // howerer stack_value_delete just delete the non-object
+      return value; 
     } 
     case CRB_TYPE::STRING_VALUE: {
       string* tem_string_ptr = dynamic_cast<CRB_TYPE::String*>(value)->string_value;

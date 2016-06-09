@@ -171,4 +171,20 @@ void Assoc::assign_member(string name, Value* value) {
 void Assoc::print() {
   cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
 }
+Array::Array() : Object(CRB_TYPE::ARRAY_VALUE) {
 
+}
+Array::Array(int size) : Object(CRB_TYPE::ARRAY_VALUE) {
+  vec.resize(size);
+}
+Array::~Array() {
+  for (int i = 0; i < vec.size(); i++) {
+    delete vec[i];
+  }
+}
+void Array::print() {
+  cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
+  for (int i = 0; i < vec.size(); i++) {
+    vec[i]->print();
+  }
+}

@@ -166,47 +166,42 @@ string value_type_to_string(CRB_TYPE::ValueType type) {
 string value_to_string(CRB_TYPE::Value *value, int line_number) {
   string result;
   switch (value->type) {
-  case CRB_TYPE::BOOLEAN_VALUE: {
-    if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value == true) {
-      result = string("true");
-    } else {
-      result = string("false");
+    case CRB_TYPE::BOOLEAN_VALUE: {
+      if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value == true) {
+        result = string("true");
+      } else {
+        result = string("false");
+      }
+      break;
     }
+    case CRB_TYPE::INT_VALUE: {
+      result = std::to_string(dynamic_cast<CRB_TYPE::IntValue*>(value)->int_value);
+      break;
+    }
+    case CRB_TYPE::DOUBLE_VALUE: {
+      result = std::to_string(dynamic_cast<CRB_TYPE::DoubleValue*>(value)->double_value);
+      break;
+    }
+    case CRB_TYPE::STRING_VALUE: {
+      result = *(dynamic_cast<CRB_TYPE::String*>(value)->string_value);
+      break;
+    }
+    case CRB_TYPE::NULL_VALUE: {
+      result = string("null");
+      break;
+    }
+  case CRB_TYPE::ARRAY_VALUE: {
+    auto array_value = dynamic_cast<CRB_TYPE::Array*>(value);
+    result += "[";
+    for (int i = 0; i < array_value->vec.size(); i++) {
+      result += CRB::value_to_string(array_value->vec[i], line_number);
+      if (i != array_value->vec.size() -1) {
+        result += ", ";
+      }
+    }
+    result += "]";
     break;
   }
-  case CRB_TYPE::INT_VALUE: {
-    result = std::to_string(dynamic_cast<CRB_TYPE::IntValue*>(value)->int_value);
-    break;
-  }
-  case CRB_TYPE::DOUBLE_VALUE: {
-    result = std::to_string(dynamic_cast<CRB_TYPE::DoubleValue*>(value)->double_value);
-    break;
-  }
-  case CRB_TYPE::STRING_VALUE: {
-    result = *(dynamic_cast<CRB_TYPE::String*>(value)->string_value);
-    break;
-  }
-  case CRB_TYPE::NULL_VALUE: {
-    result = string("null");
-    break;
-  }
-  // case CRB_TYPE::ARRAY_VALUE:
-  //     CRB_mbstowcs("(", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     for (i = 0; i < value->u.object->u.array.size; i++) {
-  //         CRB_Char *new_str;
-  //         if (i > 0) {
-  //             CRB_mbstowcs(", ", wc_buf);
-  //             crb_vstr_append_string(&vstr, wc_buf);
-  //         }
-  //         new_str = CRB_value_to_string(inter, env, line_number,
-  //                                       &value->u.object->u.array.array[i]);
-  //         crb_vstr_append_string(&vstr, new_str);
-  //         MEM_free(new_str);
-  //     }
-  //     CRB_mbstowcs(")", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     break;
   // case CRB_TYPE::ASSOC_VALUE:
   //     CRB_mbstowcs("(", wc_buf);
   //     crb_vstr_append_string(&vstr, wc_buf);
@@ -267,16 +262,26 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
   //     CRB_mbstowcs(")", wc_buf);
   //     crb_vstr_append_string(&vstr, wc_buf);
   //     break;
-  case CRB_TYPE::SCOPE_CHAIN_VALUE: /* FALLTHRU*/
-  default:
-      CRB::error(std::to_string(line_number) + " :value->type " + 
-                 CRB::value_type_to_string(value->type));
+    case CRB_TYPE::SCOPE_CHAIN_VALUE: /* FALLTHRU*/
+    default:
+        CRB::error(std::to_string(line_number) + " :value->type " + 
+                  CRB::value_type_to_string(value->type));
   }
 
   return result;
 }
 
 void stack_value_delete(CRB_TYPE::Value *value) {
+  if (!is_object_value(value->type)) {
+    delete value;
+  }
+}
+void env_value_delete(CRB_TYPE::Value *value) {
+  if (!is_object_value(value->type)) {
+    delete value;
+  }
+}
+void non_object_delete(CRB_TYPE::Value *value) {
   if (!is_object_value(value->type)) {
     delete value;
   }

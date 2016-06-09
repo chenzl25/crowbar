@@ -1,6 +1,7 @@
 #ifndef CROWBAR_TYPE_H
 #define CROWBAR_TYPE_H
 #include <string>
+#include <vector>
 #include <map>
 using namespace std;
 
@@ -91,14 +92,13 @@ public:
   string   *string_value;
   bool is_literal;
 };
-class Array : public Value {
+class Array : public Object {
 public:
+  Array();
   Array(int size);
   virtual ~Array();
   virtual void print();
-  int     size;
-  int     alloc_size;  // like the vector memory management
-  Value   *array;      // like  new Value[10]         
+  vector<CRB_TYPE::Value*> vec;
 };
 
 class Assoc : public Object {
