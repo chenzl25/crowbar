@@ -3,13 +3,15 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#include "../../lexer/src/lex.h"
-#include "yacc.h"
-#include "slr.h"
-#include "bnf_rule.h"
+#include "lexer/src/lex.h"
+#include "parser/src/yacc.h"
+#include "parser/src/slr.h"
+#include "parser/src/bnf_rule.h"
+#include "parser/src/hardcode.h"
+
 using namespace std;
-vector<Lex::LexRule> hard_code_lex_rule();
-vector<BnfRule> hard_code_bnf_rule();
+
+
 int main(int argc, char** argv) {
   string code_path     = "data/crowbar.code";
   for (int i = 1; i < argc;) {
@@ -29,13 +31,8 @@ int main(int argc, char** argv) {
   mylex.set_max_token_size(50);
 
   SLR slr;
-  slr.build_from_bnf_rules(hard_code_bnf_rule());
+  // slr.build_from_bnf_rules(hard_code_bnf_rule());  
+  slr.just_read_bnf_rules(hard_code_bnf_rule());
+  hard_code_slr_table(slr);
   slr.parse(mylex);
-}
-
-vector<Lex::LexRule> hard_code_lex_rule() {
-  /*hard_code_lex_rule*/
-}
-vector<BnfRule> hard_code_bnf_rule() {
-  /*hard_code_bnf_rule*/
 }

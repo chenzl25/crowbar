@@ -15,12 +15,19 @@ SLR::SLR() {
 SLR::~SLR() {
 
 }
+void SLR::just_read_bnf_rules(vector<BnfRule> bnf_rules) {
+  _bnf_rules = bnf_rules;
+  BnfRule extend_bnf_rule;
+  extend_bnf_rule.head.value = "S\'";
+  extend_bnf_rule.body.push_back(_bnf_rules[0].head);
+  _bnf_rules.insert(_bnf_rules.begin(), extend_bnf_rule);
+}
 void SLR::build_from_bnf_rules(vector<BnfRule> bnf_rules){
   _bnf_rules = bnf_rules;
   _construct_terminal_and_nonterminal_set();
   _construct_states(); // _goto_table  construct here implictly
   _construct_action_table();
-  _print_to_yacc_output();
+  // _print_to_yacc_output();
   // _print_terminal_and_nonterminal_set();
   // _print_first_follow();
   // cout << "final state " <<  _states.size() << endl;
@@ -427,6 +434,18 @@ SLR::Action::Action(ENUM::ActionType _type, int _state_no, int _rule_pos) {
   state_no = _state_no;
   rule_pos = _rule_pos;
 }
+SLR::Action::Action(const Action& another) {
+  type = another.type;
+  state_no = another.state_no;
+  rule_pos = another.rule_pos;
+}
+SLR::Action& SLR::Action::operator =(const Action& another) {
+  if (this == & another) return *this;
+  type = another.type;
+  state_no = another.state_no;
+  rule_pos = another.rule_pos;
+  return *this;
+}
 void SLR::_construct_action_table() {
   for (auto state : _states) {
     for (auto item: state.item) {
@@ -437,20 +456,20 @@ void SLR::_construct_action_table() {
         for (auto it_follow : follow_set) {
           if (_action_table[state.no][it_follow].type == ENUM::ACTION_REDUCE &&
               _action_table[state.no][it_follow].rule_pos != item.rule_pos) {
-            cout << "state.no " << state.no << " on input " << it_follow << " ";
-            cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer the most first bnf_rule one" << endl;
+            // cout << "state.no " << state.no << " on input " << it_follow << " ";
+            // cout << "r" << _action_table[state.no][it_follow].rule_pos << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer the most first bnf_rule one" << endl;
             if (item.rule_pos < _action_table[state.no][it_follow].rule_pos) {
               _action_table[state.no][it_follow] = SLR::Action(ENUM::ACTION_REDUCE, NULL, item.rule_pos);
             }
             // error("reduce reduce conflit");
           } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_SHIFT) {
-            cout << "shift reduce conflit : "; 
-            cout << "state.no " << state.no << " on input " << it_follow << " ";
-            cout << "s" << _action_table[state.no][it_follow].state_no << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer shift" << endl;
+            // cout << "shift reduce conflit : "; 
+            // cout << "state.no " << state.no << " on input " << it_follow << " ";
+            // cout << "s" << _action_table[state.no][it_follow].state_no << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer shift" << endl;
             continue;
             // error("shift reduce conflit");
           } else if (_action_table[state.no][it_follow].type == ENUM::ACTION_ACCEPT) {
@@ -463,11 +482,11 @@ void SLR::_construct_action_table() {
         if (dot_right.is_terminal) {
           int shift_state_no =  _goto_table[state.no][dot_right];
           if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_REDUCE) {
-            cout << "shift reduce conflit : ";
-            cout << "state.no " << state.no << " on input " << dot_right.value << " ";
-            cout << "s" << _action_table[state.no][dot_right.value].state_no << " , ";
-            cout << "r" << item.rule_pos << endl;
-            cout << "we prefer shift" << endl;
+            // cout << "shift reduce conflit : ";
+            // cout << "state.no " << state.no << " on input " << dot_right.value << " ";
+            // cout << "s" << _action_table[state.no][dot_right.value].state_no << " , ";
+            // cout << "r" << item.rule_pos << endl;
+            // cout << "we prefer shift" << endl;
             // error("shift reduce conflit");
           } else if (_action_table[state.no][dot_right.value].type == ENUM::ACTION_SHIFT &&
                      _action_table[state.no][dot_right.value].state_no != shift_state_no) {
@@ -619,137 +638,6 @@ void SLR::parse(Lex &lexer) {
         //-----------------------------------
         switch (action.rule_pos) {
           /*%action*/
-          case 1:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-            }
-            break;
-          case 2: 
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value + u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 3:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value - u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 4: 
-            {
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              printf("%lf\n",u2.double_value);
-              YYSTYPE u;
-              yystype_stack.push(u);
-            }
-            break;
-          case 5:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-            }
-            break;
-          case 6:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value * u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 7:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value / u3.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 8:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.int_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 9:
-            {
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u1.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 10:
-            {
-              YYSTYPE u3 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = u2.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
-          case 11:
-            {
-              YYSTYPE u2 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u1 = yystype_stack.top();
-              yystype_stack.pop();
-              YYSTYPE u;
-              u.double_value = -u1.double_value;
-              yystype_stack.push(u);
-              // cout << u.double_value << "!!!!!" << endl;
-            }
-            break;
           default:
             break;
         }// end switch
@@ -770,5 +658,46 @@ void SLR::parse(Lex &lexer) {
         break;
     }
 
+  }
+}
+void SLR::add_goto_table(int from, bool is_terminal, string type, string value ,int to) {
+  _goto_table[from][BnfRule::Symbol(is_terminal, type, value)] = to;
+}
+void SLR::add_action_table(int state, string input_string, 
+                      ENUM::ActionType type, int state_no, int rule_pos) {
+  _action_table[state][input_string] = SLR::Action(type, state_no, rule_pos); 
+}
+  // map< int, map<BnfRule::Symbol, int> > _goto_table;
+  // map< int, map<string, Action> > _action_table;
+void SLR::print_table_hard_code(ostream& out) {
+  vector<string> action_type_vec;
+  action_type_vec.push_back("ENUM::ACTION_SHIFT");
+  action_type_vec.push_back("ENUM::ACTION_REDUCE");
+  action_type_vec.push_back("ENUM::ACTION_ACCEPT");
+  action_type_vec.push_back("ENUM::ACTION_ERROR");
+  // we assume the SLR object call slr
+  for (auto it1 = _goto_table.begin(); it1 != _goto_table.end(); it1++) {
+    map<BnfRule::Symbol, int> &second_map = it1->second;
+    for (auto it2 = second_map.begin(); it2 != second_map.end(); it2++) {
+      out << "slr.add_goto_table(" +   
+              std::to_string(it1->first) + ", " +
+              (it2->first.is_terminal?"true":"false") + ", " +
+              "\"" + it2->first.value + "\", " +
+              "\"" + it2->first.type + "\", " +
+              std::to_string(it2->second) +
+      ");" << endl;
+    }
+  }
+  for (auto it1 = _action_table.begin(); it1 != _action_table.end(); it1++) {
+    map<string, Action> &second_map = it1->second;
+    for (auto it2 = second_map.begin(); it2 != second_map.end(); it2++) {
+      out << "slr.add_action_table(" +   
+              std::to_string(it1->first) + ", " +
+              "\"" + it2->first + "\", " +
+              action_type_vec[it2->second.type] + ", " +
+              std::to_string(it2->second.state_no) + ", " +
+              std::to_string(it2->second.rule_pos) + 
+      ");" << endl;
+    }
   }
 }

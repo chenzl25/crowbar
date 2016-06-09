@@ -1,7 +1,10 @@
-SRCS  = parser/src/main.cpp
+SRCS  = main.cpp
+
 SRCS += parser/src/yacc.cpp
 SRCS += parser/src/slr.cpp
 SRCS += parser/src/bnf_rule.cpp
+SRCS += parser/src/hardcode.cpp
+
 SRCS += lexer/src/nfa.cpp
 SRCS += lexer/src/util.cpp
 SRCS += lexer/src/dfa.cpp
@@ -18,6 +21,8 @@ SRCS += extend/eval.cpp
 SRCS += extend/execute.cpp
 SRCS += extend/native_func.cpp
 
+
+
 OBJS=$(SRCS:.cpp=.o)
 
 CXX?=g++
@@ -29,6 +34,8 @@ all:  $(OBJS)
 yacc.o:     parser/src/yacc.h
 
 bnf_rule.o: parser/src/bnf_rule.h
+
+hardcode.o: parser/src/hardcode.h
 
 slr.o:      parser/src/slr.h
 
@@ -59,6 +66,8 @@ eval.o: 				extend/eval.h
 execute.o:			extend/execute.h
 
 native_func.o:  extend/native_func.h
-	
+
+
+
 clean:
 	-rm -f $(OBJS) dcompile

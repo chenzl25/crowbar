@@ -6,6 +6,7 @@
 #include <map>
 #include <stack>
 #include <utility>
+#include <iostream>
 #include "bnf_rule.h"
 #include "../../lexer/src/lex.h"
 #include "../../lexer/src/util.h"
@@ -27,7 +28,12 @@ public:
   SLR();
   ~SLR();
   void build_from_bnf_rules(vector<BnfRule> bnf_rules);
+  void just_read_bnf_rules(vector<BnfRule> bnf_rules);
   void parse(Lex &lexer);
+  void print_table_hard_code(ostream& out);
+  void add_goto_table(int from, bool is_terminal, string type, string value ,int to);
+  void add_action_table(int state, string input_string, 
+                        ENUM::ActionType type, int state_no, int rule_pos);
 private:
   struct Item {
     int rule_pos;
@@ -46,6 +52,8 @@ private:
     int  state_no;
     int  rule_pos;
     Action();
+    Action(const Action& another);
+    Action& operator =(const Action& another);
     Action(ENUM::ActionType _type);
     Action(ENUM::ActionType _type, int _state_no, int _rule_pos);
   };

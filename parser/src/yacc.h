@@ -33,6 +33,7 @@ private:
   void _fill_yystype();
   void _fill_action();
   void _fill_main();
+  void _fill_hardcode();
   void _replace_action_string(int rule_pos, ofstream& out);
   void _print_specific_bnf_rule(int rule_pos);
   void _build_SLR();

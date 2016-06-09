@@ -139,7 +139,7 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
   bnf_rule_in.close();
   // _bnf_rules 0 position has the heighest priority
   // print();
-  // _build_SLR();
+  _build_SLR();
   _fill_template();
   return true; 
 }
@@ -150,12 +150,14 @@ void Yacc::_fill_template() {
   system("mkdir -p dist/extend");
   system("cp ../lexer/src/*[^o] dist/lexer/src");
   system("cp src/*[^o] dist/parser/src");
+  system("rm dist/parser/src/main.cpp");
   system("cp template/makefile dist");
   system("cp data/* dist/data");
   system("cp extend/* dist/extend");
   _fill_yystype();
   _fill_action();
   _fill_main();
+  _fill_hardcode();
 }
 void Yacc::_fill_yystype() {
   ifstream  in("template/yystype.template");
@@ -183,7 +185,33 @@ void Yacc::_fill_yystype() {
 }
 void Yacc::_fill_main() {
   ifstream  in("template/main.template");
-  ofstream  out("dist/parser/src/main.cpp");
+  ofstream  out("dist/main.cpp");
+  if (!in.is_open()) {
+    error("fail to open template/yystype.template");
+  }
+  if (!out.is_open()) {
+    error("fail to open dist/parser/src/main.cpp");
+  }
+  string s;
+  while (getline(in, s)) {
+    string flag;
+    stringstream ss(s);
+    ss >> flag;
+    out << s << endl;
+    // set-string-type-distincter
+    if (flag == "/*set-string-type-distincter*/") {
+      string empty_string;
+      out << "mylex.set_string_type(\"" + _lexer.get_string_type() + "\");" << endl;
+      out << "mylex.set_string_distincter(\'" + empty_string + 
+              _check_escape(_lexer.get_string_distincter()) + "\');" << endl;
+    }
+  }
+  in.close();
+  out.close();
+}
+void Yacc::_fill_hardcode() {
+  ifstream  in("template/hardcode.template");
+  ofstream  out("dist/parser/src/hardcode.cpp");
   if (!in.is_open()) {
     error("fail to open template/yystype.template");
   }
@@ -229,12 +257,9 @@ void Yacc::_fill_main() {
       }
       out << "return lex_rules;" << endl;
     }
-    // set-string-type-distincter
-    if (flag == "/*set-string-type-distincter*/") {
-      string empty_string;
-      out << "mylex.set_string_type(\"" + _lexer.get_string_type() + "\");" << endl;
-      out << "mylex.set_string_distincter(\'" + empty_string + 
-              _check_escape(_lexer.get_string_distincter()) + "\');" << endl;
+    /*hard_code_slr_table*/
+    if (flag == "/*hard_code_slr_table*/") {
+      _slr.print_table_hard_code(out);
     }
   }
   in.close();
