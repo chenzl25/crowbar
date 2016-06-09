@@ -16,6 +16,12 @@ void eval_binary_boolean(CRB_TYPE::ExpressionType op,
                          CRB_TYPE::Value *&result_value, int line_number);
 void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
                          CRB_TYPE::Value *&result_value, int line_number);
+void eval_compare_string(CRB_TYPE::ExpressionType op,
+                         CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
+                         CRB_TYPE::Value *&result_value, int line_number);
+void eval_binary_null( CRB_TYPE::ExpressionType op,
+                       CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
+                       CRB_TYPE::Value *&result_value, int line_number);
 CRB_TYPE::Value* get_lvalue(Expression* expression);
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number);

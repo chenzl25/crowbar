@@ -252,34 +252,19 @@ CRB_TYPE::Value* BinaryExpression::constant_folding_eval() {
     chain_string(left_value, right_value, result_value, this->line);
   } else if (left_value->type == CRB_TYPE::STRING_VALUE
              && right_value->type == CRB_TYPE::STRING_VALUE) {
-      // result.type = CRB_TYPE::BOOLEAN_VALUE;
-      // result.u.boolean_valueue
-      //     = eval_compare_string(inter, env, operator, left_value, right_value,
-      //                           left->line_number);
+    eval_compare_string(this->type, left_value, right_value,
+                        result_value, this->line);
   } else if (left_value->type == CRB_TYPE::NULL_VALUE
              || right_value->type == CRB_TYPE::NULL_VALUE) {
-      // result.type = CRB_TYPE::BOOLEAN_VALUE;
-      // result.u.boolean_valueue
-      //     = eval_binary_null(inter, env, operator, left_value, right_value,
-      //                        left->line_number);
+      eval_binary_null(this->type, left_value, right_value,
+                        result_value, this->line);
   } else if (is_object_value(left_value->type) &&
              is_object_value(right_value->type)) {
-      // result.type = CRB_BOOLEAN_VALUE;
-      // result.u.boolean_valueue
-      //     = (left_value->u.object == right_value->u.object);
+      bool b = (left_value == right_value); // compare the address
+      result_value = new CRB_TYPE::BooleanValue(b);
   } else {
-      // char *op_str = crb_get_operator_string(operator);
-      // crb_runtime_error(inter, env, left->line_number, BAD_OPERAND_TYPE_ERR,
-      //                   CRB_STRING_MESSAGE_ARGUMENT, "operator", op_str,
-      //                   CRB_MESSAGE_ARGUMENT_END);
+      CRB::error(std::to_string(this->line) + " :invalid binary operation");
   }
-  // eval_binary_numeric
-  // eval_binary_boolean
-  // chain_string
-  // eval_compare_string
-  // eval_binary_null
-  // ....
-  // error
   CRB::stack_value_delete(Istack->pop()); // delete when pop
   CRB::stack_value_delete(Istack->pop()); // delete then pop
   // result_value->print();

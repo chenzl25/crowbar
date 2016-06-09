@@ -233,6 +233,42 @@ void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value,
     string concat_std_string = *(dynamic_cast<CRB_TYPE::String*>(left_value)->string_value) + right_std_string;
     result_value = Iheap->alloc(&concat_std_string, false);
 }
+void eval_compare_string(CRB_TYPE::ExpressionType op,
+                         CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
+                         CRB_TYPE::Value *&result_value, int line_number) {
+    auto s1_ptr = dynamic_cast<CRB_TYPE::String*>(left_value)->string_value;
+    auto s2_ptr = dynamic_cast<CRB_TYPE::String*>(right_value)->string_value;
+    bool b;
+    if (op == CRB_TYPE::EQ_EXPRESSION) {
+        b = *s1_ptr == *s2_ptr;
+    } else if (op == CRB_TYPE::NE_EXPRESSION) {
+        b = *s1_ptr != *s2_ptr;
+    } else if (op == CRB_TYPE::GT_EXPRESSION) {
+        b = *s1_ptr > *s2_ptr;
+    } else if (op == CRB_TYPE::GE_EXPRESSION) {
+        b = *s1_ptr >= *s2_ptr;
+    } else if (op == CRB_TYPE::LT_EXPRESSION) {
+        b = *s1_ptr < *s2_ptr;
+    } else if (op == CRB_TYPE::LE_EXPRESSION) {
+        b = *s1_ptr <= *s2_ptr;
+    } else {
+        CRB::error(std::to_string(line_number) + " :invalid operater between string");
+    }
+    result_value = new CRB_TYPE::BooleanValue(b);
+}
+void eval_binary_null( CRB_TYPE::ExpressionType op,
+                       CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
+                       CRB_TYPE::Value *&result_value, int line_number) {
+    bool b;
+    if (op == CRB_TYPE::EQ_EXPRESSION) {
+        b = left_value->type == CRB_TYPE::NULL_VALUE && right_value->type == CRB_TYPE::NULL_VALUE;
+    } else if (op == CRB_TYPE::NE_EXPRESSION) {
+        b = !(left_value->type == CRB_TYPE::NULL_VALUE && right_value->type == CRB_TYPE::NULL_VALUE);
+    } else {
+        CRB::error(std::to_string(line_number) +  " :invalid operater between NULL and others");
+    }
+    result_value = new CRB_TYPE::BooleanValue(b);
+}
 CRB_TYPE::Value* get_lvalue(Expression* expression) {
     auto Ienv = CRB::Interpreter::getInstance()->get_environment();
     CRB_TYPE::Value* dest = NULL;
@@ -242,7 +278,7 @@ CRB_TYPE::Value* get_lvalue(Expression* expression) {
         //TODO
         // dest = get_array_element_lvalue(inter, env, expr);
     } else {
-        CRB::error("not lvalue in assign left side");
+        CRB::error(std::to_string(expression->line) + " :not lvalue in assign left side");
     }
     return dest;
 }
