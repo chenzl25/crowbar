@@ -57,7 +57,6 @@ class Interpreter {
    private:
     LocalEnv* _use_env;
     bool _use_caller_env;
-    bool _in_global;
     vector<LocalEnv*> _local_env_vec;
     CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
     map<string, CRB_TYPE::Value*> _global_declare_map;

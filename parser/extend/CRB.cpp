@@ -175,7 +175,6 @@ Interpreter::Environment* Interpreter::get_environment() {
   return _environment;
 }
 Interpreter::Environment::Environment() {
-  _in_global = true;
   _use_env = NULL;
 }
 Interpreter::Environment::~Environment() {
@@ -200,7 +199,6 @@ Interpreter::Environment::~Environment() {
 
 void Interpreter::Environment::alloc_env(CRB_TYPE::ScopeChain* next_) {
   _local_env_vec.push_back(new LocalEnv(next_));
-  _in_global = false;
 }
 
 LocalEnv::LocalEnv(CRB_TYPE::ScopeChain *next_) {
@@ -217,16 +215,13 @@ void Interpreter::Environment::dealloc_env() {
   assert(_local_env_vec.size() > 0, "dealloc_env size should > 0");
   delete _local_env_vec[_local_env_vec.size()-1];
   _local_env_vec.erase(_local_env_vec.end()-1);
-  if (_local_env_vec.empty()) {
-    _in_global = true;
-  }
 }
 
 
 
 // also use to add global varible
 void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_value) {
-  if (_use_env == NULL || _in_global) { 
+  if (_use_env == NULL) { 
     if (_global_function_map.count(name)) {
       CRB::error("there are same function name: " +name+ " in global");
     }
@@ -254,18 +249,18 @@ void Interpreter::Environment::use_env(LocalEnv* use_env) {
   _use_env = use_env;
 }
 void Interpreter::Environment::add_global_declare(string name) {
-  if (_use_env == NULL || _in_global) {
+  if (_use_env == NULL) {
     CRB::error("global statement in global environment");
   } else {
     if (_global_variable_map.count(name)) {
       _use_env->_global_declare_map[name] = _global_variable_map[name]; 
     } else {
-      CRB::error("without this varible in global environment");
+      CRB::error("without varible : < " + name + " > in global environment");
     }
   }
 }
 CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
-  if (_use_env == NULL || _in_global) {
+  if (_use_env == NULL) {
     if (_global_variable_map.count(name)) {
       return _global_variable_map[name];
     } else {
@@ -294,7 +289,7 @@ FunctionDefinition* Interpreter::Environment::search_function(string name) {
   }
 }
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
-  if (_use_env == NULL || _in_global) {
+  if (_use_env == NULL) {
     CRB::assert(_global_variable_map.count(name), "the value be assigned should exist");
     env_value_delete(_global_variable_map[name]);
     _global_variable_map[name] = assign_value;

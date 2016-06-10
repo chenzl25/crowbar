@@ -235,6 +235,31 @@ CRB_TYPE::Value* BinaryExpression::constant_folding_eval() {
   // return value used for constant folding
   CRB_TYPE::Value *left_value, *right_value;
   CRB_TYPE::Value *result_value;
+  // logic short cut
+  if (this->type == CRB_TYPE::LOGICAL_OR_EXPRESSION) {
+    left_value = left->eval_and_pop();
+    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of || should be boolean");
+    CRB_TYPE::BooleanValue* cast_left_value  =  dynamic_cast<CRB_TYPE::BooleanValue*>(left_value);
+    if (cast_left_value->boolean_value) {
+      return new CRB_TYPE::BooleanValue(true);
+    }
+    right_value = right->eval_and_pop();
+    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of || should be boolean");
+    CRB_TYPE::BooleanValue* cast_right_value =  dynamic_cast<CRB_TYPE::BooleanValue*>(right_value);
+    return new CRB_TYPE::BooleanValue(cast_right_value->boolean_value);
+  }
+  if (this->type == CRB_TYPE::LOGICAL_AND_EXPRESSION) {
+    left_value = left->eval_and_pop();
+    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of && should be boolean");
+    CRB_TYPE::BooleanValue* cast_left_value  =  dynamic_cast<CRB_TYPE::BooleanValue*>(left_value);
+    if (cast_left_value->boolean_value == false) {
+      return new CRB_TYPE::BooleanValue(false);
+    }
+    right_value = right->eval_and_pop();
+    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of && should be boolean");
+    CRB_TYPE::BooleanValue* cast_right_value =  dynamic_cast<CRB_TYPE::BooleanValue*>(right_value);
+    return new CRB_TYPE::BooleanValue(cast_right_value->boolean_value);
+  }
   left->eval();
   right->eval();
   auto Istack = Interpreter::getInstance()->get_stack();
@@ -455,10 +480,11 @@ void FunctionCallExpression::eval() {
   } else if (function_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
     
   } else {
-    CRB::error("not function call");
+    CRB::error(std::to_string(this->line) + ": not function call");
   }
   auto caller_env = Ienv->get_use_env();  // before call we record the caller_env
   Ienv->alloc_env(closure_value->scope_chain);
+  Ienv->use_env(Ienv->get_top_env());
   if (closure_value && closure_value->function_definition->is_closure
       && closure_value->function_definition->name) {
     // support name closure recursion
@@ -528,7 +554,17 @@ CRB_TYPE::Value* ClousreExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void ClousreExpression::eval() {
-  //TODO
+  auto Ienv = Interpreter::getInstance()->get_environment();
+  auto Istack = Interpreter::getInstance()->get_stack();
+  auto caller_env = Ienv->get_use_env();
+  CRB_TYPE::ScopeChain* caller_scope_chain;
+  if (caller_env) {
+    caller_scope_chain = caller_env->_scope_chain;
+  } else {
+    caller_scope_chain = NULL;
+  }
+  auto closure_value = new CRB_TYPE::Closure(this->function_definition, caller_scope_chain);
+  Istack->push(closure_value);
 }
 
 CommaExpression::CommaExpression(Expression *left_, 
@@ -753,7 +789,12 @@ CRB_TYPE::StatementResult* ForStatement::execute() {
     this->init->eval_and_pop();
   }
   while(true) {
-    auto value = this->cond->eval_and_pop();
+    CRB_TYPE::Value* value;
+    if (this->cond) {
+      value = this->cond->eval_and_pop();
+    } else {
+      value = new CRB_TYPE::BooleanValue(true);
+    }
     assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
            std::to_string(this->line) + " condition expression should be bool");
     if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {

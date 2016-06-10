@@ -15,83 +15,83 @@ void eval_binary_int(CRB_TYPE::ExpressionType op,
     if (is_math_operator(op)) {
       // do nothing
     } else if (is_compare_operator(op)) {
-      // do nothint
+      // do nothing
     } else {
       CRB::assert(is_logical_operator(op), "must logical_operator");
       CRB::error("logical_operator over binary int");
     }
 
     switch (op) {
-    case CRB_TYPE::BOOLEAN_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::INT_EXPRESSION:            /* FALLTHRU */
-    case CRB_TYPE::DOUBLE_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::STRING_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::REGEXP_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::IDENTIFIER_EXPRESSION:     /* FALLTHRU */
-    case CRB_TYPE::COMMA_EXPRESSION:          /* FALLTHRU */
-    case CRB_TYPE::NORMAL_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::ADD_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::SUB_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::MUL_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::DIV_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::MOD_ASSIGN_EXPRESSION:  /* FALLTHRU */
-        CRB::error(std::to_string(line_number) + "bad case.CRB_TYPE::" + CRB::expression_type_to_string(op));
-        break;
-    case CRB_TYPE::ADD_EXPRESSION:
-        result_value = new CRB_TYPE::IntValue(left + right);
-        break;
-    case CRB_TYPE::SUB_EXPRESSION:
-        result_value = new CRB_TYPE::IntValue(left - right);
-        break;
-    case CRB_TYPE::MUL_EXPRESSION:
-        result_value = new CRB_TYPE::IntValue(left * right);
-        break;
-    case CRB_TYPE::DIV_EXPRESSION:
-        if (right == 0) {
-            CRB::error(std::to_string(line_number) + ": div 0");
-        }
-        result_value = new CRB_TYPE::IntValue(left / right);
-        break;
-    case CRB_TYPE::MOD_EXPRESSION:
-        if (right == 0) {
-            CRB::error(std::to_string(line_number) + ": mod 0");
-        }
-        result_value = new CRB_TYPE::IntValue(left % right);
-        break;
-    case CRB_TYPE::EQ_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left == right);
-        break;
-    case CRB_TYPE::NE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left != right);
-        break;
-    case CRB_TYPE::GT_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left > right);
-        break;
-    case CRB_TYPE::GE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left >= right);
-        break;
-    case CRB_TYPE::LT_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left < right);
-        break;
-    case CRB_TYPE::LE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left <= right);
-        break;
-    case CRB_TYPE::LOGICAL_AND_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::LOGICAL_OR_EXPRESSION: /* FALLTHRU */
-    case CRB_TYPE::MINUS_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::LOGICAL_NOT_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::FUNCTION_CALL_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::MEMBER_EXPRESSION:     /* FALLTHRU */
-    case CRB_TYPE::NULL_EXPRESSION:       /* FALLTHRU */
-    case CRB_TYPE::ARRAY_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::CLOSURE_EXPRESSION:    /* FALLTHRU */
-    case CRB_TYPE::INDEX_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::INCREMENT_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::DECREMENT_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::EXPRESSION_TYPE_COUNT_PLUS_1:  /* FALLTHRU */
-    default:
-        CRB::error(std::to_string(line_number) + " :bad case.CRB_TYPE::.." + 
-              CRB::expression_type_to_string(op));
+        case CRB_TYPE::BOOLEAN_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::INT_EXPRESSION:            /* FALLTHRU */
+        case CRB_TYPE::DOUBLE_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::STRING_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::REGEXP_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::IDENTIFIER_EXPRESSION:     /* FALLTHRU */
+        case CRB_TYPE::COMMA_EXPRESSION:          /* FALLTHRU */
+        case CRB_TYPE::NORMAL_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::ADD_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::SUB_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::MUL_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::DIV_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::MOD_ASSIGN_EXPRESSION:  /* FALLTHRU */
+            CRB::error(std::to_string(line_number) + "bad operater" + CRB::expression_type_to_string(op));
+            break;
+        case CRB_TYPE::ADD_EXPRESSION:
+            result_value = new CRB_TYPE::IntValue(left + right);
+            break;
+        case CRB_TYPE::SUB_EXPRESSION:
+            result_value = new CRB_TYPE::IntValue(left - right);
+            break;
+        case CRB_TYPE::MUL_EXPRESSION:
+            result_value = new CRB_TYPE::IntValue(left * right);
+            break;
+        case CRB_TYPE::DIV_EXPRESSION:
+            if (right == 0) {
+                CRB::error(std::to_string(line_number) + ": div 0");
+            }
+            result_value = new CRB_TYPE::IntValue(left / right);
+            break;
+        case CRB_TYPE::MOD_EXPRESSION:
+            if (right == 0) {
+                CRB::error(std::to_string(line_number) + ": mod 0");
+            }
+            result_value = new CRB_TYPE::IntValue(left % right);
+            break;
+        case CRB_TYPE::EQ_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left == right);
+            break;
+        case CRB_TYPE::NE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left != right);
+            break;
+        case CRB_TYPE::GT_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left > right);
+            break;
+        case CRB_TYPE::GE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left >= right);
+            break;
+        case CRB_TYPE::LT_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left < right);
+            break;
+        case CRB_TYPE::LE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left <= right);
+            break;
+        case CRB_TYPE::LOGICAL_AND_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::LOGICAL_OR_EXPRESSION: /* FALLTHRU */
+        case CRB_TYPE::MINUS_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::LOGICAL_NOT_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::FUNCTION_CALL_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::MEMBER_EXPRESSION:     /* FALLTHRU */
+        case CRB_TYPE::NULL_EXPRESSION:       /* FALLTHRU */
+        case CRB_TYPE::ARRAY_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::CLOSURE_EXPRESSION:    /* FALLTHRU */
+        case CRB_TYPE::INDEX_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::INCREMENT_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::DECREMENT_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::EXPRESSION_TYPE_COUNT_PLUS_1:  /* FALLTHRU */
+        default:
+            CRB::error(std::to_string(line_number) + " :bad case.CRB_TYPE::.." + 
+                  CRB::expression_type_to_string(op));
     }
 }
 
@@ -108,76 +108,76 @@ void eval_binary_double(CRB_TYPE::ExpressionType op,
     }
 
     switch (op) {
-    case CRB_TYPE::BOOLEAN_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::INT_EXPRESSION:            /* FALLTHRU */
-    case CRB_TYPE::DOUBLE_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::STRING_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::REGEXP_EXPRESSION:         /* FALLTHRU */
-    case CRB_TYPE::IDENTIFIER_EXPRESSION:     /* FALLTHRU */
-    case CRB_TYPE::COMMA_EXPRESSION:          /* FALLTHRU */
-    case CRB_TYPE::NORMAL_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::ADD_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::SUB_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::MUL_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::DIV_ASSIGN_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::MOD_ASSIGN_EXPRESSION:  /* FALLTHRU */
-        CRB::error(std::to_string(line_number) + "bad case.CRB_TYPE::" + CRB::expression_type_to_string(op));
-        break;
-    case CRB_TYPE::ADD_EXPRESSION:
-        result_value = new CRB_TYPE::DoubleValue(left + right);
-        break;
-    case CRB_TYPE::SUB_EXPRESSION:
-        result_value = new CRB_TYPE::DoubleValue(left - right);
-        break;
-    case CRB_TYPE::MUL_EXPRESSION:
-        result_value = new CRB_TYPE::DoubleValue(left * right);
-        break;
-    case CRB_TYPE::DIV_EXPRESSION:
-        if (right == 0) {
-            CRB::error(std::to_string(line_number) + ": div 0");
-        }
-        result_value = new CRB_TYPE::DoubleValue(left / right);
-        break;
-    case CRB_TYPE::MOD_EXPRESSION:
-        if (right == 0) {
-            CRB::error(std::to_string(line_number) + ": mod 0");
-        }
-        result_value = new CRB_TYPE::DoubleValue(fmod(left, right));
-        break;
-    case CRB_TYPE::EQ_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left == right);
-        break;
-    case CRB_TYPE::NE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left != right);
-        break;
-    case CRB_TYPE::GT_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left > right);
-        break;
-    case CRB_TYPE::GE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left >= right);
-        break;
-    case CRB_TYPE::LT_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left < right);
-        break;
-    case CRB_TYPE::LE_EXPRESSION:
-        result_value = new CRB_TYPE::BooleanValue(left <= right);
-        break;
-    case CRB_TYPE::LOGICAL_AND_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::LOGICAL_OR_EXPRESSION: /* FALLTHRU */
-    case CRB_TYPE::MINUS_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::LOGICAL_NOT_EXPRESSION:        /* FALLTHRU */
-    case CRB_TYPE::FUNCTION_CALL_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::MEMBER_EXPRESSION:     /* FALLTHRU */
-    case CRB_TYPE::NULL_EXPRESSION:       /* FALLTHRU */
-    case CRB_TYPE::ARRAY_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::CLOSURE_EXPRESSION:    /* FALLTHRU */
-    case CRB_TYPE::INDEX_EXPRESSION:      /* FALLTHRU */
-    case CRB_TYPE::INCREMENT_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::DECREMENT_EXPRESSION:  /* FALLTHRU */
-    case CRB_TYPE::EXPRESSION_TYPE_COUNT_PLUS_1:  /* FALLTHRU */
-    default:
-        CRB::error(std::to_string(line_number) + " :bad case.CRB_TYPE::.." + 
-              CRB::expression_type_to_string(op));
+        case CRB_TYPE::BOOLEAN_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::INT_EXPRESSION:            /* FALLTHRU */
+        case CRB_TYPE::DOUBLE_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::STRING_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::REGEXP_EXPRESSION:         /* FALLTHRU */
+        case CRB_TYPE::IDENTIFIER_EXPRESSION:     /* FALLTHRU */
+        case CRB_TYPE::COMMA_EXPRESSION:          /* FALLTHRU */
+        case CRB_TYPE::NORMAL_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::ADD_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::SUB_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::MUL_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::DIV_ASSIGN_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::MOD_ASSIGN_EXPRESSION:  /* FALLTHRU */
+            CRB::error(std::to_string(line_number) + "bad case.CRB_TYPE::" + CRB::expression_type_to_string(op));
+            break;
+        case CRB_TYPE::ADD_EXPRESSION:
+            result_value = new CRB_TYPE::DoubleValue(left + right);
+            break;
+        case CRB_TYPE::SUB_EXPRESSION:
+            result_value = new CRB_TYPE::DoubleValue(left - right);
+            break;
+        case CRB_TYPE::MUL_EXPRESSION:
+            result_value = new CRB_TYPE::DoubleValue(left * right);
+            break;
+        case CRB_TYPE::DIV_EXPRESSION:
+            if (right == 0) {
+                CRB::error(std::to_string(line_number) + ": div 0");
+            }
+            result_value = new CRB_TYPE::DoubleValue(left / right);
+            break;
+        case CRB_TYPE::MOD_EXPRESSION:
+            if (right == 0) {
+                CRB::error(std::to_string(line_number) + ": mod 0");
+            }
+            result_value = new CRB_TYPE::DoubleValue(fmod(left, right));
+            break;
+        case CRB_TYPE::EQ_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left == right);
+            break;
+        case CRB_TYPE::NE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left != right);
+            break;
+        case CRB_TYPE::GT_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left > right);
+            break;
+        case CRB_TYPE::GE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left >= right);
+            break;
+        case CRB_TYPE::LT_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left < right);
+            break;
+        case CRB_TYPE::LE_EXPRESSION:
+            result_value = new CRB_TYPE::BooleanValue(left <= right);
+            break;
+        case CRB_TYPE::LOGICAL_AND_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::LOGICAL_OR_EXPRESSION: /* FALLTHRU */
+        case CRB_TYPE::MINUS_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::LOGICAL_NOT_EXPRESSION:        /* FALLTHRU */
+        case CRB_TYPE::FUNCTION_CALL_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::MEMBER_EXPRESSION:     /* FALLTHRU */
+        case CRB_TYPE::NULL_EXPRESSION:       /* FALLTHRU */
+        case CRB_TYPE::ARRAY_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::CLOSURE_EXPRESSION:    /* FALLTHRU */
+        case CRB_TYPE::INDEX_EXPRESSION:      /* FALLTHRU */
+        case CRB_TYPE::INCREMENT_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::DECREMENT_EXPRESSION:  /* FALLTHRU */
+        case CRB_TYPE::EXPRESSION_TYPE_COUNT_PLUS_1:  /* FALLTHRU */
+        default:
+            CRB::error(std::to_string(line_number) + " :bad case.CRB_TYPE::.." + 
+                  CRB::expression_type_to_string(op));
     }
 }
 
@@ -401,6 +401,7 @@ void call_crowbar_function(FunctionCallExpression* expression,
         Ienv->add_variable(*closure_value->function_definition->parameter_list->_parameter_vec[i],
                            arg_value); // add variable to the callee environment
     }
+    Ienv->use_env(Ienv->get_top_env());
     statement_result = closure_value->function_definition->block->execute();
     if (statement_result->type == CRB_TYPE::RETURN_STATEMENT_RESULT) {
         result_value = statement_result->value;

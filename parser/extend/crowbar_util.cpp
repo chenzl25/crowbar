@@ -202,6 +202,17 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
     result += "]";
     break;
   }
+  case CRB_TYPE::CLOSURE_VALUE: {
+    auto closure_value = dynamic_cast<CRB_TYPE::Closure*>(value);
+    result += "closure(";
+    if (closure_value->function_definition->name) {
+      result += *closure_value->function_definition->name;
+    } else {
+      result += "null";
+    }
+    result += ")";
+    break;
+  }
   // case CRB_TYPE::ASSOC_VALUE:
   //     CRB_mbstowcs("(", wc_buf);
   //     crb_vstr_append_string(&vstr, wc_buf);
@@ -223,24 +234,6 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
   //         new_str = CRB_value_to_string(inter, env, line_number,
   //                                       &value->u.object
   //                                       ->u.assoc.member[i].value);
-  //         crb_vstr_append_string(&vstr, new_str);
-  //         MEM_free(new_str);
-  //     }
-  //     CRB_mbstowcs(")", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     break;
-  // case CRB_TYPE::CLOSURE_VALUE:
-  //     CRB_mbstowcs("closure(", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     if (value->u.closure.function->name == NULL) {
-  //         CRB_mbstowcs("null", wc_buf);
-  //         crb_vstr_append_string(&vstr, wc_buf);
-  //     } else {
-  //         CRB_Char *new_str;
-          
-  //         new_str = CRB_mbstowcs_alloc(inter, env, line_number,
-  //                                      value->u.closure.function->name);
-  //         DBG_assert(new_str != NULL, ("new_str is null.\n"));
   //         crb_vstr_append_string(&vstr, new_str);
   //         MEM_free(new_str);
   //     }
