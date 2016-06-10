@@ -105,14 +105,7 @@ Interpreter::Heap::~Heap() {
     // cout << *it << endl;
     // (*it)->print();
     auto cast_value = dynamic_cast<CRB_TYPE::Value*>(*it);
-    if (cast_value->type == CRB_TYPE::ARRAY_VALUE) {
-      auto array_value =  dynamic_cast<CRB_TYPE::Array*>(cast_value);
-      array_value->ref_cnt--;
-      if (array_value->ref_cnt == 0) delete cast_value;
-    } else {
-      //TODO other object type
-      delete cast_value;
-    }
+    heap_value_delete(cast_value);
   }
   cout << "-------------------------------------------------" << endl;
 }
@@ -181,11 +174,7 @@ Interpreter::Environment::~Environment() {
   cout << "-------------------------------------------------" << endl;
   cout << "Environment delete : " << endl;
   for (auto it = _global_variable_map.begin(); it != _global_variable_map.end(); it++) {
-    if (!is_object_value(it->second->type)) {
-      cout << it->first << " : " << endl;
-      it->second->print();
-      delete it->second;
-    }
+    env_value_delete(it->second);
   }
   for (auto it = _global_function_map.begin(); it != _global_function_map.end(); it++) {
     if (it->second->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION) {

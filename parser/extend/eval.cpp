@@ -270,6 +270,20 @@ void eval_binary_null( CRB_TYPE::ExpressionType op,
     }
     result_value = new CRB_TYPE::BooleanValue(b);
 }
+// assign_value should can assign without copying
+void assign_to_member(MemberExpression* member_expression, CRB_TYPE::Value* assign_value) {
+    string line_string = std::to_string(member_expression->line);
+    auto Istack = CRB::Interpreter::getInstance()->get_stack();
+    auto assoc_value = member_expression->expression->eval_and_pop();
+    CRB::assert(assoc_value->type == CRB_TYPE::ASSOC_VALUE, line_string + ": " + 
+                CRB::value_type_to_string(assoc_value->type) + " not a Object");
+    auto cast_assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(assoc_value);
+    if (cast_assoc_value->search_member(*member_expression->member_name)) {
+        cast_assoc_value->assign_member(*member_expression->member_name, assign_value);
+    } else {
+        cast_assoc_value->add_member(*member_expression->member_name, assign_value);
+    }
+}
 // assign_value will be in the array
 void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* assign_value) {
     string line_string = std::to_string(index_expression->line);
@@ -279,7 +293,7 @@ void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* as
     index_expression->index->eval();
     auto index_value = Istack->pop();
     auto array_value = Istack->pop();
-    CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a array");
+    CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a Array");
     CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
     auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
     auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(array_value);
@@ -352,7 +366,10 @@ void call_native_function(FunctionCallExpression* expression,
                           CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env) {
     auto Ienv = CRB::Interpreter::getInstance()->get_environment();
     auto Istack = CRB::Interpreter::getInstance()->get_stack();
-    int argument_size = expression->argument_list->_argument_vec.size();
+    int argument_size = 0;
+    if (expression->argument_list) {
+      argument_size = expression->argument_list->_argument_vec.size();
+    }
     Ienv->use_env(caller_env);
     for (int i = 0; i < argument_size; i++) {
         expression->argument_list->_argument_vec[i]->eval();

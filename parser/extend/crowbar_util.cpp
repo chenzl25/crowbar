@@ -213,33 +213,28 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
     result += ")";
     break;
   }
-  // case CRB_TYPE::ASSOC_VALUE:
-  //     CRB_mbstowcs("(", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     for (i = 0; i < value->u.object->u.assoc.member_count; i++) {
-  //         CRB_Char *new_str;
-  //         if (i > 0) {
-  //             CRB_mbstowcs(", ", wc_buf);
-  //             crb_vstr_append_string(&vstr, wc_buf);
-  //         }
-  //         new_str
-  //             = CRB_mbstowcs_alloc(inter, env, line_number,
-  //                                  value->u.object->u.assoc.member[i].name);
-  //         DBG_assert(new_str != NULL, ("new_str is null.\n"));
-  //         crb_vstr_append_string(&vstr, new_str);
-  //         MEM_free(new_str);
-
-  //         CRB_mbstowcs("=>", wc_buf);
-  //         crb_vstr_append_string(&vstr, wc_buf);
-  //         new_str = CRB_value_to_string(inter, env, line_number,
-  //                                       &value->u.object
-  //                                       ->u.assoc.member[i].value);
-  //         crb_vstr_append_string(&vstr, new_str);
-  //         MEM_free(new_str);
-  //     }
-  //     CRB_mbstowcs(")", wc_buf);
-  //     crb_vstr_append_string(&vstr, wc_buf);
-  //     break;
+  case CRB_TYPE::ASSOC_VALUE: {
+    auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+    result += "{";
+    int cnt = 0;
+    for (auto it  = assoc_value->member_map.begin(); 
+              it != assoc_value->member_map.end();
+              it++) {
+      result += it->first;
+      result += ": ";
+      if (it->second->type == CRB_TYPE::STRING_VALUE) {
+        result += "\"" + CRB::value_to_string(it->second, line_number) + "\"";
+      } else {
+        result += CRB::value_to_string(it->second, line_number);
+      }
+      if (cnt != assoc_value->member_map.size() -1) {
+        result += ", ";
+      }
+      cnt++;
+    }
+    result += "}";
+    break;
+  }
   // case CRB_TYPE::FAKE_METHOD_VALUE:
   //     CRB_mbstowcs("fake_method(", wc_buf);
   //     crb_vstr_append_string(&vstr, wc_buf);
@@ -265,18 +260,56 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
 }
 
 void stack_value_delete(CRB_TYPE::Value *value) {
-  if (!is_object_value(value->type)) {
-    delete value;
-  }
+  non_object_delete(value);
 }
 void env_value_delete(CRB_TYPE::Value *value) {
-  if (!is_object_value(value->type)) {
+  basic_value_delete(value);
+}
+void array_value_delete(CRB_TYPE::Value *value) {
+  basic_value_delete(value);
+}
+void assoc_value_delete(CRB_TYPE::Value *value) {
+  basic_value_delete(value);
+}
+void statement_result_value_delete(CRB_TYPE::Value *value) {
+  basic_value_delete(value);
+}
+void heap_value_delete(CRB_TYPE::Value *value) {
+  if (value->type == CRB_TYPE::ARRAY_VALUE) {
+    auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
+    array_value->ref_cnt--;
+    if (array_value->ref_cnt == 0) delete value;
+  } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
+    auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+    assoc_value->ref_cnt--;
+    if (assoc_value->ref_cnt == 0) delete value;
+  } else {
+    //TODO other object type
     delete value;
   }
 }
+
 void non_object_delete(CRB_TYPE::Value *value) {
   if (!is_object_value(value->type)) {
     delete value;
+  } 
+}
+
+inline void basic_value_delete(CRB_TYPE::Value *value) {
+  if (!is_object_value(value->type)) {
+    delete value;
+  } else {
+    if (value->type == CRB_TYPE::ARRAY_VALUE) {
+      auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
+      array_value->ref_cnt--;
+      if (array_value->ref_cnt == 0) delete value;
+    } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
+      auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+      assoc_value->ref_cnt--;
+      if (assoc_value->ref_cnt == 0) delete value;
+    } else {
+      //TODO other object type
+    }
   }
 }
 

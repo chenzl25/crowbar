@@ -23,7 +23,7 @@ void eval_binary_null( CRB_TYPE::ExpressionType op,
                        CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
                        CRB_TYPE::Value *&result_value, int line_number);
 void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* assign_value);
-
+void assign_to_member(MemberExpression* member_expression, CRB_TYPE::Value* assign_value);
 CRB_TYPE::Value* get_array_element_lvalue(IndexExpression* index_expression);
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number);

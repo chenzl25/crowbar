@@ -423,7 +423,8 @@ void AssignExpression::eval() {
   operand->eval();
   auto src = Istack->peek(0); // for the result of eval 
   if (this->variable->type == CRB_TYPE::MEMBER_EXPRESSION) {
-    // TODO;
+    // if the src is non-object like 1+2, then memory leak, we fix this later
+    assign_to_member(dynamic_cast<MemberExpression*>(this->variable), value_copy(src));
     return;
   }
   if (this->variable->type == CRB_TYPE::INDEX_EXPRESSION) {
@@ -514,7 +515,24 @@ CRB_TYPE::Value* MemberExpression::eval_and_pop() {
   return Interpreter::getInstance()->get_stack()->pop();
 }
 void MemberExpression::eval() {
-  //TODO
+  auto Istack = Interpreter::getInstance()->get_stack();
+  CRB_TYPE::Value* result_value;
+  auto value = this->expression->eval_and_pop(); // pop is ok, GC will not collect
+  if (value->type == CRB_TYPE::ASSOC_VALUE) {
+    auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+    auto member_value = assoc_value->search_member(*this->member_name);
+    if (member_name == NULL) {
+      result_value = new CRB_TYPE::Value();
+    } else {
+      result_value = value_copy(member_value); // follow stack-pop-delete, we need to copy value
+    }
+  } else if (value->type == CRB_TYPE::STRING_VALUE || 
+             value->type == CRB_TYPE::ARRAY_VALUE) {
+    result_value = new CRB_TYPE::FakeMethod(value, this->member_name);
+  } else {
+    CRB::error(std::to_string(this->line) + ": only Array, String, Object support . operation");
+  }
+  Istack->push(result_value);
 }
 
 ArrayExpression::ArrayExpression(ExpressionList *array_literal_):Expression(CRB_TYPE::ARRAY_EXPRESSION) {

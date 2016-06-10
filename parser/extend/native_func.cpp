@@ -63,10 +63,10 @@ FunctionDefinition* create_print_native_function() {
 
 CRB_TYPE::Value* new_array_proc(int arg_cnt) {
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
-  CRB::assert(arg_cnt == 1, "new_array need 1 argument");
+  CRB::assert(arg_cnt == 1, "Array need 1 argument");
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
-  assert(Istack->size() >= 1, "new_array: the eval stack should have 1 value at least ");
-  assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, "new_array: argument should be interger");
+  assert(Istack->size() >= 1, "Array: the eval stack should have 1 value at least ");
+  assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, "Array: argument should be interger");
   int array_size = dynamic_cast<CRB_TYPE::IntValue*>(Istack->peek(0))->int_value;
   auto array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
   array_value->vec.resize(array_size);
@@ -87,10 +87,29 @@ FunctionDefinition* create_new_array_native_function() {
   return fd;
 }
 
+CRB_TYPE::Value* new_object_proc(int arg_cnt) {
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  CRB::assert(arg_cnt == 0, "Object need 0 argument");
+  auto Istack = CRB::Interpreter::getInstance()->get_stack();
+  return Iheap->alloc(CRB_TYPE::ASSOC_OBJECT);
+}
+
+FunctionDefinition* create_new_object_native_function() {
+  FunctionDefinition* fd = new FunctionDefinition();
+  fd->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION;
+  fd->name = new string("Object"); // we name it Array
+  fd->is_closure = false;
+  fd->block = NULL;
+  fd->parameter_list = NULL;
+  fd->proc = new_object_proc;
+  return fd;
+}
+
 void add_native_function() {
   auto Ienv = CRB::Interpreter::getInstance()->get_environment();
   Ienv->add_function(create_print_native_function());
   Ienv->add_function(create_new_array_native_function());
+  Ienv->add_function(create_new_object_native_function());
 }
 
 

@@ -1,4 +1,5 @@
 #include "execute.h"
+#include "crowbar_util.h"
 #include "string"
 #include "CRB.h"
 using namespace std;
@@ -27,14 +28,6 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(value);
       cast_array_value->ref_cnt++;
       return cast_array_value;
-      // auto old_array_value = dynamic_cast<CRB_TYPE::Array*>(value);
-      // auto new_array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
-      // new_array_value->vec.resize(old_array_value->vec.size());
-      // for (int i = 0; i < old_array_value->vec.size(); i++) {
-      //   new_array_value->vec[i] = value_copy(old_array_value->vec[i]);
-      // }
-      // cout << "copy array" << endl;
-      // return new_array_value; 
     } 
     case CRB_TYPE::STRING_VALUE: {
       string* tem_string_ptr = dynamic_cast<CRB_TYPE::String*>(value)->string_value;
@@ -42,7 +35,9 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       return result;
     } 
     case CRB_TYPE::ASSOC_VALUE: {
-      // return new 
+      auto cast_assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+      cast_assoc_value->ref_cnt++;
+      return cast_assoc_value;
     } 
     case CRB_TYPE::CLOSURE_VALUE: {
       auto function_definition = dynamic_cast<CRB_TYPE::Closure*>(value)->function_definition;
@@ -51,9 +46,11 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
     } 
     case CRB_TYPE::FAKE_METHOD_VALUE: {
       // return new 
+      CRB::error("now don't support copy fake method value");
     } 
     case CRB_TYPE::SCOPE_CHAIN_VALUE: {
       // return new 
+      CRB::error("now don't support copy scope chain value");
     } 
   }
 }

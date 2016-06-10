@@ -101,18 +101,7 @@ StatementResult::StatementResult(Value* value_) {
 }
 StatementResult::~StatementResult() {
   if (value) {
-    // CRB::non_object_delete(value);
-    if (!is_object_value(value->type)) {
-      delete value;
-    } else {
-      if (value->type == CRB_TYPE::ARRAY_VALUE) {
-        auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
-        array_value->ref_cnt--;
-        if (array_value->ref_cnt == 0) delete value;
-      } else {
-        //TODO other object type
-      }
-    }
+    CRB::statement_result_value_delete(value);
   }
 }
 
@@ -154,23 +143,14 @@ void ScopeChain::print() {
 }
 
 Assoc::Assoc() : Object(CRB_TYPE::ASSOC_VALUE) {
-
+  int ref_cnt = 1;
 }
 Assoc::~Assoc() {
   // we can delete the Value, because Value only delete itself 
   // the Object in the Value will be delete by Heap
+  CRB::assert(ref_cnt == 0, "when delete the Assoc the ref_cnt should equal 0");
   for (auto it = member_map.begin(); it != member_map.end(); it++) {
-    if (!is_object_value(it->second->type)) {
-      delete it->second;
-    } else{
-      if (it->second->type == CRB_TYPE::ARRAY_VALUE) {
-        auto array_value =  dynamic_cast<CRB_TYPE::Array*>(it->second);
-        array_value->ref_cnt--;
-        if (array_value->ref_cnt == 0) delete it->second;
-      } else {
-        //TODO other object type
-      }
-    }
+    CRB::assoc_value_delete(it->second);
   }
 }
 void Assoc::add_member(string name, Value* value) {
@@ -200,9 +180,9 @@ Array::Array(int size) : Object(CRB_TYPE::ARRAY_VALUE) {
   vec.resize(size);
 }
 Array::~Array() {
-  CRB::assert(ref_cnt == 0, "when delete the array the ref_cnt should equal 0");
+  CRB::assert(ref_cnt == 0, "when delete the Array the ref_cnt should equal 0");
   for (int i = 0; i < vec.size(); i++) {
-    CRB::non_object_delete(vec[i]);
+    CRB::array_value_delete(vec[i]);
   }
 }
 void Array::print() {
@@ -211,3 +191,25 @@ void Array::print() {
     vec[i]->print();
   }
 }
+
+FakeMethod::FakeMethod() {
+  object = NULL;
+  method_name = NULL;
+}
+FakeMethod::FakeMethod(Value *object_, string *method_name_) {
+  object = object_;
+  method_name = method_name_;
+}
+FakeMethod::~FakeMethod() {
+  // do nothing 
+  // object must be Array or String, ( maybe we can add Assoc later...)
+  // object from others. we can't delete
+  // method_name is from MemberExpression. we can't delete
+}
+void FakeMethod::print() {
+  cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
+  object->print();
+  cout << "method name: " << *method_name << endl;
+}
+// Object    *object;
+// String    *method_name;

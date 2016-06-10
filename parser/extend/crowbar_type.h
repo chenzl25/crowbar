@@ -111,14 +111,16 @@ public:
   Value* search_member(string name);
   void assign_member(string name, Value* value);
   map<string, Value*> member_map;
+  int ref_cnt;
 };
 class FakeMethod : public Value {
 public:
   FakeMethod();
+  FakeMethod(Value *object_, string *method_name_);
   virtual ~FakeMethod();
   virtual void print();
-  String    *method_name;
-  Object    *object;
+  Value    *object;
+  string    *method_name;
 };
 
 class ScopeChain : public Object {
