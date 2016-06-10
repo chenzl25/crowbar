@@ -28,10 +28,10 @@ CRB_TYPE::Value* get_array_element_lvalue(IndexExpression* index_expression);
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number);
 void do_function_call(FunctionCallExpression* expression, 
-                      CRB_TYPE::Value* func_value);
+                      CRB_TYPE::Value* func_value, CRB::LocalEnv *caller_env);
 void call_crowbar_function(FunctionCallExpression* expression, 
-                           CRB_TYPE::Closure* closure_value);
+                           CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env);
 void call_native_function(FunctionCallExpression* expression, 
-                           CRB_TYPE::Closure* closure_value);
+                           CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env);
 
 #endif

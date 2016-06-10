@@ -13,6 +13,14 @@ using namespace std;
 
 namespace CRB {
 
+class LocalEnv {
+ public:
+  LocalEnv(CRB_TYPE::ScopeChain *next_);
+  ~LocalEnv();
+  CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
+  map<string, CRB_TYPE::Value*> _global_declare_map;
+};
+
 class Interpreter {
  private:
   class Heap;
@@ -34,15 +42,9 @@ class Interpreter {
    public:
     Environment();
     ~Environment();
-    class LocalEnv {
-     public:
-      LocalEnv(CRB_TYPE::ScopeChain *next_);
-      ~LocalEnv();
-      CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
-      map<string, CRB_TYPE::Value*> _global_declare_map;
-    };
-    void use_caller_env();
-    void use_callee_env();
+    LocalEnv* get_top_env();
+    LocalEnv* get_use_env();
+    void use_env(LocalEnv* use_env);
     void alloc_env(CRB_TYPE::ScopeChain* next_);
     void dealloc_env();
     void add_function(FunctionDefinition* fd);
@@ -53,8 +55,7 @@ class Interpreter {
     void assign(string name, CRB_TYPE::Value*);
     FunctionDefinition* search_function(string name);
    private:
-    LocalEnv* _caller_env;
-    LocalEnv* _callee_env;
+    LocalEnv* _use_env;
     bool _use_caller_env;
     bool _in_global;
     vector<LocalEnv*> _local_env_vec;

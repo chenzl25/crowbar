@@ -1,0 +1,18 @@
+one = 1;
+two = 2;
+three = 3;
+function id(a) {
+    return a;
+}
+
+function add(a, b) {
+    return a + b;
+}
+function sub(a, b) {
+    return a - b;
+}
+function mul(a, b) {
+    return a * b;
+}
+# (1 - (1*2)) + (2*2) = 3
+print(add(sub(one, mul(one, two)), mul(three, two)));

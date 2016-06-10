@@ -328,7 +328,7 @@ void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest
 }
 
 void do_function_call(FunctionCallExpression* expression, 
-                      CRB_TYPE::Value* func_value) {
+                      CRB_TYPE::Value* func_value, CRB::LocalEnv *caller_env) {
     if (func_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
         // call_fake_method(inter, env, caller_env, expr, &func->u.fake_method);
         return;
@@ -338,10 +338,10 @@ void do_function_call(FunctionCallExpression* expression,
     auto closure_value = dynamic_cast<CRB_TYPE::Closure*>(func_value);
     switch (closure_value->function_definition->type) {
         case CRB_TYPE::CROWBAR_FUNCTION_DEFINITION:
-            call_crowbar_function(expression, closure_value);
+            call_crowbar_function(expression, closure_value, caller_env);
             break;
         case CRB_TYPE::NATIVE_FUNCTION_DEFINITION:
-            call_native_function(expression, closure_value);
+            call_native_function(expression, closure_value, caller_env);
             break;
         case CRB_TYPE::FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1:
         default:
@@ -349,15 +349,15 @@ void do_function_call(FunctionCallExpression* expression,
     }
 }
 void call_native_function(FunctionCallExpression* expression, 
-                          CRB_TYPE::Closure* closure_value) {
+                          CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env) {
     auto Ienv = CRB::Interpreter::getInstance()->get_environment();
     auto Istack = CRB::Interpreter::getInstance()->get_stack();
     int argument_size = expression->argument_list->_argument_vec.size();
-    Ienv->use_caller_env();
+    Ienv->use_env(caller_env);
     for (int i = 0; i < argument_size; i++) {
         expression->argument_list->_argument_vec[i]->eval();
     }
-    Ienv->use_callee_env();
+    Ienv->use_env(Ienv->get_top_env());
     auto result_value = closure_value->function_definition->proc(argument_size);
     for(int i = 0; i < argument_size; i++) {
         CRB::stack_value_delete(Istack->pop());
@@ -365,7 +365,7 @@ void call_native_function(FunctionCallExpression* expression,
     Istack->push(result_value);
 }
 void call_crowbar_function(FunctionCallExpression* expression, 
-                           CRB_TYPE::Closure* closure_value) {
+                           CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env) {
     auto Ienv = CRB::Interpreter::getInstance()->get_environment();
     auto Istack = CRB::Interpreter::getInstance()->get_stack();
     int argument_size = 0 ;
@@ -390,14 +390,14 @@ void call_crowbar_function(FunctionCallExpression* expression,
                    " which need " + std::to_string(parameter_size));
     }
     for (int i = 0; i < argument_size; i++) {
-        Ienv->use_caller_env();
+        Ienv->use_env(caller_env); // switch to the caller_env to eval the argument
         // pop is ok, because we store in the environment, which can avoid being GC
         // we need to notice that arg_value maybe a object or array
         // which may exist in the caller_env, so just pass by reference 
         // the problem is when pass by reference we will delete it twice : one in caller_env, another in callee_env
         // so we choose to use reference counting in the array and object
         auto arg_value = expression->argument_list->_argument_vec[i]->eval_and_pop(); 
-        Ienv->use_callee_env(); 
+        Ienv->use_env(Ienv->get_top_env()); // switch to the callee_env to add local variable
         Ienv->add_variable(*closure_value->function_definition->parameter_list->_parameter_vec[i],
                            arg_value); // add variable to the callee environment
     }

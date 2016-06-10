@@ -457,14 +457,16 @@ void FunctionCallExpression::eval() {
   } else {
     CRB::error("not function call");
   }
+  auto caller_env = Ienv->get_use_env();  // before call we record the caller_env
   Ienv->alloc_env(closure_value->scope_chain);
   if (closure_value && closure_value->function_definition->is_closure
       && closure_value->function_definition->name) {
     // support name closure recursion
     Ienv->add_variable(*closure_value->function_definition->name, closure_value);
   }
-  do_function_call(this, closure_value); // eval function call
-  Ienv->dealloc_env();
+  do_function_call(this, closure_value, caller_env); // eval function call
+  Ienv->dealloc_env(); // dealloc the callee_env
+  Ienv->use_env(caller_env);  // reset the use_env
   auto return_value = Istack->pop();  // pop function return value
   CRB::stack_value_delete(Istack->pop()); // delete function
   Istack->push(return_value);
