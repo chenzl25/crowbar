@@ -1,0 +1,37 @@
+#test qsort
+
+arr = {9:7:4:1:0:2:8:5:3:6};
+#print("before sort: " + arr + "\n");
+function swap(a, i, j) {
+    tem = a[i];
+    a[i] = a[j];
+    a[j] = tem;
+}
+function partition(a, l, r) {
+    # just choose first one
+    v = a[l];
+    k = l;
+    for (i = l+1; i <= r; i++) {
+        if (a[i] >= v) {
+            continue;
+        } else {
+            k++;
+            swap(a, i, k);
+        }
+    }
+    swap(a, l, k);
+    return k;
+}
+function qsort(a, l, r) {
+    if (l >= r) {
+        return;
+    }
+    index = partition(a, l, r);
+    qsort(a, l, index-1);
+    qsort(a, index+1, r);
+}
+
+qsort(arr, 0, 9);
+print(arr);
+
+

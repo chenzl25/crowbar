@@ -104,7 +104,15 @@ Interpreter::Heap::~Heap() {
   for (auto it = _heap_list.begin(); it != _heap_list.end(); it++) {
     // cout << *it << endl;
     // (*it)->print();
-    delete *it;
+    auto cast_value = dynamic_cast<CRB_TYPE::Value*>(*it);
+    if (cast_value->type == CRB_TYPE::ARRAY_VALUE) {
+      auto array_value =  dynamic_cast<CRB_TYPE::Array*>(cast_value);
+      array_value->ref_cnt--;
+      if (array_value->ref_cnt == 0) delete cast_value;
+    } else {
+      //TODO other object type
+      delete cast_value;
+    }
   }
   cout << "-------------------------------------------------" << endl;
 }
@@ -214,6 +222,7 @@ Interpreter::Environment::LocalEnv::~LocalEnv() {
   _scope_chain = NULL;
 }
 void Interpreter::Environment::dealloc_env() {
+  assert(_local_env_vec.size() > 0, "dealloc_env size should > 0");
   delete _local_env_vec[_local_env_vec.size()-1];
   _local_env_vec.erase(_local_env_vec.end()-1);
   if (_local_env_vec.size() >= 2) {

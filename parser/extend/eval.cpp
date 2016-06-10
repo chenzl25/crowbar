@@ -286,7 +286,6 @@ void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* as
     CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
     CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
             ": index exceeds the array size");
-    cout << "!!!" << endl;
     CRB::non_object_delete(cast_array_value->vec[cast_index_value->int_value]);
     cast_array_value->vec[cast_index_value->int_value] = assign_value;
 }
@@ -338,15 +337,15 @@ void do_function_call(FunctionCallExpression* expression,
     CRB::assert(func_value->type == CRB_TYPE::CLOSURE_VALUE, "should be closure_value in do_function_call");
     auto closure_value = dynamic_cast<CRB_TYPE::Closure*>(func_value);
     switch (closure_value->function_definition->type) {
-    case CRB_TYPE::CROWBAR_FUNCTION_DEFINITION:
-        call_crowbar_function(expression, closure_value);
-        break;
-    case CRB_TYPE::NATIVE_FUNCTION_DEFINITION:
-        call_native_function(expression, closure_value);
-        break;
-    case CRB_TYPE::FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1:
-    default:
-        CRB::error(std::to_string(expression->line) + " :bad case in do_function_call");
+        case CRB_TYPE::CROWBAR_FUNCTION_DEFINITION:
+            call_crowbar_function(expression, closure_value);
+            break;
+        case CRB_TYPE::NATIVE_FUNCTION_DEFINITION:
+            call_native_function(expression, closure_value);
+            break;
+        case CRB_TYPE::FUNCTION_DEFINITION_TYPE_COUNT_PLUS_1:
+        default:
+            CRB::error(std::to_string(expression->line) + " :bad case in do_function_call");
     }
 }
 void call_native_function(FunctionCallExpression* expression, 
@@ -392,10 +391,15 @@ void call_crowbar_function(FunctionCallExpression* expression,
     }
     for (int i = 0; i < argument_size; i++) {
         Ienv->use_caller_env();
-        auto arg_value = expression->argument_list->_argument_vec[i]->eval_and_pop();
-        Ienv->use_callee_env();
+        // pop is ok, because we store in the environment, which can avoid being GC
+        // we need to notice that arg_value maybe a object or array
+        // which may exist in the caller_env, so just pass by reference 
+        // the problem is when pass by reference we will delete it twice : one in caller_env, another in callee_env
+        // so we choose to use reference counting in the array and object
+        auto arg_value = expression->argument_list->_argument_vec[i]->eval_and_pop(); 
+        Ienv->use_callee_env(); 
         Ienv->add_variable(*closure_value->function_definition->parameter_list->_parameter_vec[i],
-                           arg_value);
+                           arg_value); // add variable to the callee environment
     }
     statement_result = closure_value->function_definition->block->execute();
     if (statement_result->type == CRB_TYPE::RETURN_STATEMENT_RESULT) {
@@ -403,6 +407,6 @@ void call_crowbar_function(FunctionCallExpression* expression,
     } else {
         result_value = new CRB_TYPE::Value();
     }
-    Istack->push(result_value);
+    Istack->push(value_copy(result_value));
     delete statement_result; // delete statement_result will not delete the return value
 }

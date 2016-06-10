@@ -101,7 +101,18 @@ StatementResult::StatementResult(Value* value_) {
 }
 StatementResult::~StatementResult() {
   if (value) {
-    delete value; // maybe need to change when consider other value from heap
+    // CRB::non_object_delete(value);
+    if (!is_object_value(value->type)) {
+      delete value;
+    } else {
+      if (value->type == CRB_TYPE::ARRAY_VALUE) {
+        auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
+        array_value->ref_cnt--;
+        if (array_value->ref_cnt == 0) delete value;
+      } else {
+        //TODO other object type
+      }
+    }
   }
 }
 
@@ -148,8 +159,18 @@ Assoc::Assoc() : Object(CRB_TYPE::ASSOC_VALUE) {
 Assoc::~Assoc() {
   // we can delete the Value, because Value only delete itself 
   // the Object in the Value will be delete by Heap
-  for (auto it : member_map) {
-    delete it.second;
+  for (auto it = member_map.begin(); it != member_map.end(); it++) {
+    if (!is_object_value(it->second->type)) {
+      delete it->second;
+    } else{
+      if (it->second->type == CRB_TYPE::ARRAY_VALUE) {
+        auto array_value =  dynamic_cast<CRB_TYPE::Array*>(it->second);
+        array_value->ref_cnt--;
+        if (array_value->ref_cnt == 0) delete it->second;
+      } else {
+        //TODO other object type
+      }
+    }
   }
 }
 void Assoc::add_member(string name, Value* value) {
@@ -165,21 +186,23 @@ Value* Assoc::search_member(string name) {
 }
 void Assoc::assign_member(string name, Value* value) {
   CRB::assert(member_map.count(name), "the value be assigned should exist");
-  delete member_map[name]; // delete is ok the Object is independent from Value now
+  CRB::non_object_delete(member_map[name]); // delete is ok the Object is independent from Value now
   member_map[name] = value;
 }
 void Assoc::print() {
   cout << "value type : " << CRB::value_type_to_string(Value::type) << endl;
 }
 Array::Array() : Object(CRB_TYPE::ARRAY_VALUE) {
-
+  ref_cnt = 1;
 }
 Array::Array(int size) : Object(CRB_TYPE::ARRAY_VALUE) {
+  ref_cnt = 1;
   vec.resize(size);
 }
 Array::~Array() {
+  CRB::assert(ref_cnt == 0, "when delete the array the ref_cnt should equal 0");
   for (int i = 0; i < vec.size(); i++) {
-    delete vec[i];
+    CRB::non_object_delete(vec[i]);
   }
 }
 void Array::print() {

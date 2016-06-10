@@ -24,7 +24,17 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
       // because we just use the the copy value to the stack
       // and stack will use stack_value_delete() to delete the copy value
       // howerer stack_value_delete just delete the non-object
-      return value; 
+      auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(value);
+      cast_array_value->ref_cnt++;
+      return cast_array_value;
+      // auto old_array_value = dynamic_cast<CRB_TYPE::Array*>(value);
+      // auto new_array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
+      // new_array_value->vec.resize(old_array_value->vec.size());
+      // for (int i = 0; i < old_array_value->vec.size(); i++) {
+      //   new_array_value->vec[i] = value_copy(old_array_value->vec[i]);
+      // }
+      // cout << "copy array" << endl;
+      // return new_array_value; 
     } 
     case CRB_TYPE::STRING_VALUE: {
       string* tem_string_ptr = dynamic_cast<CRB_TYPE::String*>(value)->string_value;

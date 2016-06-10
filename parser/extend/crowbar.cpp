@@ -162,6 +162,7 @@ void IdentifierExpression::eval() {
     auto closure_value = new CRB_TYPE::Closure(fd, NULL);
     Istack->push(closure_value);
   } else {
+    // here we copy the environment value. array and object will just the same without copying
     Istack->push(value_copy(search_result)); // copy maintains stack delete invariant
   }
 }
@@ -256,8 +257,8 @@ CRB_TYPE::Value* BinaryExpression::constant_folding_eval() {
                         result_value, this->line);
   } else if (left_value->type == CRB_TYPE::NULL_VALUE
              || right_value->type == CRB_TYPE::NULL_VALUE) {
-      eval_binary_null(this->type, left_value, right_value,
-                        result_value, this->line);
+    eval_binary_null(this->type, left_value, right_value,
+                     result_value, this->line);
   } else if (is_object_value(left_value->type) &&
              is_object_value(right_value->type)) {
       bool b = (left_value == right_value); // compare the address
@@ -447,7 +448,7 @@ void FunctionCallExpression::eval() {
   auto Ienv = Interpreter::getInstance()->get_environment();
   auto Istack = Interpreter::getInstance()->get_stack();
   CRB_TYPE::Closure* closure_value = NULL;
-  this->function->eval();
+  this->function->eval(); // push function
   auto function_value = value_copy(Istack->peek(0));
   if (function_value->type == CRB_TYPE::CLOSURE_VALUE) {
     closure_value = dynamic_cast<CRB_TYPE::Closure*>(function_value);
@@ -462,10 +463,10 @@ void FunctionCallExpression::eval() {
     // support name closure recursion
     Ienv->add_variable(*closure_value->function_definition->name, closure_value);
   }
-  do_function_call(this, closure_value);
+  do_function_call(this, closure_value); // eval function call
   Ienv->dealloc_env();
-  auto return_value = Istack->pop();
-  CRB::stack_value_delete(Istack->pop()); // closure value delete here
+  auto return_value = Istack->pop();  // pop function return value
+  CRB::stack_value_delete(Istack->pop()); // delete function
   Istack->push(return_value);
 }
 
@@ -505,7 +506,7 @@ void ArrayExpression::eval() {
   auto array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
   int array_size = array_literal->_expression_vec.size();
   array_value->vec.resize(array_size);
-  Istack->push(array_value);
+  Istack->push(array_value); // push the value
   for (int i = 0; i < array_size; i++) {
     array_value->vec[i] = array_literal->_expression_vec[i]->eval_and_pop(); 
   }
@@ -686,7 +687,10 @@ CRB_TYPE::StatementResult* IfStatement::execute() {
     }
   } else if (this->else_block) {
     result = this->else_block->execute();
+  } else {
+    result = new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
   }
+  return result;
 }
 WhileStatement::WhileStatement(Expression *condition_,
                                Block *block_): Statement(CRB_TYPE::WHILE_STATEMENT) {

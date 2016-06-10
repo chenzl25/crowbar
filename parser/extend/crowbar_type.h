@@ -99,6 +99,7 @@ public:
   virtual ~Array();
   virtual void print();
   vector<CRB_TYPE::Value*> vec;
+  int ref_cnt;
 };
 
 class Assoc : public Object {

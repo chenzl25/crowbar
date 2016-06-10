@@ -69,6 +69,10 @@ Expression *crb_create_binary_expression(CRB_TYPE::ExpressionType operator_type,
       result = new IntExpression(dynamic_cast<CRB_TYPE::IntValue*>(folding_value)->int_value);
     } else if (folding_value->type == CRB_TYPE::DOUBLE_VALUE) {
       result = new DoubleExpression(dynamic_cast<CRB_TYPE::DoubleValue*>(folding_value)->double_value);
+    } else if (folding_value->type == CRB_TYPE::BOOLEAN_VALUE) {
+      result = new BooleanExpression(dynamic_cast<CRB_TYPE::BooleanValue*>(folding_value)->boolean_value);
+    } else {
+      CRB::error("some error in constant folding");
     }
     // folding_value->print();
     delete folding_value;
