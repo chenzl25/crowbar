@@ -48,12 +48,14 @@ class Interpreter {
     void alloc_env(CRB_TYPE::ScopeChain* next_);
     void dealloc_env();
     void add_function(FunctionDefinition* fd);
+    void add_fake_method(FunctionDefinition* fd);
     void add_variable(string name, CRB_TYPE::Value*);
     void add_global_declare(string name);
     void assign_variable(string name, CRB_TYPE::Value*);
     CRB_TYPE::Value* search_variable(string name);
     void assign(string name, CRB_TYPE::Value*);
     FunctionDefinition* search_function(string name);
+    FunctionDefinition* search_fake_method(string name);
    private:
     LocalEnv* _use_env;
     bool _use_caller_env;
@@ -61,6 +63,7 @@ class Interpreter {
     CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
     map<string, CRB_TYPE::Value*> _global_declare_map;
     map<string, FunctionDefinition*> _global_function_map;
+    map<string, FunctionDefinition*> _global_fake_method_map;
     map<string, CRB_TYPE::Value*> _global_variable_map;
   };
   class Heap {

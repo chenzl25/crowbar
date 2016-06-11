@@ -46,7 +46,9 @@ CRB_TYPE::Value* value_copy(CRB_TYPE::Value* value) {
     } 
     case CRB_TYPE::FAKE_METHOD_VALUE: {
       // return new 
-      CRB::error("now don't support copy fake method value");
+      auto old_fake_method_value = dynamic_cast<CRB_TYPE::FakeMethod*>(value);
+      return  new CRB_TYPE::FakeMethod(old_fake_method_value->object,
+                                       old_fake_method_value->method_name);
     } 
     case CRB_TYPE::SCOPE_CHAIN_VALUE: {
       // return new 

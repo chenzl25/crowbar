@@ -344,7 +344,8 @@ void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest
 void do_function_call(FunctionCallExpression* expression, 
                       CRB_TYPE::Value* func_value, CRB::LocalEnv *caller_env) {
     if (func_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
-        // call_fake_method(inter, env, caller_env, expr, &func->u.fake_method);
+        auto fake_method_value = dynamic_cast<CRB_TYPE::FakeMethod*>(func_value);
+        call_fake_method(expression, fake_method_value, caller_env);
         return;
     }
 
@@ -362,6 +363,28 @@ void do_function_call(FunctionCallExpression* expression,
             CRB::error(std::to_string(expression->line) + " :bad case in do_function_call");
     }
 }
+void call_fake_method(FunctionCallExpression* expression, 
+                      CRB_TYPE::FakeMethod* fake_method_value, CRB::LocalEnv *caller_env) {
+    auto Ienv = CRB::Interpreter::getInstance()->get_environment();
+    auto Istack = CRB::Interpreter::getInstance()->get_stack();
+    int argument_size = 0;
+    if (expression->argument_list) {
+      argument_size = expression->argument_list->_argument_vec.size();
+    }
+    auto fd = Ienv->search_fake_method(*fake_method_value->method_name);
+    CRB::assert(fd != NULL, std::to_string(expression->line) + " :method " +
+                                           *fake_method_value->method_name + "doesn't exist");
+    for (int i = argument_size-1; i >= 0; i--) {  // reverse order
+        expression->argument_list->_argument_vec[i]->eval();
+    }
+    Istack->push(value_copy(fake_method_value->object)); // as implicit this
+    auto result_value = fd->proc(argument_size);
+    CRB::stack_value_delete(Istack->pop()); // delete this
+    for(int i = 0; i < argument_size; i++) {
+        CRB::stack_value_delete(Istack->pop());
+    }
+    Istack->push(value_copy(result_value));
+}
 void call_native_function(FunctionCallExpression* expression, 
                           CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env) {
     auto Ienv = CRB::Interpreter::getInstance()->get_environment();
@@ -371,7 +394,7 @@ void call_native_function(FunctionCallExpression* expression,
       argument_size = expression->argument_list->_argument_vec.size();
     }
     Ienv->use_env(caller_env);
-    for (int i = 0; i < argument_size; i++) {
+    for (int i = argument_size-1; i >= 0; i--) {  // reverse order
         expression->argument_list->_argument_vec[i]->eval();
     }
     Ienv->use_env(Ienv->get_top_env());
@@ -379,7 +402,7 @@ void call_native_function(FunctionCallExpression* expression,
     for(int i = 0; i < argument_size; i++) {
         CRB::stack_value_delete(Istack->pop());
     }
-    Istack->push(result_value);
+    Istack->push(value_copy(result_value));
 }
 void call_crowbar_function(FunctionCallExpression* expression, 
                            CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env) {

@@ -33,5 +33,7 @@ void call_crowbar_function(FunctionCallExpression* expression,
                            CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env);
 void call_native_function(FunctionCallExpression* expression, 
                            CRB_TYPE::Closure* closure_value, CRB::LocalEnv *caller_env);
+void call_fake_method(FunctionCallExpression* expression, 
+                      CRB_TYPE::FakeMethod* fake_method_value, CRB::LocalEnv *caller_env);
 
 #endif

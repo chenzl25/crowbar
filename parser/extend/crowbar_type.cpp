@@ -192,11 +192,11 @@ void Array::print() {
   }
 }
 
-FakeMethod::FakeMethod() {
+FakeMethod::FakeMethod() : Value(CRB_TYPE::FAKE_METHOD_VALUE) {
   object = NULL;
   method_name = NULL;
 }
-FakeMethod::FakeMethod(Value *object_, string *method_name_) {
+FakeMethod::FakeMethod(Value *object_, string *method_name_) : Value(CRB_TYPE::FAKE_METHOD_VALUE) {
   object = object_;
   method_name = method_name_;
 }

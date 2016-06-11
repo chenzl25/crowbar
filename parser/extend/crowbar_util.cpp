@@ -183,7 +183,7 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
       break;
     }
     case CRB_TYPE::STRING_VALUE: {
-      result = *(dynamic_cast<CRB_TYPE::String*>(value)->string_value);
+      result = "\"" + *(dynamic_cast<CRB_TYPE::String*>(value)->string_value) + "\"";
       break;
     }
     case CRB_TYPE::NULL_VALUE: {
@@ -275,42 +275,42 @@ void statement_result_value_delete(CRB_TYPE::Value *value) {
   basic_value_delete(value);
 }
 void heap_value_delete(CRB_TYPE::Value *value) {
-  if (value->type == CRB_TYPE::ARRAY_VALUE) {
-    auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
-    array_value->ref_cnt--;
-    if (array_value->ref_cnt == 0) delete value;
-  } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
-    auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
-    assoc_value->ref_cnt--;
-    if (assoc_value->ref_cnt == 0) delete value;
-  } else {
-    //TODO other object type
-    delete value;
-  }
+  // if (value->type == CRB_TYPE::ARRAY_VALUE) {
+  //   auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
+  //   array_value->ref_cnt--;
+  //   if (array_value->ref_cnt == 0) delete value;
+  // } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
+  //   auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+  //   assoc_value->ref_cnt--;
+  //   if (assoc_value->ref_cnt == 0) delete value;
+  // } else {
+  //   //TODO other object type
+  //   delete value;
+  // }
 }
 
 void non_object_delete(CRB_TYPE::Value *value) {
-  if (!is_object_value(value->type)) {
-    delete value;
-  } 
+  // if (!is_object_value(value->type)) {
+  //   delete value;
+  // } 
 }
 
 inline void basic_value_delete(CRB_TYPE::Value *value) {
-  if (!is_object_value(value->type)) {
-    delete value;
-  } else {
-    if (value->type == CRB_TYPE::ARRAY_VALUE) {
-      auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
-      array_value->ref_cnt--;
-      if (array_value->ref_cnt == 0) delete value;
-    } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
-      auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
-      assoc_value->ref_cnt--;
-      if (assoc_value->ref_cnt == 0) delete value;
-    } else {
-      //TODO other object type
-    }
-  }
+  // if (!is_object_value(value->type)) {
+  //   delete value;
+  // } else {
+  //   if (value->type == CRB_TYPE::ARRAY_VALUE) {
+  //     auto array_value =  dynamic_cast<CRB_TYPE::Array*>(value);
+  //     array_value->ref_cnt--;
+  //     if (array_value->ref_cnt == 0) delete value;
+  //   } else if(value->type == CRB_TYPE::ASSOC_VALUE) {
+  //     auto assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+  //     assoc_value->ref_cnt--;
+  //     if (assoc_value->ref_cnt == 0) delete value;
+  //   } else {
+  //     //TODO other object type
+  //   }
+  // }
 }
 
 } // CRB

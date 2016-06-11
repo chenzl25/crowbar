@@ -474,24 +474,36 @@ void FunctionCallExpression::eval() {
   auto Ienv = Interpreter::getInstance()->get_environment();
   auto Istack = Interpreter::getInstance()->get_stack();
   CRB_TYPE::Closure* closure_value = NULL;
+  CRB_TYPE::FakeMethod* fake_method_value = NULL;
   this->function->eval(); // push function
   auto function_value = value_copy(Istack->peek(0));
   if (function_value->type == CRB_TYPE::CLOSURE_VALUE) {
     closure_value = dynamic_cast<CRB_TYPE::Closure*>(function_value);
   } else if (function_value->type == CRB_TYPE::FAKE_METHOD_VALUE) {
-    
+    fake_method_value = dynamic_cast<CRB_TYPE::FakeMethod*>(function_value);
   } else {
     CRB::error(std::to_string(this->line) + ": not function call");
   }
   auto caller_env = Ienv->get_use_env();  // before call we record the caller_env
-  Ienv->alloc_env(closure_value->scope_chain);
+  if (closure_value) {
+    Ienv->alloc_env(closure_value->scope_chain);
+  } else {
+    Ienv->alloc_env(NULL);
+  }
   Ienv->use_env(Ienv->get_top_env());
   if (closure_value && closure_value->function_definition->is_closure
       && closure_value->function_definition->name) {
     // support name closure recursion
     Ienv->add_variable(*closure_value->function_definition->name, closure_value);
   }
-  do_function_call(this, closure_value, caller_env); // eval function call
+  CRB_TYPE::Value* do_function_value;
+  if (closure_value) {
+    do_function_value = closure_value;
+  } else {
+    do_function_value = fake_method_value;
+  }
+  do_function_call(this, do_function_value, caller_env); // eval function call
+
   Ienv->dealloc_env(); // dealloc the callee_env
   Ienv->use_env(caller_env);  // reset the use_env
   auto return_value = Istack->pop();  // pop function return value

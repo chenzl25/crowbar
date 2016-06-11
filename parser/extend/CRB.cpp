@@ -1,5 +1,6 @@
 #include "CRB.h"
 #include "native_func.h"
+#include "fake_method.h"
 #include "crowbar_util.h"
 #include <set>
 using namespace std;
@@ -35,6 +36,7 @@ Interpreter* Interpreter::getInstance() {
 }
 void Interpreter::before_hook() {
   CRB::add_native_function(); // from native_fun.cpp
+  CRB::add_fake_method();     // from fake_method.cpp
 }
 void Interpreter::chain_statement_list(Statement* statement) {
   _statement_list->add_statement(statement);
@@ -177,10 +179,15 @@ Interpreter::Environment::~Environment() {
     env_value_delete(it->second);
   }
   for (auto it = _global_function_map.begin(); it != _global_function_map.end(); it++) {
+    // cout << "delete function: " << *it->second->name << endl;
     if (it->second->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION) {
       delete it->second->name;
     }
-    cout << "delete function: " << *it->second->name << endl;
+    delete it->second;
+  }
+  for (auto it = _global_fake_method_map.begin(); it != _global_fake_method_map.end(); it++) {
+    // cout << "delete fake method: " << *it->second->name << endl;
+    delete it->second->name;
     delete it->second;
   }
   cout << "-------------------------------------------------" << endl;
@@ -270,13 +277,7 @@ CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
   }
   return NULL;
 }
-FunctionDefinition* Interpreter::Environment::search_function(string name) {
-  if (_global_function_map.count(name)) {
-    return _global_function_map[name];
-  } else {
-    return NULL;
-  }
-}
+
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
   if (_use_env == NULL) {
     CRB::assert(_global_variable_map.count(name), "the value be assigned should exist");
@@ -311,7 +312,26 @@ void Interpreter::Environment::add_function(FunctionDefinition* fd) {
   _global_function_map[*(fd->name)] = fd;
   // cout << "add function: " << *(fd->name) << endl;
 }
-
+FunctionDefinition* Interpreter::Environment::search_function(string name) {
+  if (_global_function_map.count(name)) {
+    return _global_function_map[name];
+  } else {
+    return NULL;
+  }
+}
+void Interpreter::Environment::add_fake_method(FunctionDefinition* fd) {
+  if (_global_fake_method_map.count(*(fd->name))) {
+    CRB::error("multi definition of fake method " + *(fd->name));
+  }
+  _global_fake_method_map[*(fd->name)] = fd;
+}
+FunctionDefinition* Interpreter::Environment::search_fake_method(string name) {
+  if (_global_fake_method_map.count(name)) {
+    return _global_fake_method_map[name];
+  } else {
+    return NULL;
+  }
+}
 
 } // CRB
 
