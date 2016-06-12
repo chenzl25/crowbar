@@ -77,9 +77,6 @@ public:
   virtual void print();
   ObjectType  type;
   bool        marked;
-  // Array       array;
-  // Assoc       assoc;
-  // ScopeChain  scope_chain;
 };
 
 

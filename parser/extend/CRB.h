@@ -17,6 +17,7 @@ class LocalEnv {
  public:
   LocalEnv(CRB_TYPE::ScopeChain *next_);
   ~LocalEnv();
+  CRB_TYPE::ScopeChain * get_scope_chain();
   CRB_TYPE::ScopeChain *_scope_chain; // local_variable here
   map<string, CRB_TYPE::Value*> _global_declare_map;
 };
@@ -57,6 +58,7 @@ class Interpreter {
     FunctionDefinition* search_function(string name);
     FunctionDefinition* search_fake_method(string name);
    private:
+    friend class Interpreter::Heap;
     LocalEnv* _use_env;
     bool _use_caller_env;
     vector<LocalEnv*> _local_env_vec;
@@ -73,9 +75,16 @@ class Interpreter {
     ~Heap();
     CRB_TYPE::Object* alloc(CRB_TYPE::ObjectType);
     CRB_TYPE::Object* alloc(string* string_value, bool is_literal_);
-    int _threshold;
+    int _current_threshold;
+    int _threshold_size;
     int _current_size;
+    int _gc_times;
    private:
+    void garbage_collect();
+    void mark_from_root_set();
+    void mark_value(CRB_TYPE::Value* value);
+    void sweep();
+    void print();
     list<CRB_TYPE::Object*> _heap_list;
   };
   class Stack {
@@ -89,6 +98,7 @@ class Interpreter {
     void push(CRB_TYPE::Value*);
     int size();
    private:
+    friend class Interpreter::Heap;
     vector<CRB_TYPE::Value*> _stack_vec; 
   };
   Heap *_heap;
@@ -101,11 +111,6 @@ class Interpreter {
   ~Interpreter();
 };
 
-
-Interpreter *create_interpreter(void);
-void compile(Interpreter *interpreter, string code_path);
-void interpret(Interpreter *interpreter);
-void dispose_interpreter(Interpreter *interpreter);
   
 } // end CRB namespace
 

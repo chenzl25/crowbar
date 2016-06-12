@@ -1,6 +1,8 @@
 #ifndef CROWBAR_UTIL_H
 #define CROWBAR_UTIL_H
 #include <string>
+#include <cstdio>
+#include <iomanip>
 #include "crowbar_type.h"
 using namespace std;
 namespace CRB {

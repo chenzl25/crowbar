@@ -3,6 +3,7 @@
 #include "fake_method.h"
 #include "crowbar_util.h"
 #include <set>
+
 using namespace std;
 
 namespace CRB {
@@ -50,18 +51,7 @@ int Interpreter::get_line() {
 Interpreter::Heap* Interpreter::get_heap() {
   return _heap;
 }
-Interpreter *create_interpreter(void) {
 
-}
-void compile(Interpreter *interpreter, string code_path) {
-
-}
-void interpret(Interpreter *interpreter) {
-
-}
-void dispose_interpreter(Interpreter *interpreter) {
-
-}
 Interpreter::Stack* Interpreter::get_stack() {
   return _stack;
 }
@@ -96,25 +86,31 @@ void Interpreter::Stack::push(CRB_TYPE::Value* v) {
   _stack_vec.push_back(v);
 }
 Interpreter::Heap::Heap() {
-  _threshold = (1024 * 256); // 256K
+  _threshold_size = (1024.0 * 256); // 256K
+  _current_threshold = _threshold_size;
   _current_size = 0;
+  _gc_times = 0;
 }
 Interpreter::Heap::~Heap() {
   // TODO
-  cout << "-------------------------------------------------" << endl;
-  cout << "Heap delete :" << endl; 
+  // cout << "-------------------------------------------------" << endl;
+  // cout << "Heap delete :" << endl; 
+  // this->print();
   for (auto it = _heap_list.begin(); it != _heap_list.end(); it++) {
     // cout << *it << endl;
     // (*it)->print();
     auto cast_value = dynamic_cast<CRB_TYPE::Value*>(*it);
     heap_value_delete(cast_value);
   }
-  cout << "-------------------------------------------------" << endl;
+  // cout << "-------------------------------------------------" << endl;
 }
 
 
 
 CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
+  if (this->_current_size > this->_current_threshold) {
+    this->garbage_collect();
+  }
   CRB_TYPE::Object* alloc_ptr;
   switch (type_) {
     case CRB_TYPE::STRING_OBJECT:
@@ -145,10 +141,14 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(CRB_TYPE::ObjectType type_) {
 set<CRB_TYPE::Object*> fix_bug_set;
 
 CRB_TYPE::Object* Interpreter::Heap::alloc(string* string_value, bool is_literal_) {
+  if (this->_current_size > this->_current_threshold) {
+    this->garbage_collect();
+  }
   CRB_TYPE::Object* alloc_ptr = NULL;
   AGAIN:
   if (is_literal_) { // when gc we do not sweep literal
     alloc_ptr = new CRB_TYPE::String(string_value, is_literal_);
+    _current_size += sizeof(CRB_TYPE::String);
   } else {
     alloc_ptr = new CRB_TYPE::String(new string(*string_value), is_literal_);
     _current_size += sizeof(CRB_TYPE::String) + string_value->length();
@@ -160,6 +160,122 @@ CRB_TYPE::Object* Interpreter::Heap::alloc(string* string_value, bool is_literal
   // cout << alloc_ptr << endl;
   _heap_list.push_back(alloc_ptr);
   return alloc_ptr;
+}
+
+template<typename T> void wprint(T t, const int& width = 10) {
+  cout << std::left << setw(width) << setfill(' ') << t;
+}
+void Interpreter::Heap::print() {
+  wprint("heap size", 12);
+  wprint(std::to_string(this->_current_size), 8);
+  wprint("bytes = ");
+  printf("%.3lfK\n", this->_current_size / 1024.0);
+}
+void Interpreter::Heap::garbage_collect() {
+  _gc_times++;
+  // cout << "garbage collect " << this->_gc_times << " :" << endl;
+  // wprint("before");
+  // this->print();
+  
+  this->mark_from_root_set();
+  this->sweep();
+
+  this->_current_threshold = this->_current_size + this->_threshold_size;
+  // wprint("after");
+  // this->print();
+}
+void Interpreter::Heap::mark_from_root_set() {
+  // list<CRB_TYPE::Object*> _heap_list;
+  // from root set : stack and environment 
+  auto Ienv = Interpreter::getInstance()->get_environment();
+  auto Istack = Interpreter::getInstance()->get_stack();
+  // reset marked
+  for (auto it = this->_heap_list.begin(); it != this->_heap_list.end(); it++) {
+    (*it)->marked = false;
+  }
+
+
+  // mark global variable
+  for (auto it = Ienv->_global_variable_map.begin(); it != Ienv->_global_variable_map.end(); it++) {
+    this->mark_value(it->second);
+  }
+  // mark local environment
+  for (auto it = Ienv->_local_env_vec.begin(); it != Ienv->_local_env_vec.end(); it++) {
+    this->mark_value((*it)->get_scope_chain());
+  }
+  // mark stack
+  for (auto it = Istack->_stack_vec.begin(); it != Istack->_stack_vec.end(); it++) {
+    this->mark_value(*it);
+  }
+
+}
+void Interpreter::Heap::mark_value(CRB_TYPE::Value* value) {
+  if (value == NULL) {
+    return;
+  }
+  switch (value->type) {
+    case CRB_TYPE::STRING_VALUE: {
+      auto cast_string_value = dynamic_cast<CRB_TYPE::String*>(value);
+      if (cast_string_value->marked) return;
+      cast_string_value->marked = true;
+      break;
+    } 
+    case CRB_TYPE::ARRAY_VALUE: {
+      auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(value);
+      if (cast_array_value->marked) return;
+      cast_array_value->marked = true;
+      for (auto it = cast_array_value->vec.begin(); it != cast_array_value->vec.end(); it++) {
+        this->mark_value(*it);
+      }
+      break;
+    } 
+    case CRB_TYPE::ASSOC_VALUE: {
+      auto cast_assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(value);
+      if (cast_assoc_value->marked) return;
+      cast_assoc_value->marked = true;
+      for (auto it = cast_assoc_value->member_map.begin(); it != cast_assoc_value->member_map.end(); it++) {
+        this->mark_value(it->second);
+      }
+      break;
+    } 
+    case CRB_TYPE::SCOPE_CHAIN_VALUE: {
+      auto cast_scope_chain_value = dynamic_cast<CRB_TYPE::ScopeChain*>(value);
+      if (cast_scope_chain_value->marked) return;
+      cast_scope_chain_value->marked = true;
+      this->mark_value(cast_scope_chain_value->frame);
+      this->mark_value(cast_scope_chain_value->next);
+      break;
+    }
+    case CRB_TYPE::CLOSURE_VALUE: {
+      auto cast_closure_value = dynamic_cast<CRB_TYPE::Closure*>(value);
+      this->mark_value(cast_closure_value->scope_chain);
+      break;
+    }
+    case CRB_TYPE::FAKE_METHOD_VALUE: {
+      auto cast_fake_method_value = dynamic_cast<CRB_TYPE::FakeMethod*>(value);
+      this->mark_value(cast_fake_method_value->object);
+      break;
+    }
+    default:
+      return;
+  }
+}
+void Interpreter::Heap::sweep() {
+  list<CRB_TYPE::Object*> to_delete_list;
+  fix_bug_set.clear();
+  for (auto it = this->_heap_list.begin(); it != this->_heap_list.end();) {
+    if ((*it)->marked == false) {
+      to_delete_list.push_back(*it);
+      it = this->_heap_list.erase(it);
+    } else {
+      fix_bug_set.insert(*it);
+      it++;
+    }
+  }
+  for (auto it = to_delete_list.begin(); it != to_delete_list.end();it++) {
+    auto value = *it;
+    heap_value_delete(*it);
+  }
 }
 void Interpreter::execute() {
   _statement_list->execute();
@@ -173,8 +289,8 @@ Interpreter::Environment::Environment() {
   _use_env = NULL;
 }
 Interpreter::Environment::~Environment() {
-  cout << "-------------------------------------------------" << endl;
-  cout << "Environment delete : " << endl;
+  // cout << "-------------------------------------------------" << endl;
+  // cout << "Environment delete : " << endl;
   for (auto it = _global_variable_map.begin(); it != _global_variable_map.end(); it++) {
     env_value_delete(it->second);
   }
@@ -190,7 +306,7 @@ Interpreter::Environment::~Environment() {
     delete it->second->name;
     delete it->second;
   }
-  cout << "-------------------------------------------------" << endl;
+  // cout << "-------------------------------------------------" << endl;
 }
 
 void Interpreter::Environment::alloc_env(CRB_TYPE::ScopeChain* next_) {
@@ -207,6 +323,11 @@ LocalEnv::~LocalEnv() {
   // delete _scope_chain;   remain for heap
   _scope_chain = NULL;
 }
+CRB_TYPE::ScopeChain* LocalEnv::get_scope_chain() {
+  return _scope_chain;
+}
+
+
 void Interpreter::Environment::dealloc_env() {
   assert(_local_env_vec.size() > 0, "dealloc_env size should > 0");
   delete _local_env_vec[_local_env_vec.size()-1];

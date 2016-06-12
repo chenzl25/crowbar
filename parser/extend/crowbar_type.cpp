@@ -64,9 +64,6 @@ Object::Object(CRB_TYPE::ValueType type_):Value(type_) {
       CRB::error("type for Object constructor should be ValueType");
   }
   marked = false;
-  // Array       array;
-  // Assoc       assoc;
-  // ScopeChain  scope_chain;
 }
 Object::~Object(){
   
