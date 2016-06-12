@@ -227,6 +227,7 @@ void eval_binary_boolean(CRB_TYPE::ExpressionType op,
                  CRB::expression_type_to_string(op));
     }
 }
+
 void chain_string(CRB_TYPE::Value *left_value, CRB_TYPE::Value *right_value, 
                          CRB_TYPE::Value *&result_value, int line_number) {
     auto Iheap = CRB::Interpreter::getInstance()->get_heap();
@@ -285,23 +286,55 @@ void assign_to_member(MemberExpression* member_expression, CRB_TYPE::Value* assi
     }
 }
 // assign_value will be in the array
-void assign_array_element(IndexExpression* index_expression, CRB_TYPE::Value* assign_value) {
+void assign_array_element_or_to_member(IndexExpression* index_expression, CRB_TYPE::Value* assign_value) {
     string line_string = std::to_string(index_expression->line);
     // we use eval insteat of eval pop to avoid GC collect the temporary variable
     auto Istack = CRB::Interpreter::getInstance()->get_stack();
-    index_expression->array->eval();
+    index_expression->obj->eval();
     index_expression->index->eval();
     auto index_value = Istack->pop();
-    auto array_value = Istack->pop();
-    CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a Array");
-    CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
-    auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
-    auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(array_value);
-    CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
-    CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
-            ": index exceeds the array size");
-    CRB::non_object_delete(cast_array_value->vec[cast_index_value->int_value]);
-    cast_array_value->vec[cast_index_value->int_value] = assign_value;
+    auto obj_value = Istack->pop();
+
+    CRB::assert(obj_value->type == CRB_TYPE::ARRAY_VALUE ||
+              obj_value->type == CRB_TYPE::ASSOC_VALUE, 
+              line_string + ": not a Array or Object");
+    if (obj_value->type == CRB_TYPE::ARRAY_VALUE) {
+        CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
+        auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
+        auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(obj_value);
+        CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
+        CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
+                ": index exceeds the array size");
+        CRB::array_value_delete(cast_array_value->vec[cast_index_value->int_value]);
+        cast_array_value->vec[cast_index_value->int_value] = assign_value;
+    } else if (obj_value->type == CRB_TYPE::ASSOC_VALUE) {
+        auto cast_assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(obj_value);
+        CRB::assert(index_value->type == CRB_TYPE::INT_VALUE || 
+                    index_value->type == CRB_TYPE::DOUBLE_VALUE ||
+                    index_value->type == CRB_TYPE::STRING_VALUE, line_string + 
+                    ": index not a int or double or string");
+        string index_string;
+        switch (index_value->type) {
+          case CRB_TYPE::INT_VALUE: {
+            index_string = std::to_string(dynamic_cast<CRB_TYPE::IntValue*>(index_value)->int_value);
+            break;
+          }
+          case CRB_TYPE::DOUBLE_VALUE: {
+            index_string = CRB::double_to_member_string(dynamic_cast<CRB_TYPE::DoubleValue*>(index_value)->double_value);
+            break;
+          }
+          case CRB_TYPE::STRING_VALUE: {
+            index_string = *dynamic_cast<CRB_TYPE::String*>(index_value)->string_value;
+            break;
+          }
+        }
+        auto result_value = cast_assoc_value->search_member(index_string);
+        if (result_value) {
+            cast_assoc_value->assign_member(index_string, assign_value);
+        } else {
+            cast_assoc_value->add_member(index_string, assign_value);
+        }
+    }
 }
 void do_assign(string variable_name, CRB_TYPE::Value* src, CRB_TYPE::Value* dest, 
                CRB_TYPE::ExpressionType type, int line_number) {
@@ -374,11 +407,13 @@ void call_fake_method(FunctionCallExpression* expression,
     auto fd = Ienv->search_fake_method(*fake_method_value->method_name);
     CRB::assert(fd != NULL, std::to_string(expression->line) + " :method " +
                                            *fake_method_value->method_name + "doesn't exist");
+    Ienv->use_env(caller_env);
     for (int i = argument_size-1; i >= 0; i--) {  // reverse order
         expression->argument_list->_argument_vec[i]->eval();
     }
+    Ienv->use_env(Ienv->get_top_env());
     Istack->push(value_copy(fake_method_value->object)); // as implicit this
-    auto result_value = fd->proc(argument_size);
+    auto result_value = fd->proc(argument_size, expression->line);
     CRB::stack_value_delete(Istack->pop()); // delete this
     for(int i = 0; i < argument_size; i++) {
         CRB::stack_value_delete(Istack->pop());
@@ -398,7 +433,7 @@ void call_native_function(FunctionCallExpression* expression,
         expression->argument_list->_argument_vec[i]->eval();
     }
     Ienv->use_env(Ienv->get_top_env());
-    auto result_value = closure_value->function_definition->proc(argument_size);
+    auto result_value = closure_value->function_definition->proc(argument_size, expression->line);
     for(int i = 0; i < argument_size; i++) {
         CRB::stack_value_delete(Istack->pop());
     }

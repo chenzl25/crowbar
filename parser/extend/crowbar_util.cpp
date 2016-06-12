@@ -30,6 +30,15 @@ void error(string msg) {
   cout << msg << endl;
   exit(-1);
 }
+string double_to_member_string(double d) {
+  string std_string = std::to_string(d);
+  int dot_pos = std_string.find_first_of('.');
+  if (dot_pos != -1) {
+    int last_of_not_zero = std_string.find_last_not_of('0');
+    return std_string.substr(0, last_of_not_zero+1);
+  }
+  return std_string;
+}
 string expression_type_to_string(CRB_TYPE::ExpressionType type) {
   switch(type) {
       case CRB_TYPE::BOOLEAN_EXPRESSION:
@@ -162,7 +171,6 @@ string value_type_to_string(CRB_TYPE::ValueType type) {
       return "undefined type";
   }
 }
-
 string value_to_string(CRB_TYPE::Value *value, int line_number) {
   string result;
   switch (value->type) {
@@ -183,7 +191,7 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
       break;
     }
     case CRB_TYPE::STRING_VALUE: {
-      result = "\"" + *(dynamic_cast<CRB_TYPE::String*>(value)->string_value) + "\"";
+      result =  *(dynamic_cast<CRB_TYPE::String*>(value)->string_value);
       break;
     }
     case CRB_TYPE::NULL_VALUE: {
@@ -194,7 +202,11 @@ string value_to_string(CRB_TYPE::Value *value, int line_number) {
     auto array_value = dynamic_cast<CRB_TYPE::Array*>(value);
     result += "[";
     for (int i = 0; i < array_value->vec.size(); i++) {
-      result += CRB::value_to_string(array_value->vec[i], line_number);
+      if (array_value->vec[i]->type == CRB_TYPE::STRING_VALUE) {
+        result += "\"" + CRB::value_to_string(array_value->vec[i], line_number) + "\"";
+      } else {
+        result += CRB::value_to_string(array_value->vec[i], line_number);        
+      }
       if (i != array_value->vec.size() -1) {
         result += ", ";
       }

@@ -158,7 +158,7 @@ void IdentifierExpression::eval() {
   auto search_result = Ienv->search_variable(*(this->identifier));
   if (search_result == NULL) {
     auto fd = Ienv->search_function(*(this->identifier));
-    assert(fd != NULL, std::to_string(this->line)+ " :undefined identifier :" + *(this->identifier));
+    CRB::assert(fd != NULL, std::to_string(this->line)+ " :undefined identifier :" + *(this->identifier));
     auto closure_value = new CRB_TYPE::Closure(fd, NULL);
     Istack->push(closure_value);
   } else {
@@ -238,25 +238,25 @@ CRB_TYPE::Value* BinaryExpression::constant_folding_eval() {
   // logic short cut
   if (this->type == CRB_TYPE::LOGICAL_OR_EXPRESSION) {
     left_value = left->eval_and_pop();
-    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of || should be boolean");
+    CRB::assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of || should be boolean");
     CRB_TYPE::BooleanValue* cast_left_value  =  dynamic_cast<CRB_TYPE::BooleanValue*>(left_value);
     if (cast_left_value->boolean_value) {
       return new CRB_TYPE::BooleanValue(true);
     }
     right_value = right->eval_and_pop();
-    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of || should be boolean");
+    CRB::assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of || should be boolean");
     CRB_TYPE::BooleanValue* cast_right_value =  dynamic_cast<CRB_TYPE::BooleanValue*>(right_value);
     return new CRB_TYPE::BooleanValue(cast_right_value->boolean_value);
   }
   if (this->type == CRB_TYPE::LOGICAL_AND_EXPRESSION) {
     left_value = left->eval_and_pop();
-    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of && should be boolean");
+    CRB::assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "left side of && should be boolean");
     CRB_TYPE::BooleanValue* cast_left_value  =  dynamic_cast<CRB_TYPE::BooleanValue*>(left_value);
     if (cast_left_value->boolean_value == false) {
       return new CRB_TYPE::BooleanValue(false);
     }
     right_value = right->eval_and_pop();
-    assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of && should be boolean");
+    CRB::assert(left_value->type == CRB_TYPE::BOOLEAN_VALUE, "right side of && should be boolean");
     CRB_TYPE::BooleanValue* cast_right_value =  dynamic_cast<CRB_TYPE::BooleanValue*>(right_value);
     return new CRB_TYPE::BooleanValue(cast_right_value->boolean_value);
   }
@@ -311,7 +311,7 @@ void IncrementExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
   auto Ienv = Interpreter::getInstance()->get_environment();
   string line_string = std::to_string(this->line);
-  assert(this->operand != NULL, line_string + " : IncrementExpression: operand_expression should exist");
+  CRB::assert(this->operand != NULL, line_string + " : IncrementExpression: operand_expression should exist");
   
   CRB_TYPE::Value*  operand_value;  
   if (operand->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
@@ -319,13 +319,13 @@ void IncrementExpression::eval() {
   } else {
     operand_value = operand->eval_and_pop();// we can pop, because it should be the int, GC will not collect it.
   }
-  assert(operand_value != NULL, line_string + " : IncrementExpression: operand_value should exist");
-  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
+  CRB::assert(operand_value != NULL, line_string + " : IncrementExpression: operand_value should exist");
+  CRB::assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
   auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
   int old_int = cast_operand_value->int_value;
   if (this->operand->type == CRB_TYPE::INDEX_EXPRESSION) {
     cast_operand_value->int_value++;
-    assign_array_element(dynamic_cast<IndexExpression*>(this->operand), 
+    assign_array_element_or_to_member(dynamic_cast<IndexExpression*>(this->operand), 
                          cast_operand_value); // reuse the cast_operand_value, because cast_operand_value from the stack must be copied
   } else {
     // maybe it should extend the object later, like obj.a++;
@@ -348,7 +348,7 @@ void DecrementExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
   auto Ienv = Interpreter::getInstance()->get_environment();
   string line_string = std::to_string(this->line);
-  assert(this->operand != NULL, line_string + " : DecrementExpression: operand_expression should exist");
+  CRB::assert(this->operand != NULL, line_string + " : DecrementExpression: operand_expression should exist");
   
   CRB_TYPE::Value*  operand_value;  
   if (operand->type == CRB_TYPE::IDENTIFIER_EXPRESSION) {
@@ -356,13 +356,13 @@ void DecrementExpression::eval() {
   } else {
     operand_value = operand->eval_and_pop();// we can pop, because it should be the int, GC will not collect it.
   }
-  assert(operand_value != NULL, line_string + " : DecrementExpression: operand_value should exist");
-  assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
+  CRB::assert(operand_value != NULL, line_string + " : DecrementExpression: operand_value should exist");
+  CRB::assert(operand_value->type == CRB_TYPE::INT_VALUE, line_string + " : operator ++ should only work on interger");
   auto cast_operand_value = dynamic_cast<CRB_TYPE::IntValue*>(operand_value);
   int old_int = cast_operand_value->int_value;
   if (this->operand->type == CRB_TYPE::INDEX_EXPRESSION) {
     cast_operand_value->int_value--;
-    assign_array_element(dynamic_cast<IndexExpression*>(this->operand), 
+    assign_array_element_or_to_member(dynamic_cast<IndexExpression*>(this->operand), 
                          cast_operand_value); // reuse the cast_operand_value, because cast_operand_value from the stack must be copied
   } else {
     // maybe it should extend the object later, like obj.a--;
@@ -370,13 +370,13 @@ void DecrementExpression::eval() {
   }
   Istack->push(new CRB_TYPE::IntValue(old_int));
 }
-IndexExpression::IndexExpression(Expression *array_, Expression *index_): Expression(CRB_TYPE::INDEX_EXPRESSION) {
-  array = array_;
+IndexExpression::IndexExpression(Expression *obj_, Expression *index_): Expression(CRB_TYPE::INDEX_EXPRESSION) {
+  obj = obj_;
   index = index_;
 }
 IndexExpression::~IndexExpression() {
-  if(array != NULL) delete array;
-  array = NULL;
+  if(obj != NULL) delete obj;
+  obj = NULL;
   if(index != NULL) delete index;
   index = NULL;
 }
@@ -386,20 +386,62 @@ CRB_TYPE::Value* IndexExpression::eval_and_pop() {
 }
 void IndexExpression::eval() {
   auto Istack = Interpreter::getInstance()->get_stack();
+  auto Iheap = Interpreter::getInstance()->get_heap();
   string line_string = std::to_string(this->line);
   // we use eval insteat of eval pop to avoid GC collect the temporary variable
-  this->array->eval();
+  this->obj->eval();
   this->index->eval();
   auto index_value = Istack->pop();
-  auto array_value = Istack->pop();
-  CRB::assert(array_value->type == CRB_TYPE::ARRAY_VALUE, line_string + ": not a array");
-  CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
-  auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
-  auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(array_value);
-  CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
-  CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
-          ": index exceeds the array size");
-  Istack->push(value_copy(cast_array_value->vec[cast_index_value->int_value]));
+  auto obj_value = Istack->pop();
+  CRB::assert(obj_value->type == CRB_TYPE::ARRAY_VALUE ||
+              obj_value->type == CRB_TYPE::ASSOC_VALUE ||
+              obj_value->type == CRB_TYPE::STRING_VALUE, 
+              line_string + ": not a Array or Object");
+  if (obj_value->type == CRB_TYPE::ARRAY_VALUE) {
+    CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
+    auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
+    auto cast_array_value = dynamic_cast<CRB_TYPE::Array*>(obj_value);
+    CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
+    CRB::assert(cast_index_value->int_value < cast_array_value->vec.size(), line_string +
+            ": index exceeds the array size");
+    Istack->push(value_copy(cast_array_value->vec[cast_index_value->int_value]));
+  } else if (obj_value->type == CRB_TYPE::ASSOC_VALUE) {
+    auto cast_assoc_value = dynamic_cast<CRB_TYPE::Assoc*>(obj_value);
+    CRB::assert(index_value->type == CRB_TYPE::INT_VALUE || 
+                index_value->type == CRB_TYPE::DOUBLE_VALUE ||
+                index_value->type == CRB_TYPE::STRING_VALUE, line_string + 
+                ": index not a int or double or string");
+    string index_string;
+    switch (index_value->type) {
+      case CRB_TYPE::INT_VALUE: {
+        index_string = std::to_string(dynamic_cast<CRB_TYPE::IntValue*>(index_value)->int_value);
+        break;
+      }
+      case CRB_TYPE::DOUBLE_VALUE: {
+        index_string = CRB::double_to_member_string(dynamic_cast<CRB_TYPE::DoubleValue*>(index_value)->double_value);
+        break;
+      }
+      case CRB_TYPE::STRING_VALUE: {
+        index_string = *dynamic_cast<CRB_TYPE::String*>(index_value)->string_value;
+        break;
+      }
+    }
+    auto result_value = cast_assoc_value->search_member(index_string);
+    if (result_value) {
+      Istack->push(value_copy(result_value));
+    } else {
+      Istack->push(new CRB_TYPE::Value());
+    }
+  } else if (obj_value->type == CRB_TYPE::STRING_VALUE) {
+    CRB::assert(index_value->type == CRB_TYPE::INT_VALUE, line_string + ": index not a integer");
+    auto cast_index_value = dynamic_cast<CRB_TYPE::IntValue*>(index_value);
+    auto cast_string_value = dynamic_cast<CRB_TYPE::String*>(obj_value);
+    CRB::assert(cast_index_value->int_value >= 0, line_string + ": the index should not lest than 0");
+    CRB::assert(cast_index_value->int_value < cast_string_value->string_value->length(), line_string +
+            ": index exceeds the string length");
+    string tem_string = string() + (*cast_string_value->string_value)[cast_index_value->int_value];
+    Istack->push(Iheap->alloc(&tem_string, false));
+  }
 }
 AssignExpression::AssignExpression( CRB_TYPE::ExpressionType assign_type_, 
                                     Expression *variable_,
@@ -429,7 +471,7 @@ void AssignExpression::eval() {
   }
   if (this->variable->type == CRB_TYPE::INDEX_EXPRESSION) {
     // for the stack delete reason
-    assign_array_element(dynamic_cast<IndexExpression*>(this->variable), value_copy(src));
+    assign_array_element_or_to_member(dynamic_cast<IndexExpression*>(this->variable), value_copy(src));
     return;
   } 
   // find the the dest value
@@ -651,7 +693,7 @@ Elsif::~Elsif() {
 }
 CRB_TYPE::StatementResult* Elsif::execute() {
   auto value = condition->eval_and_pop();
-  assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+  CRB::assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
          " condition expression should be bool");
   if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value)  {
     stack_value_delete(value); // delete the stack pop
@@ -741,7 +783,7 @@ IfStatement::~IfStatement() {
 CRB_TYPE::StatementResult* IfStatement::execute() {
   CRB_TYPE::StatementResult* result;
   auto value = condition->eval_and_pop();
-  assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+  CRB::assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
          std::to_string(this->line) + " condition expression should be bool");
   if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
     stack_value_delete(value); // delete the stack pop
@@ -775,7 +817,7 @@ CRB_TYPE::StatementResult* WhileStatement::execute() {
   CRB_TYPE::StatementResult* result;
   while(true) {
     auto value = condition->eval_and_pop();
-    assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+    CRB::assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
            std::to_string(this->line) + " condition expression should be bool");
     if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
       stack_value_delete(value); // delete the stack pop
@@ -825,7 +867,7 @@ CRB_TYPE::StatementResult* ForStatement::execute() {
     } else {
       value = new CRB_TYPE::BooleanValue(true);
     }
-    assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
+    CRB::assert(value->type == CRB_TYPE::BOOLEAN_VALUE, 
            std::to_string(this->line) + " condition expression should be bool");
     if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
       stack_value_delete(value); // delete the stack pop

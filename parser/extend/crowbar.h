@@ -153,11 +153,11 @@ public:
 
 class IndexExpression : public Expression {
 public:  
-  IndexExpression(Expression *array, Expression *index);
+  IndexExpression(Expression *obj, Expression *index);
   virtual ~IndexExpression();
   virtual void eval();
   virtual CRB_TYPE::Value* eval_and_pop();
-  Expression *array;
+  Expression *obj;
   Expression *index;
 };
 
@@ -263,7 +263,7 @@ private:
 
 };
 
-typedef CRB_TYPE::Value* NativeFunctionProc(int arg_cnt);
+typedef CRB_TYPE::Value* NativeFunctionProc(int arg_cnt, int line_number);
 
 class FunctionDefinition {
 public:

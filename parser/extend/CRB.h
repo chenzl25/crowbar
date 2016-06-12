@@ -8,6 +8,8 @@
 #include <list>
 #include "crowbar_type.h"
 #include "crowbar.h"
+#include "../lexer/src/lex.h"
+#include "../parser/src/slr.h"
 using namespace std;
 
 
@@ -35,6 +37,9 @@ class Interpreter {
   void set_line(int line_);
   int get_line();
   void execute();
+  void parse(string code_path);
+  void set_lexer(Lex& lex_);
+  void set_parsr(SLR& slr_);
   Interpreter::Heap* get_heap();
   Interpreter::Stack* get_stack();
   Interpreter::Environment* get_environment();
@@ -106,6 +111,8 @@ class Interpreter {
   Environment *_environment;
   StatementList *_statement_list;
   int _line;
+  SLR _slr;
+  Lex _lex;
   static Interpreter* _instance;
   Interpreter();
   ~Interpreter();

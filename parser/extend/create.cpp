@@ -188,8 +188,8 @@ Statement *crb_create_continue_statement(void) {
   return new ContinueStatement();
 }
 
-Expression *crb_create_index_expression(Expression *array, Expression *index) {
-  return new IndexExpression(array, index);
+Expression *crb_create_index_expression(Expression *obj, Expression *index) {
+  return new IndexExpression(obj, index);
 }
 Expression *crb_create_incdec_expression(Expression *operand, CRB_TYPE::ExpressionType inc_or_dec) {
   if (inc_or_dec == CRB_TYPE::INCREMENT_EXPRESSION) {

@@ -51,7 +51,7 @@ Statement *crb_create_return_statement(Expression *expression);
 Statement *crb_create_break_statement(void);
 Statement *crb_create_continue_statement(void);
 
-Expression *crb_create_index_expression(Expression *array, Expression *index);
+Expression *crb_create_index_expression(Expression *obj, Expression *index);
 Expression *crb_create_incdec_expression(Expression *operand, CRB_TYPE::ExpressionType inc_or_dec);
 Expression *crb_create_array_expression(ExpressionList *list);
 Expression *crb_create_closure_definition(string *identifier,

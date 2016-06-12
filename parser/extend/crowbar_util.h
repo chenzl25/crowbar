@@ -12,6 +12,7 @@ void debug(string s, int a);
 void assert(bool should, string msg);
 void error (int line, string msg);
 void error(string msg); 
+string double_to_member_string(double d);
 string expression_type_to_string(CRB_TYPE::ExpressionType type);
 string statement_type_to_string(CRB_TYPE::StatementType type);
 string value_type_to_string(CRB_TYPE::ValueType type);

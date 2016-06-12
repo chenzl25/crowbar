@@ -8,7 +8,7 @@
 #include "parser/src/slr.h"
 #include "parser/src/bnf_rule.h"
 #include "parser/src/hardcode.h"
-
+#include "extend/CRB.h"
 using namespace std;
 
 
@@ -25,14 +25,21 @@ int main(int argc, char** argv) {
   Lex mylex;
   mylex.build_from_lex_rules(hard_code_lex_rule());
   /*set-string-type-distincter*/
-  if (!mylex.read_code(code_path)) {
-    error("read code_file error");
-  }
+mylex.set_string_type("string");
+mylex.set_string_distincter('\"');
+  // if (!mylex.read_code(code_path)) {
+  //   error("read code file error");
+  // }
   mylex.set_max_token_size(50);
 
   SLR slr;
   // slr.build_from_bnf_rules(hard_code_bnf_rule());  
   slr.just_read_bnf_rules(hard_code_bnf_rule());
   hard_code_slr_table(slr);
-  slr.parse(mylex);
+  // slr.parse(mylex);
+  CRB::Interpreter::getInstance()->set_lexer(mylex);
+  CRB::Interpreter::getInstance()->set_parsr(slr);
+  CRB::Interpreter::getInstance()->parse(code_path);
+  CRB::Interpreter::getInstance()->execute();
+  CRB::Interpreter::getInstance()->dealloc();
 }

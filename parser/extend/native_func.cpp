@@ -9,10 +9,11 @@ using namespace std;
 
 namespace CRB {
 
-CRB_TYPE::Value* print_proc(int arg_cnt) {
-  CRB::assert(arg_cnt == 1, "native print need 1 argument");
+CRB_TYPE::Value* print_proc(int arg_cnt, int line_number) {
+  string line_string = std::to_string(line_number);
+  CRB::assert(arg_cnt == 1, line_string + ": print: need 1 argument");
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
-  string s = CRB::value_to_string(Istack->peek(0), -1/*line_number*/);
+  string s = CRB::value_to_string(Istack->peek(0), line_number);
   char *buf = new char[s.length()];
   int j = 0;
   for (int i = 0; i < s.length(); i++, j++) {
@@ -38,7 +39,7 @@ CRB_TYPE::Value* print_proc(int arg_cnt) {
           buf[j] = '\'';
           break;
         default:
-          CRB::error("can't not escape char :" + s[i]);
+          CRB::error(line_string + ": can't not escape char :" + s[i]);
       }
       i++;
     } else {
@@ -61,12 +62,13 @@ FunctionDefinition* create_print_native_function() {
   return fd;
 }
 
-CRB_TYPE::Value* new_array_proc(int arg_cnt) {
+CRB_TYPE::Value* new_array_proc(int arg_cnt, int line_number) {
+  string line_string = std::to_string(line_number);
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
-  CRB::assert(arg_cnt == 1, "Array need 1 argument");
+  CRB::assert(arg_cnt == 1, line_string + ": Array: need 1 argument");
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
-  assert(Istack->size() >= 1, "Array: the eval stack should have 1 value at least ");
-  assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, "Array: argument should be interger");
+  CRB::assert(Istack->size() >= 1, line_string + ": Array: the eval stack should have 1 value at least ");
+  CRB::assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, line_string + ": Array: argument should be interger");
   int array_size = dynamic_cast<CRB_TYPE::IntValue*>(Istack->peek(0))->int_value;
   auto array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
   array_value->vec.resize(array_size);
@@ -87,9 +89,10 @@ FunctionDefinition* create_new_array_native_function() {
   return fd;
 }
 
-CRB_TYPE::Value* new_object_proc(int arg_cnt) {
+CRB_TYPE::Value* new_object_proc(int arg_cnt, int line_number) {
+  string line_string = std::to_string(line_number);
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
-  CRB::assert(arg_cnt == 0, "Object need 0 argument");
+  CRB::assert(arg_cnt == 0, line_string + ": Object: need 0 argument");
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
   return Iheap->alloc(CRB_TYPE::ASSOC_OBJECT);
 }
@@ -105,11 +108,63 @@ FunctionDefinition* create_new_object_native_function() {
   return fd;
 }
 
+CRB_TYPE::Value* from_char_code_proc(int arg_cnt, int line_number) {
+  string line_string = std::to_string(line_number);
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  CRB::assert(arg_cnt >= 1, line_string + ": fromCharCode: need 1 argument at least");
+  auto Istack = CRB::Interpreter::getInstance()->get_stack();
+  CRB::assert(Istack->size() >= arg_cnt, line_string + ": fromCharCode: the eval stack should have " + std::to_string(arg_cnt) +" value at least ");
+  string tem_string;
+  for (int i = 0; i < arg_cnt; i++) {
+    CRB::assert(Istack->peek(i)->type == CRB_TYPE::INT_VALUE, line_string + ": fromCharCode: argument should be a interger");
+    int char_code = dynamic_cast<CRB_TYPE::IntValue*>(Istack->peek(i))->int_value;
+    tem_string += static_cast<char>(char_code);
+  }
+  return Iheap->alloc(&tem_string, false);
+}
+
+FunctionDefinition* create_from_char_code_function() {
+  FunctionDefinition* fd = new FunctionDefinition();
+  fd->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION;
+  fd->name = new string("fromCharCode"); // we name it Array
+  fd->is_closure = false;
+  fd->block = NULL;
+  fd->parameter_list = NULL;
+  fd->proc = from_char_code_proc;
+  return fd;
+}
+
+CRB_TYPE::Value* require_proc(int arg_cnt, int line_number) {
+  string line_string = std::to_string(line_number);
+  auto Iheap = CRB::Interpreter::getInstance()->get_heap();
+  CRB::assert(arg_cnt >= 1, line_string + ": require: need 1 argument");
+  auto Istack = CRB::Interpreter::getInstance()->get_stack();
+  CRB::assert(Istack->size() >= 1, line_string + ": require: the eval stack should have 1 value");
+  CRB::assert(Istack->peek(0)->type == CRB_TYPE::STRING_VALUE, line_string + ": require: the argument should be String");
+
+  CRB::Interpreter::getInstance()->parse(*dynamic_cast<CRB_TYPE::String*>(Istack->peek(0))->string_value);
+  return new CRB_TYPE::Value(); // NULL, maybe we will improve the require function to return a variable in the future.
+}
+
+FunctionDefinition* create_require_function() {
+  FunctionDefinition* fd = new FunctionDefinition();
+  fd->type = CRB_TYPE::NATIVE_FUNCTION_DEFINITION;
+  fd->name = new string("require"); // we name it Array
+  fd->is_closure = false;
+  fd->block = NULL;
+  fd->parameter_list = NULL;
+  fd->proc = require_proc;
+  return fd;
+}
+
+
 void add_native_function() {
   auto Ienv = CRB::Interpreter::getInstance()->get_environment();
   Ienv->add_function(create_print_native_function());
   Ienv->add_function(create_new_array_native_function());
   Ienv->add_function(create_new_object_native_function());
+  Ienv->add_function(create_from_char_code_function());
+  Ienv->add_function(create_require_function());
 }
 
 

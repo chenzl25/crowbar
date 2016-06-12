@@ -22,18 +22,30 @@ Interpreter::~Interpreter() { // order is importance
   delete _heap;  // heap should delete after environment
   delete _statement_list;  // statemet at last
 }
-void Interpreter::dealloc() {
-  cout << "\n=======================================\n";
-  delete _instance;
-  _instance = NULL;
-}
-
 Interpreter* Interpreter::getInstance() {
   if (_instance == NULL) {
     _instance = new Interpreter();
     _instance->before_hook();
   } 
   return _instance;
+}
+void Interpreter::dealloc() {
+  cout << "\n=======================================\n";
+  delete _instance;
+  _instance = NULL;
+}
+
+void Interpreter::set_lexer(Lex& lex_) {
+  _lex = lex_;
+}
+void Interpreter::set_parsr(SLR& slr_) {
+  _slr = slr_;
+}
+void Interpreter::parse(string code_path) {
+  if (!_lex.read_code(code_path)) {
+    error("read code file error");
+  }
+  _slr.parse(_lex);
 }
 void Interpreter::before_hook() {
   CRB::add_native_function(); // from native_fun.cpp
@@ -173,16 +185,16 @@ void Interpreter::Heap::print() {
 }
 void Interpreter::Heap::garbage_collect() {
   _gc_times++;
-  // cout << "garbage collect " << this->_gc_times << " :" << endl;
-  // wprint("before");
-  // this->print();
+  cout << "garbage collect " << this->_gc_times << " :" << endl;
+  wprint("before");
+  this->print();
   
   this->mark_from_root_set();
   this->sweep();
 
   this->_current_threshold = this->_current_size + this->_threshold_size;
-  // wprint("after");
-  // this->print();
+  wprint("after");
+  this->print();
 }
 void Interpreter::Heap::mark_from_root_set() {
   // list<CRB_TYPE::Object*> _heap_list;
@@ -193,7 +205,6 @@ void Interpreter::Heap::mark_from_root_set() {
   for (auto it = this->_heap_list.begin(); it != this->_heap_list.end(); it++) {
     (*it)->marked = false;
   }
-
 
   // mark global variable
   for (auto it = Ienv->_global_variable_map.begin(); it != Ienv->_global_variable_map.end(); it++) {
@@ -261,20 +272,15 @@ void Interpreter::Heap::mark_value(CRB_TYPE::Value* value) {
   }
 }
 void Interpreter::Heap::sweep() {
-  list<CRB_TYPE::Object*> to_delete_list;
   fix_bug_set.clear();
   for (auto it = this->_heap_list.begin(); it != this->_heap_list.end();) {
     if ((*it)->marked == false) {
-      to_delete_list.push_back(*it);
+      heap_value_delete(*it);
       it = this->_heap_list.erase(it);
     } else {
       fix_bug_set.insert(*it);
       it++;
     }
-  }
-  for (auto it = to_delete_list.begin(); it != to_delete_list.end();it++) {
-    auto value = *it;
-    heap_value_delete(*it);
   }
 }
 void Interpreter::execute() {
