@@ -1,8 +1,9 @@
+#include <set>
+#include <cstdlib>
 #include "CRB.h"
 #include "native_func.h"
 #include "fake_method.h"
 #include "crowbar_util.h"
-#include <set>
 
 using namespace std;
 
@@ -42,10 +43,32 @@ void Interpreter::set_parsr(SLR& slr_) {
   _slr = slr_;
 }
 void Interpreter::parse(string code_path) {
+  char full_path[100];
+  if (realpath(code_path.c_str(), full_path)) {
+    cout << full_path << endl;
+    if (_require_file_cache_set.count(full_path)) {
+      return;
+    }
+    _require_file_cache_set.insert(full_path);
+    _current_run_code_path = full_path;
+    _current_run_code_file_name = _current_run_code_path.substr(_current_run_code_path.find_last_of('/')+1);
+    _current_run_code_path = _current_run_code_path.substr(0, _current_run_code_path.find_last_of('/'));
+  } else {
+    CRB::error("realpath fail: " +code_path + " doesn't exist");
+  }
   if (!_lex.read_code(code_path)) {
     error("read code file error");
   }
   _slr.parse(_lex);
+}
+void Interpreter::set_current_run_code_path(string path) {
+  _current_run_code_path = path;
+}
+string Interpreter::get_current_run_code_path() {
+  return _current_run_code_path;
+}
+string Interpreter::get_current_run_code_filename() {
+  return _current_run_code_file_name;
 }
 void Interpreter::before_hook() {
   CRB::add_native_function(); // from native_fun.cpp

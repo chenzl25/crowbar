@@ -1,5 +1,8 @@
 #include <string>
 #include <iostream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string>
 #include "crowbar_util.h"
 #include "CRB.h"
 using namespace std;
@@ -27,6 +30,8 @@ void error (int line, string msg) {
   exit(-1);
 }
 void error(string msg) {
+  string file_name = Interpreter::getInstance()->get_current_run_code_filename();
+  cout << file_name << ":" << endl;
   cout << msg << endl;
   exit(-1);
 }
@@ -38,6 +43,23 @@ string double_to_member_string(double d) {
     return std_string.substr(0, last_of_not_zero+1);
   }
   return std_string;
+}
+string calculate_path(string old_path, string related_path) {
+  while (related_path.length() >= 2 && related_path[0] == '.' && related_path[1] == '/') {
+    related_path.erase(0,2);
+  }
+  assert(related_path.length() > 0, "related_path should have file name");
+  while(related_path.length() >= 3 && related_path[0] == '.' && 
+        related_path[1] == '.'    && related_path[2] == '/') {
+    int last_slash_pos = old_path.find_last_of('/');
+    old_path = old_path.substr(0, last_slash_pos);
+    related_path.erase(0,3);
+  }
+  return old_path + "/" + related_path;
+}
+bool file_exists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
 }
 string expression_type_to_string(CRB_TYPE::ExpressionType type) {
   switch(type) {

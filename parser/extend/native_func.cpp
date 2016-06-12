@@ -5,6 +5,7 @@
 #include "native_func.h"
 #include "crowbar_util.h"
 #include "CRB.h"
+
 using namespace std;
 
 namespace CRB {
@@ -134,6 +135,11 @@ FunctionDefinition* create_from_char_code_function() {
   return fd;
 }
 
+  
+
+
+
+
 CRB_TYPE::Value* require_proc(int arg_cnt, int line_number) {
   string line_string = std::to_string(line_number);
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
@@ -141,8 +147,14 @@ CRB_TYPE::Value* require_proc(int arg_cnt, int line_number) {
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
   CRB::assert(Istack->size() >= 1, line_string + ": require: the eval stack should have 1 value");
   CRB::assert(Istack->peek(0)->type == CRB_TYPE::STRING_VALUE, line_string + ": require: the argument should be String");
-
-  CRB::Interpreter::getInstance()->parse(*dynamic_cast<CRB_TYPE::String*>(Istack->peek(0))->string_value);
+  string require_file_path = *dynamic_cast<CRB_TYPE::String*>(Istack->peek(0))->string_value;
+  string old_run_code_path = CRB::Interpreter::getInstance()->get_current_run_code_path();
+  string result_path = CRB::calculate_path(old_run_code_path, require_file_path);
+  if (!CRB::file_exists(result_path)) {
+    CRB::error(line_string + ": " + require_file_path + " doesn't exists");
+  }
+  CRB::Interpreter::getInstance()->parse(result_path);
+  CRB::Interpreter::getInstance()->set_current_run_code_path(old_run_code_path);
   return new CRB_TYPE::Value(); // NULL, maybe we will improve the require function to return a variable in the future.
 }
 

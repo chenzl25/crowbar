@@ -1,0 +1,6 @@
+1. namespace like module protection
+2. object iterater
+3. prototype
+4. Global variable like: String, Array, Object, Math, JSON.
+5. IO, file operation 
+6. require path be associated with file path

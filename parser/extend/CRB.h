@@ -40,6 +40,9 @@ class Interpreter {
   void parse(string code_path);
   void set_lexer(Lex& lex_);
   void set_parsr(SLR& slr_);
+  void set_current_run_code_path(string path);
+  string get_current_run_code_path();
+  string get_current_run_code_filename();
   Interpreter::Heap* get_heap();
   Interpreter::Stack* get_stack();
   Interpreter::Environment* get_environment();
@@ -113,6 +116,9 @@ class Interpreter {
   int _line;
   SLR _slr;
   Lex _lex;
+  string _current_run_code_path;
+  string _current_run_code_file_name;
+  set<string> _require_file_cache_set;
   static Interpreter* _instance;
   Interpreter();
   ~Interpreter();
