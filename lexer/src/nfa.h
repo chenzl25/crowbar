@@ -6,7 +6,7 @@
 #include <vector>
 #include <set>
 #include "re_parse.h"
-#include "Digraph.h"
+#include "digraph.h"
 using namespace std;
 
 struct TreeNode;
