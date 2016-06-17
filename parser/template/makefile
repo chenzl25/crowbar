@@ -21,7 +21,7 @@ SRCS += extend/eval.cpp
 SRCS += extend/execute.cpp
 SRCS += extend/native_func.cpp
 SRCS += extend/fake_method.cpp
-
+SRCS += extend/native_object.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
@@ -68,6 +68,8 @@ execute.o:			extend/execute.h
 native_func.o:  extend/native_func.h
 
 fake_method.o: extend/fake_method.h
+
+native_object.o: extend/native_object.h
 
 clean:
 	-rm -f $(OBJS) dcompile

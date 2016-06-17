@@ -27,5 +27,8 @@ void assoc_value_delete(CRB_TYPE::Value *value);
 void statement_result_value_delete(CRB_TYPE::Value *value);
 void non_object_delete(CRB_TYPE::Value *value);
 void basic_value_delete(CRB_TYPE::Value *value);
+double gaussian_rand();
+double uniform_rand();
+
 } // CRB
 #endif

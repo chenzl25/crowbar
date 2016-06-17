@@ -140,7 +140,7 @@ void ScopeChain::print() {
 }
 
 Assoc::Assoc() : Object(CRB_TYPE::ASSOC_VALUE) {
-  int ref_cnt = 1;
+  ref_cnt = 1;
 }
 Assoc::~Assoc() {
   // we can delete the Value, because Value only delete itself 

@@ -2,6 +2,10 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cmath>
+#include <random>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include <string>
 #include "crowbar_util.h"
 #include "CRB.h"
@@ -60,6 +64,16 @@ string calculate_path(string old_path, string related_path) {
 bool file_exists (const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
+}
+double gaussian_rand() {
+  return sqrt(-2*log(uniform_rand())*cos(2*3.141592653589793*uniform_rand()));
+}
+
+double uniform_rand() {
+  std::random_device rd;     
+  std::mt19937 rng(rd());    
+  std::uniform_real_distribution<double> uni(0,1); 
+  return uni(rng);
 }
 string expression_type_to_string(CRB_TYPE::ExpressionType type) {
   switch(type) {

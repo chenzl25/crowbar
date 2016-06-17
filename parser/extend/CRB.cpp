@@ -3,6 +3,7 @@
 #include "CRB.h"
 #include "native_func.h"
 #include "fake_method.h"
+#include "native_object.h"
 #include "crowbar_util.h"
 
 using namespace std;
@@ -73,6 +74,7 @@ string Interpreter::get_current_run_code_filename() {
 void Interpreter::before_hook() {
   CRB::add_native_function(); // from native_fun.cpp
   CRB::add_fake_method();     // from fake_method.cpp
+  CRB::add_native_object();   // from native_object.cpp
 }
 void Interpreter::chain_statement_list(Statement* statement) {
   _statement_list->add_statement(statement);
