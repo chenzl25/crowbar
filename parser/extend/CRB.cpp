@@ -231,6 +231,10 @@ void Interpreter::Heap::mark_from_root_set() {
     (*it)->marked = false;
   }
 
+  // mark native varialbe
+  for (auto it = Ienv->_native_variable_map.begin(); it != Ienv->_native_variable_map.end(); it++) {
+    this->mark_value(it->second);
+  }
   // mark global variable
   for (auto it = Ienv->_global_variable_map.begin(); it != Ienv->_global_variable_map.end(); it++) {
     this->mark_value(it->second);
@@ -322,6 +326,9 @@ Interpreter::Environment::Environment() {
 Interpreter::Environment::~Environment() {
   // cout << "-------------------------------------------------" << endl;
   // cout << "Environment delete : " << endl;
+  for (auto it = _native_variable_map.begin(); it != _native_variable_map.end(); it++) {
+    env_value_delete(it->second);
+  }
   for (auto it = _global_variable_map.begin(); it != _global_variable_map.end(); it++) {
     env_value_delete(it->second);
   }
@@ -383,6 +390,14 @@ void Interpreter::Environment::add_variable(string name, CRB_TYPE::Value* local_
     _use_env->_scope_chain->frame->add_member(name, local_value);
   }
 }
+
+void Interpreter::Environment::add_native_variable(string name, CRB_TYPE::Value* native_variable_value) {
+  if (_native_variable_map.count(name)) {
+    CRB::error("multi define native object " +name);
+  }
+  _native_variable_map[name] = native_variable_value;
+}
+
 LocalEnv* Interpreter::Environment::get_top_env() {
   if (_local_env_vec.empty()) {
     return NULL;
@@ -408,6 +423,10 @@ void Interpreter::Environment::add_global_declare(string name) {
   }
 }
 CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
+  // can not cover the native variable map
+  if (_native_variable_map.count(name)) {
+    return _native_variable_map[name];
+  }
   if (_use_env == NULL) {
     if (_global_variable_map.count(name)) {
       return _global_variable_map[name];
@@ -431,6 +450,9 @@ CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
 }
 
 void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* assign_value) {
+  if (_native_variable_map.count(name)) {
+    CRB::error("can not assign to the native variable");
+  }
   if (_use_env == NULL) {
     CRB::assert(_global_variable_map.count(name), "the value be assigned should exist");
     env_value_delete(_global_variable_map[name]);

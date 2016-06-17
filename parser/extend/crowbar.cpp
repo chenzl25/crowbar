@@ -205,8 +205,8 @@ void LogicalNotExpression::eval() {
   operand->eval();
   auto value = Interpreter::getInstance()->get_stack()->peek(0);
   if (value->type == CRB_TYPE::BOOLEAN_VALUE) {
-    CRB_TYPE::BooleanValue* value =  dynamic_cast<CRB_TYPE::BooleanValue*>(value);
-    value->boolean_value = !value->boolean_value;
+    CRB_TYPE::BooleanValue* cast_value =  dynamic_cast<CRB_TYPE::BooleanValue*>(value);
+    cast_value->boolean_value = !(cast_value->boolean_value);
   } else {
     CRB::error(std::to_string(this->line) + " wrong type in logical not expression");
   }
@@ -787,7 +787,11 @@ CRB_TYPE::StatementResult* IfStatement::execute() {
          std::to_string(this->line) + " condition expression should be bool");
   if (dynamic_cast<CRB_TYPE::BooleanValue*>(value)->boolean_value) {
     stack_value_delete(value); // delete the stack pop
-    result = this->then_block->statement_list->execute();
+    if (this->then_block->statement_list) {
+      result = this->then_block->statement_list->execute();
+    } else {
+      result = new CRB_TYPE::StatementResult(CRB_TYPE::NORMAL_STATEMENT_RESULT);
+    }
   } else if (this->elsif_list) {
     result = this->elsif_list->execute();
     if (result != NULL) {

@@ -31,7 +31,5 @@ function qsort(a, l, r) {
     qsort(a, index+1, r);
 }
 
-qsort(arr, 0, 9);
-print(arr);
 
 

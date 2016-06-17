@@ -37,7 +37,7 @@ void add_math_object() {
   math_assoc_value->add_member("E", new CRB_TYPE::DoubleValue(2.718281828459045));
   auto random_closure_value = new CRB_TYPE::Closure(create_random_method(), NULL);
   math_assoc_value->add_member("random", random_closure_value);
-  Ienv->add_variable("Math", math_assoc_value);
+  Ienv->add_native_variable("Math", math_assoc_value);
   return;
 }
 

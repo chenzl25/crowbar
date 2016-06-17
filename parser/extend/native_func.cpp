@@ -66,11 +66,16 @@ FunctionDefinition* create_print_native_function() {
 CRB_TYPE::Value* new_array_proc(int arg_cnt, int line_number) {
   string line_string = std::to_string(line_number);
   auto Iheap = CRB::Interpreter::getInstance()->get_heap();
-  CRB::assert(arg_cnt == 1, line_string + ": Array: need 1 argument");
   auto Istack = CRB::Interpreter::getInstance()->get_stack();
-  CRB::assert(Istack->size() >= 1, line_string + ": Array: the eval stack should have 1 value at least ");
-  CRB::assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, line_string + ": Array: argument should be interger");
-  int array_size = dynamic_cast<CRB_TYPE::IntValue*>(Istack->peek(0))->int_value;
+  int array_size;
+  if (arg_cnt == 0) {
+    array_size = 0;
+  } else {
+    CRB::assert(arg_cnt == 1, line_string + ": Array: need 1 argument");
+    CRB::assert(Istack->size() >= 1, line_string + ": Array: the eval stack should have 1 value at least ");
+    CRB::assert(Istack->peek(0)->type == CRB_TYPE::INT_VALUE, line_string + ": Array: argument should be interger");
+    array_size = dynamic_cast<CRB_TYPE::IntValue*>(Istack->peek(0))->int_value;
+  }
   auto array_value = dynamic_cast<CRB_TYPE::Array*>(Iheap->alloc(CRB_TYPE::ARRAY_OBJECT));
   array_value->vec.resize(array_size);
   for (int i = 0; i < array_size; i++) {

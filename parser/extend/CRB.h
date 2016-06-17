@@ -60,6 +60,7 @@ class Interpreter {
     void add_fake_method(FunctionDefinition* fd);
     void add_variable(string name, CRB_TYPE::Value*);
     void add_global_declare(string name);
+    void add_native_variable(string name, CRB_TYPE::Value*);
     void assign_variable(string name, CRB_TYPE::Value*);
     CRB_TYPE::Value* search_variable(string name);
     void assign(string name, CRB_TYPE::Value*);
@@ -75,6 +76,7 @@ class Interpreter {
     map<string, FunctionDefinition*> _global_function_map;
     map<string, FunctionDefinition*> _global_fake_method_map;
     map<string, CRB_TYPE::Value*> _global_variable_map;
+    map<string, CRB_TYPE::Value*> _native_variable_map;
   };
   class Heap {
    public:
