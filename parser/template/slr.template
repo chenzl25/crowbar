@@ -647,8 +647,9 @@ void SLR::parse(Lex &lexer) {
         return;
       }
       case ENUM::ACTION_ERROR:
-        cout << action_string << endl;
-        cout << state_stack.top() << endl;
+        // cout << action_string << endl;
+        // cout << state_stack.top() << endl;
+        cout << CRB::Interpreter::getInstance()->get_current_run_code_filename() << ":" << endl;
         error("line " + std::to_string(token.line) + ": parse error");
         break;
       default:

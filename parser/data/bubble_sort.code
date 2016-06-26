@@ -1,0 +1,17 @@
+function bubble_sort(a) {
+  for (i = 0; i < a.size()-1; i++) {
+    for (j = i + 1; j < a.size(); j++) {
+      if (a[j] > a[i]) {
+        tem = a[i];
+        a[i] = a[j];
+        a[j] = tem;
+      }       
+    }
+  }
+}
+
+arr = {9:7:4:1:0:2:8:5:3:6};
+
+print(arr);
+bubble_sort(arr);
+print(arr);

@@ -4,3 +4,5 @@
 4. Global variable like: String, Array, Object, Math, JSON.
 5. IO, file operation 
 6. require path be associated with file path
+7. require return a object(like: exports), which contains the method and other variable.
+   we can use the (fullpath + "exports") to uniquely define the object

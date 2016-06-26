@@ -434,9 +434,11 @@ CRB_TYPE::Value* Interpreter::Environment::search_variable(string name) {
       return NULL;
     }
   } else {
-    CRB_TYPE::Value* result;
+    CRB_TYPE::Value* result = NULL;
     auto head_scope = _use_env->_scope_chain;
-    result = _use_env->_global_declare_map[name];
+    if (_use_env->_global_declare_map.count(name)) {
+      result = _use_env->_global_declare_map[name];
+    }
     if (result) return result;
 
     do {
@@ -472,8 +474,13 @@ void Interpreter::Environment::assign_variable(string name, CRB_TYPE::Value* ass
 
     do {
       dest = head_scope->frame->search_member(name);
-      if (dest != NULL) head_scope->frame->assign_member(name, assign_value);
-      else head_scope = head_scope->next;
+      if (dest != NULL)  {
+        head_scope->frame->assign_member(name, assign_value);
+        return;
+      }
+      else {
+        head_scope = head_scope->next;
+      }
     } while(head_scope);
 
     CRB::error("the value be assigned should exist");
