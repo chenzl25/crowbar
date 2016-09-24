@@ -96,7 +96,8 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
       bnf_rule_tem_set.push_back(tmp);
       // first pass
       while (ss >> raw_string) {
-        BnfRule::Symbol symbol(_check_terminal(raw_string), raw_string, _find_type(raw_string));
+        bool is_terminal = _check_terminal(raw_string);
+        BnfRule::Symbol symbol(is_terminal, raw_string, _find_type(raw_string));
         bnf_rule_tem_set[or_count].body.push_back(symbol);
       }
       while (getline(bnf_rule_in, s)) {
@@ -121,7 +122,8 @@ bool Yacc::read_bnf_rule(string bnf_rule_path) {
         BnfRule tmp;
         bnf_rule_tem_set.push_back(tmp);
         while (ss >> raw_string) {
-          BnfRule::Symbol symbol(_check_terminal(raw_string), raw_string, _find_type(raw_string));
+          bool is_terminal = _check_terminal(raw_string);
+          BnfRule::Symbol symbol(is_terminal, raw_string, _find_type(raw_string));
           bnf_rule_tem_set[or_count].body.push_back(symbol);
         }
       }
@@ -148,8 +150,10 @@ void Yacc::_fill_template() {
   system("mkdir -p dist/data");
   system("mkdir -p dist/lexer/src");
   system("mkdir -p dist/extend");
-  system("cp ../lexer/src/*[^o] dist/lexer/src");
-  system("cp src/*[^o] dist/parser/src");
+  system("cp ../lexer/src/* dist/lexer/src");
+  system("rm  dist/lexer/src/*.o");
+  system("cp src/* dist/parser/src");
+  system("rm dist/parser/src/*.o");
   system("rm dist/parser/src/main.cpp");
   system("cp template/makefile dist");
   system("cp data/* dist/data");
@@ -393,7 +397,7 @@ void Yacc::print() {
 bool Yacc::_check_terminal(string & input) {
   assert(input.length() > 0, "the input for _check_terminal size should > 0");
   if (input[0] == '\'' && input[input.length()-1] == '\'') {
-    input = input.substr(1, input.length() -2);
+    input = input.substr(1, input.length() -2); // side effect!
     return true;
   }
   for (auto s: _lex_declaration_set) {

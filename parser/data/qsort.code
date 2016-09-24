@@ -1,7 +1,7 @@
 #test qsort
 
 arr = {9:7:4:1:0:2:8:5:3:6};
-#print("before sort: " + arr + "\n");
+print("before sort: " + arr + "\n");
 function swap(a, i, j) {
     tem = a[i];
     a[i] = a[j];
@@ -30,6 +30,7 @@ function qsort(a, l, r) {
     qsort(a, l, index-1);
     qsort(a, index+1, r);
 }
-
+qsort(arr, 0, arr.size()-1);
+print("after sort: " + arr + "\n");
 
 
