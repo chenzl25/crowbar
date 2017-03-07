@@ -2,7 +2,7 @@
 
 In this project we will let parser and lexer work together to implement a `crowbar` interpreter.
 
-**now the code only work on OS X**
+**now the code work on OS X and Linux**
 
 ### *How to run*
 
